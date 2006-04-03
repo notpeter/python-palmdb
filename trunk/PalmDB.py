@@ -109,6 +109,13 @@ def attr2string( x):
 def _(x):
     return x
 
+def getBits(variable,bitIndex,bitCount=1):
+        bitsToMask=pow(2,bitCount)-1
+	mask=bitsToMask<<bitIndex
+	result=variable & mask
+	result=result>>bitIndex
+	return result
+
 # you need to pass the AppBlock into this class in the constructor
 class Categories(dict):
     '''
