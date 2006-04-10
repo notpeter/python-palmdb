@@ -109,12 +109,40 @@ def attr2string( x):
 def _(x):
     return x
 
-def getBits(variable,bitIndex,bitCount=1):
+def getBits(variable,MSBBitIndex,bitCount=1):
+	# MSBBitIndex is zero based
         bitsToMask=pow(2,bitCount)-1
-	mask=bitsToMask<<bitIndex
+	mask=bitsToMask<<MSBBitIndex
 	result=variable & mask
-	result=result>>bitIndex
+	result=result>>MSBBitIndex
 	return result
+
+def setBits(value,variable,MSBBitIndex,bitCount=1):
+	# MSBBitIndex is zero based
+
+	# +++ FIX THIS +++ this needs to be implemented
+	pass
+
+def crackPalmDate(variable):
+	# Date due field:
+    	# This field seems to be layed out like this:
+    	#     year  7 bits (0-128)
+    	#     month 4 bits (0-16)
+    	#     day   5 bits (0-32)
+	year = getBits(variable,15,7)
+	if year <> 0:
+		year += 1904
+
+	# +++ FIX THIS +++ I'm not sure if month and day are zero based or not, it should be documented
+	return(year,getBits(8,4),getBits(4,5))
+
+def packPalmDate(year,month,day):
+	# +++ FIX THIS +++ I'm not sure if month and day are zero based or not, it should be documented
+	returnValue=0
+	returnValue=setBits(year,returnValue,15,7)
+	returnValue=setBits(month,returnValue,8,4)
+	returnValue=setBits(day,returnValue,4,5)
+	return returnValue
 
 # you need to pass the AppBlock into this class in the constructor
 class Categories(dict):
@@ -674,10 +702,11 @@ class PalmDatabase:
         rawsize = len(raw)
 
         # debugging
-        # print 'Scanning PDB of size', rawsize
-        # print 'AppInfo at', appinfo_offset
-        # print 'SortInfo at', sortinfo_offset
-        # print 'Found', numrec, 'records'
+        print 'Debug: Scanning PDB of size', rawsize
+        print 'Debug: AppInfo at', appinfo_offset
+        print 'Debug: SortInfo at', sortinfo_offset
+        print 'Debug: Found', numrec, 'records'
+        print 'Debug: Palm Header Size %d'%(palmHeaderSize)
 
         if self.recordFactory == None:
             if rsrc: 
@@ -688,73 +717,105 @@ class PalmDatabase:
         if rsrc: 
             s = PI_RESOURCE_ENT_SIZE
             recordMaker = PalmDatabase.addResourceFromByteArray
+            print "Debug: resource type"
         else: 
             s = PI_RECORD_ENT_SIZE
             recordMaker = PalmDatabase.addRecordFromByteArray
+            print "Debug: record type"
 
         first_offset = 0        # need this to find the sort/app info blocks
 
         # next two maintain state for the loop
-        prev_offset = 0         # track the offset of the previous block
-        prev_record = None      # track the previous record
+        prev_offset = rawsize    # track the offset of the previous block, but we are going backwards to simplify the algorithm
 
-        # loop over the block index
-        for pos in range( palmHeaderSize, palmHeaderSize + s * numrec, s):
-            hstr = raw[pos:pos+s]
-            if not hstr or len(hstr) < s:
-                raise IOError, _("problem reading record entry")
+	# check to make sure the Palm database is big enough to at least contain the records it says it does
+        if palmHeaderSize + s * numrec > rawsize:
+            raise IOError, _("Error: database not big enough to have %d records")%(numrec)
+
+        print "Debug: Header size (%d), Number of records (%d)"%(s,numrec)
+        # create records for each Palm record
+        # have to use -1 as the final number, because range never reaches it, it always stops before it
+        for count in range(numrec-1,-1,-1):
+            print "Debug: count (%d)"%(count)
+            startingRecordOffset=count*s+palmHeaderSize
+            endingRecordOffset=(count+1)*s+palmHeaderSize
+            # we have to offset by one because we have to skip the Palm header
+            hstr=raw[startingRecordOffset:endingRecordOffset]
+
+            print "Debug: using range of %d to %d"%(startingRecordOffset,endingRecordOffset)
+            # make sure we got the data we are looking for
+            if not hstr or len(hstr) <> s:
+                raise IOError, _("Error: problem reading record entry, size was (%d), size should have been (%d)")%(len(hstr),s)
 
             # Create an instance of the record
             (offset, record) = recordMaker( self, hstr)
+            print "Debug: offset (%d) record (%s)"%(offset,record)
 
+            # Check for problems
             if record:
                 if offset > rawsize:
-                    raise IOError, _("Invalid offset, off end of database")
+                    raise IOError, _("Error: Invalid offset (%d), off end of database")%(offset)
 
-                if first_offset == 0:
-                    first_offset = offset
+                if offset > prev_offset:
+                        raise IOError, _("Error: Invalid offset (%d), greater than previous offset (records being processed in reverse order)")%(offset)
 
-                if prev_record:
-                    if offset < prev_offset:
-                        raise IOError, _("Invalid offset, less than previous offset")
-                    prev_record.setRaw( raw[ prev_offset:offset])
-                    self.records.append( prev_record)
-                    prev_offset = offset 
+                record.setRaw( raw[offset:prev_offset])
 
-                prev_record = record
+                # Add to beginning because we are going backwards
+                self.records.insert(0,record)
+                prev_offset = offset 
 
-        # Make sure we set the data and append for the last record
-        if prev_record:
-            prev_record.setRaw( raw[ prev_offset:rawsize])
-            self.records.append( prev_record)
 
-        if first_offset == 0:
-            first_offset = rawsize 
 
+        # Now take care of the sortinfo and appinfo blocks
+        
+        # The Order of the major blocks is as follows:
+        # Palm DB Header
+        # List of Record Header Entries
+        # AppInfo block
+        # SortInfo block
+        # Sequence of DB record data entries
+
+
+        # Calculate SortInfo block size
+        # If no block, the of course size is zero
+        # If we have records, then the offset of the first record is the bounds of the sortinfo block because they are on the end
+        # Otherwise, the bounds must be the end of the file
+        sortinfo_size=0
         if sortinfo_offset:
-            sortinfo_size = first_offset - sortinfo_offset
-            first_offset = sortinfo_offset
-        else:
-            sortinfo_size = 0
+            if numrec > 0:
+                sortinfo_size=prev_offset-sortinfo_offset
+            else:
+                sortinfo_size=rawsize-sortinfo_offset
 
+        # Calculate the AppInfo block size
+        # If we have a sort block, the offset to that is the bounds of the AppInfo block
+        # Otherwise, if we have records, then the offset of the first record is the bounds of the AppInfo block
+        # Finally if none of the previous things are true, then the bounds is the end of the file
+        appinfo_size=0
         if appinfo_offset:
-            appinfo_size = first_offset - appinfo_offset
-            first_offset = appinfo_offset
-        else:
-            appinfo_size = 0
+            if sortinfo_offset > 0:
+                appinfo_size=sortinfo_offset-appinfo_offset
+            elif numrec > 0:
+                appinfo_size=prev_offset-appinfo_offset
+            else:
+                appinfo_size=rawsize-appinfo_offset
 
-        if appinfo_size < 0 or sortinfo_size < 0:
-            raise IOError, _("bad database header (appinfo_size or sortinfo_size < 0)")
+        if appinfo_size < 0:
+            raise IOError, _("Error: bad database header AppInfo Block size < 0 (%d)")%(appinfo_size)
+
+        if sortinfo_size < 0:
+            raise IOError, _("Error: bad database header SortInfo Block size < 0 (%d)")%(sortinfo_size)
 
         if appinfo_size:
             self.appblock = raw[appinfo_offset:appinfo_offset+appinfo_size]
             if len(self.appblock) != appinfo_size:
-                raise IOError, _("failed to read appinfo block")
+                raise IOError, _("Error: failed to read appinfo block")
 
         if sortinfo_size:
             self.sortblock = raw[sortinfo_offset:sortinfo_offset+sortinfo_size]
             if len(self.sortblock) != sortinfo_size:
-                raise IOError, _("failed to read sortinfo block")
+                raise IOError, _("Error: failed to read sortinfo block")
 
     def toByteArray(self):
         '''
