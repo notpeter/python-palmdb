@@ -736,20 +736,20 @@ class PalmDatabase:
         # create records for each Palm record
         # have to use -1 as the final number, because range never reaches it, it always stops before it
         for count in range(numrec-1,-1,-1):
-            print "Debug: count (%d)"%(count)
+#            print "Debug: count (%d)"%(count)
             startingRecordOffset=count*s+palmHeaderSize
             endingRecordOffset=(count+1)*s+palmHeaderSize
             # we have to offset by one because we have to skip the Palm header
             hstr=raw[startingRecordOffset:endingRecordOffset]
 
-            print "Debug: using range of %d to %d"%(startingRecordOffset,endingRecordOffset)
+#            print "Debug: using range of %d to %d"%(startingRecordOffset,endingRecordOffset)
             # make sure we got the data we are looking for
             if not hstr or len(hstr) <> s:
                 raise IOError, _("Error: problem reading record entry, size was (%d), size should have been (%d)")%(len(hstr),s)
 
             # Create an instance of the record
             (offset, record) = recordMaker( self, hstr)
-            print "Debug: offset (%d) record (%s)"%(offset,record)
+#            print "Debug: offset (%d) record (%s)"%(offset,record)
 
             # Check for problems
             if record:
