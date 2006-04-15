@@ -111,10 +111,16 @@ def _(x):
 
 def getBits(variable,MSBBitIndex,bitCount=1):
 	# MSBBitIndex is zero based
+        shift=MSBBitIndex-bitCount+1
+#        print 'Variable %X'%variable
         bitsToMask=pow(2,bitCount)-1
-	mask=bitsToMask<<MSBBitIndex
+#        print 'bitsToMask %X'%bitsToMask
+	mask=bitsToMask<<shift
+#        print 'Shifted mask %X'%mask
 	result=variable & mask
-	result=result>>MSBBitIndex
+#        print 'result %X' %result
+	result=result>>shift
+#        print 'result %X' %result
 	return result
 
 def setBits(value,variable,MSBBitIndex,bitCount=1):
@@ -702,11 +708,11 @@ class PalmDatabase:
         rawsize = len(raw)
 
         # debugging
-        print 'Debug: Scanning PDB of size', rawsize
-        print 'Debug: AppInfo at', appinfo_offset
-        print 'Debug: SortInfo at', sortinfo_offset
-        print 'Debug: Found', numrec, 'records'
-        print 'Debug: Palm Header Size %d'%(palmHeaderSize)
+#        print 'Debug: Scanning PDB of size', rawsize
+#        print 'Debug: AppInfo at', appinfo_offset
+#        print 'Debug: SortInfo at', sortinfo_offset
+#        print 'Debug: Found', numrec, 'records'
+#        print 'Debug: Palm Header Size %d'%(palmHeaderSize)
 
         if self.recordFactory == None:
             if rsrc: 
@@ -717,11 +723,11 @@ class PalmDatabase:
         if rsrc: 
             s = PI_RESOURCE_ENT_SIZE
             recordMaker = PalmDatabase.addResourceFromByteArray
-            print "Debug: resource type"
+#            print "Debug: resource type"
         else: 
             s = PI_RECORD_ENT_SIZE
             recordMaker = PalmDatabase.addRecordFromByteArray
-            print "Debug: record type"
+#            print "Debug: record type"
 
         first_offset = 0        # need this to find the sort/app info blocks
 
@@ -732,7 +738,7 @@ class PalmDatabase:
         if palmHeaderSize + s * numrec > rawsize:
             raise IOError, _("Error: database not big enough to have %d records")%(numrec)
 
-        print "Debug: Header size (%d), Number of records (%d)"%(s,numrec)
+#        print "Debug: Header size (%d), Number of records (%d)"%(s,numrec)
         # create records for each Palm record
         # have to use -1 as the final number, because range never reaches it, it always stops before it
         for count in range(numrec-1,-1,-1):
