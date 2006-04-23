@@ -2,7 +2,7 @@ from distutils.core import setup
 import glob
 import os
 
-PalmDBVersion = '1.4.1'
+PalmDBVersion = '1.5.1'
 
 # find files that 
 def findExampleFiles(directoryToSearch,extensionList,prefixDirectory):
