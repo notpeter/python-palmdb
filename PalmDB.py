@@ -139,16 +139,39 @@ def crackPalmDate(variable):
 	if year <> 0:
 		year += 1904
 
-	# +++ FIX THIS +++ I'm not sure if month and day are zero based or not, it should be documented
+	# +++ FIX THIS +++ Month and day should be one based, need to check
 	return(year,getBits(8,4),getBits(4,5))
 
 def packPalmDate(year,month,day):
-	# +++ FIX THIS +++ I'm not sure if month and day are zero based or not, it should be documented
+	# +++ FIX THIS +++ Month and day should be one based, need to check
 	returnValue=0
 	returnValue=setBits(year,returnValue,15,7)
 	returnValue=setBits(month,returnValue,8,4)
 	returnValue=setBits(day,returnValue,4,5)
 	return returnValue
+
+#
+# XML Helper Functions
+#
+def escapeForXML(text):
+        return text.replace(u"&", u"&amp;")\
+               .replace(u"<", u"&lt;")\
+               .replace(u">", u"&gt;")\
+               .replace(u"'", u"&apos;")\
+               .replace(u'"', u"&quot;")
+
+def returnAsXMLItem(itemName,item,escape=True):
+    if escape:
+        itemAsString=escapeForXML(str(item))
+    else:
+        itemAsString=str(item)
+
+    if len(itemAsString):
+        return '<'+itemName+'>'+itemAsString+'</'+itemName+'>\n'
+    else:
+        return ''
+
+
 
 # you need to pass the AppBlock into this class in the constructor
 class Categories(dict):
@@ -212,6 +235,12 @@ class Categories(dict):
         application info block. The string returned will be calcsize() bytes long.
         '''
 	return struct.pack(self.__packString,*([self.renamedCategories]+self.categoryLabels+self.categoryUniqIDs+[self.lastUniqID]))
+
+    def getXML(self):
+        returnValue=''
+        for key in self.keys():
+            returnValue+=returnAsXMLItem('Category',returnAsXMLItem('CategoryID',key)+returnAsXMLItem('CategoryName',self[key]),escape=False)
+        return returnAsXMLItem('PalmCategories',returnValue,escape=False)
 
     def calcsize(self):
         '''
@@ -387,6 +416,39 @@ class PalmDatabaseInfo(dict):
             self['numrec'])
         return raw
 
+    def getXML(self):
+        returnValue=''
+
+        if self['flagReset']:
+            returnValue+=returnAsXMLItem('Reset',True)
+        if self['flagResource']:
+            returnValue+=returnAsXMLItem('Resource',True)
+        if self['flagNewer']:
+            returnValue+=returnAsXMLItem('Newer',True)
+        if self['flagExcludeFromSync']:
+            returnValue+=returnAsXMLItem('ExcludeFromSync',True)
+        if self['flagAppInfoDirty']:
+            returnValue+=returnAsXMLItem('AppInfoDirty',True)
+        if self['flagReadOnly']:
+            returnValue+=returnAsXMLItem('ReadOnly',True)
+        if self['flagBackup']:
+            returnValue+=returnAsXMLItem('Backup',True)
+        if self['flagOpen']:
+            returnValue+=returnAsXMLItem('Open',True)
+        if len(returnValue):
+            returnValue=returnAsXMLItem('PalmDatabaseFlags',returnValue,encode=False)
+
+        returnValue+=returnAsXMLItem('DatabaseName',self['name'])
+        returnValue+=returnAsXMLItem('Type',self['type'])
+        returnValue+=returnAsXMLItem('CreatorID',self['creator'])
+        returnValue+=returnAsXMLItem('Creationdate','%d-%d-%d'%crackPalmDate(self['createDate']))
+        returnValue+=returnAsXMLItem('ModificationDate','%d-%d-%d'%crackPalmDate(self['modifyDate']))
+        returnValue+=returnAsXMLItem('BackupDate','%d-%d-%d'%crackPalmDate(self['backupDate']))
+        returnValue+=returnAsXMLItem('ModificationNumber',self['modnum'])
+        returnValue+=returnAsXMLItem('Version',self['version'])
+     
+        return returnAsXMLItem('PalmHeaderInfo',returnValue,escape=False)
+
 def filterForRecordsByCategory(records,category=None):
     '''
     This function lets you filter a list of records by category.
@@ -468,6 +530,41 @@ class PRecord:
         Get raw data to marshal class
         '''
         return self.raw
+
+    def getRecordAttributesAsXML(self,categories):
+        returnValue =self.getCategoryAsXML(categories)
+        returnValue+=self.getIDAsXML()
+        returnValue+=self.getAttrBitsAsXML()
+        return returnValue
+
+    def getCategoryAsXML(self,categories):
+        return returnAsXMLItem('PalmCategory',categories[self.category])
+
+    def getIDAsXML(self):
+        return returnAsXMLItem('PalmID',self.id)
+
+    def getAttrBitsAsXML(self):
+        '''
+        Get record attributes as XML records
+        '''
+        returnValue=''
+        deleted=getBits(self.attr,3)
+        dirty=getBits(self.attr,2)
+        busy=getBits(self.attr,1)
+        secret=getBits(self.attr,0)
+        
+        if deleted:
+            returnValue+=returnAsXMLItem('Deleted',True)
+        if dirty:
+            returnValue+=returnAsXMLItem('Dirty',True)
+        if busy:
+            returnValue+=returnAsXMLItem('Busy',True)
+        if secret:
+            returnValue+=returnAsXMLItem('Secret',True)
+
+        if len(returnValue):
+            returnValue=returnAsXMLItem('PalmRecordAttributes',returnValue,escape=False)
+        return returnValue
 
 def filterForResourcesByTypeID(records,type=None,id=None):
     '''
