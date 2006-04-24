@@ -160,13 +160,34 @@ def escapeForXML(text):
                .replace(u"'", u"&apos;")\
                .replace(u'"', u"&quot;")
 
+#
+# Globals to affect XML encoding behaviour
+#
+XMLuseNumeric=False
+XMLsuppressFalseOrBlank=True
+
+def returnBooleanAsXMLItem(itemName,item):
+    returnValue=''
+    if  item:
+        if XMLuseNumeric:
+            returnValue=returnAsXMLItem(itemName,1)
+        else:
+            returnValue=returnAsXMLItem(itemName,True)
+    else:
+        if not XMLsuppressFalseOrBlank:
+            if XMLuseNumeric:
+                returnValue=returnAsXMLItem(itemName,0)
+            else:
+                returnValue=returnAsXMLItem(itemName,False)
+    return returnValue
+
 def returnAsXMLItem(itemName,item,escape=True):
     if escape:
         itemAsString=escapeForXML(str(item))
     else:
         itemAsString=str(item)
 
-    if len(itemAsString):
+    if len(itemAsString) or not XMLsuppressFalseOrBlank:
         return '<'+itemName+'>'+itemAsString+'</'+itemName+'>\n'
     else:
         return ''
@@ -419,24 +440,16 @@ class PalmDatabaseInfo(dict):
     def getXML(self):
         returnValue=''
 
-        if self['flagReset']:
-            returnValue+=returnAsXMLItem('Reset',True)
-        if self['flagResource']:
-            returnValue+=returnAsXMLItem('Resource',True)
-        if self['flagNewer']:
-            returnValue+=returnAsXMLItem('Newer',True)
-        if self['flagExcludeFromSync']:
-            returnValue+=returnAsXMLItem('ExcludeFromSync',True)
-        if self['flagAppInfoDirty']:
-            returnValue+=returnAsXMLItem('AppInfoDirty',True)
-        if self['flagReadOnly']:
-            returnValue+=returnAsXMLItem('ReadOnly',True)
-        if self['flagBackup']:
-            returnValue+=returnAsXMLItem('Backup',True)
-        if self['flagOpen']:
-            returnValue+=returnAsXMLItem('Open',True)
+        returnValue+=returnBooleanAsXMLItem('Reset',self['flagReset'])
+        returnValue+=returnBooleanAsXMLItem('Resource',self['flagResource'])
+        returnValue+=returnBooleanAsXMLItem('Newer',self['flagNewer'])
+        returnValue+=returnBooleanAsXMLItem('ExcludeFromSync',self['flagExcludeFromSync'])
+        returnValue+=returnBooleanAsXMLItem('AppInfoDirty',self['flagAppInfoDirty'])
+        returnValue+=returnBooleanAsXMLItem('ReadOnly',self['flagReadOnly'])
+        returnValue+=returnBooleanAsXMLItem('Backup',self['flagBackup'])
+        returnValue+=returnBooleanAsXMLItem('Open',self['flagOpen'])
         if len(returnValue):
-            returnValue=returnAsXMLItem('PalmDatabaseFlags',returnValue,encode=False)
+            returnValue=returnAsXMLItem('PalmDatabaseFlags',returnValue,escape=False)
 
         returnValue+=returnAsXMLItem('DatabaseName',self['name'])
         returnValue+=returnAsXMLItem('Type',self['type'])
