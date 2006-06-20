@@ -170,19 +170,28 @@ def returnBooleanAsXML(itemName,item):
     returnValue=''
     if  item:
         if XMLuseNumeric:
-            returnValue=returnAttributeAsXML(itemName,'Integer',1)
+            returnValue=returnIntegerAsXML(itemName,'integer',1)
         else:
-            returnValue=returnAttributeAsXML(itemName,'Boolean',True)
+            returnValue=returnAttributeAsXML(itemName,'boolean',True)
     else:
         if not XMLsuppressFalseOrBlank:
             if XMLuseNumeric:
-                returnValue=returnAttributeAsXML(itemName,'Integer',0)
+                returnValue=returnIntegerAsXML(itemName,'integer',0)
             else:
-                returnValue=returnAttributeAsXML(itemName,'Boolean',False)
+                returnValue=returnAttributeAsXML(itemName,'boolean',False)
     return returnValue
 
+def returnIntegerAsXML(itemName,item):
+    return returnAttributeAsXML(itemName,'integer',item)
+
+def returnStringAsXML(itemName,item):
+    return returnAttributeAsXML(itemName,'string',item)
+
+def returnDateAsXML(itemName,item):
+    return returnAttributeAsXML(itemName,'date',item)
+
 def returnRationalAsXML(itemName,numerator,denominator):
-    return '<Attribute name="%s"><Rational numerator="%d" denominator="%d"/></Attribute>\n'%(itemName,numerator,denominator)
+    return '<attribute name="%s"><rational numerator="%d" denominator="%d"/></attribute>\n'%(itemName,numerator,denominator)
 
 def returnAttributeAsXML(itemName,itemType,item,escape=True):
     if escape:
@@ -191,7 +200,7 @@ def returnAttributeAsXML(itemName,itemType,item,escape=True):
         itemAsString=str(item)
 
     if len(itemAsString) or not XMLsuppressFalseOrBlank:
-        return '<Attribute name="%s"><%s val="%s"/></Attribute>\n'%(itemName,itemType,itemAsString)
+        return '<attribute name="%s"><%s val="%s"/></attribute>\n'%(itemName,itemType,itemAsString)
     else:
         return ''
 
@@ -274,8 +283,8 @@ class Categories(dict):
     def getXML(self):
         returnValue=''
         for key in self.keys():
-            returnValue+=returnAsXMLItem('Category',returnAttributeAsXML('CategoryID','Integer',key)+returnAttributeAsXML('CategoryName','String',self[key]),escape=False)
-        return returnAsXMLItem('PalmCategories',returnValue,escape=False)
+            returnValue+=returnAsXMLItem('category',returnIntegerAsXML('CategoryID',key)+returnStringAsXML('CategoryName',self[key]),escape=False)
+        return returnAsXMLItem('palmCategories',returnValue,escape=False)
 
     def calcsize(self):
         '''
@@ -454,27 +463,27 @@ class PalmDatabaseInfo(dict):
     def getXML(self):
         returnValue=''
 
-        returnValue+=returnBooleanAsXML('Reset',self['flagReset'])
-        returnValue+=returnBooleanAsXML('Resource',self['flagResource'])
-        returnValue+=returnBooleanAsXML('Newer',self['flagNewer'])
-        returnValue+=returnBooleanAsXML('ExcludeFromSync',self['flagExcludeFromSync'])
-        returnValue+=returnBooleanAsXML('AppInfoDirty',self['flagAppInfoDirty'])
-        returnValue+=returnBooleanAsXML('ReadOnly',self['flagReadOnly'])
-        returnValue+=returnBooleanAsXML('Backup',self['flagBackup'])
-        returnValue+=returnBooleanAsXML('Open',self['flagOpen'])
+        returnValue+=returnBooleanAsXML('reset',self['flagReset'])
+        returnValue+=returnBooleanAsXML('resource',self['flagResource'])
+        returnValue+=returnBooleanAsXML('newer',self['flagNewer'])
+        returnValue+=returnBooleanAsXML('excludeFromSync',self['flagExcludeFromSync'])
+        returnValue+=returnBooleanAsXML('appInfoDirty',self['flagAppInfoDirty'])
+        returnValue+=returnBooleanAsXML('readOnly',self['flagReadOnly'])
+        returnValue+=returnBooleanAsXML('backup',self['flagBackup'])
+        returnValue+=returnBooleanAsXML('open',self['flagOpen'])
         if len(returnValue):
             returnValue=returnAsXMLItem('PalmDatabaseFlags',returnValue,escape=False)
 
-        returnValue+=returnAttributeAsXML('DatabaseName','String',self['name'])
-        returnValue+=returnAttributeAsXML('Type','String',self['type'])
-        returnValue+=returnAttributeAsXML('CreatorID','String',self['creator'])
-        returnValue+=returnAttributeAsXML('Creationdate','Date','%d-%d-%d'%crackPalmDate(self['createDate']))
-        returnValue+=returnAttributeAsXML('ModificationDate','Date','%d-%d-%d'%crackPalmDate(self['modifyDate']))
-        returnValue+=returnAttributeAsXML('BackupDate','Date','%d-%d-%d'%crackPalmDate(self['backupDate']))
-        returnValue+=returnAttributeAsXML('ModificationNumber','Integer',self['modnum'])
-        returnValue+=returnAttributeAsXML('Version','Integer',self['version'])
+        returnValue+=returnStringAsXML('databaseName',self['name'])
+        returnValue+=returnStringAsXML('type',self['type'])
+        returnValue+=returnStringAsXML('creatorID',self['creator'])
+        returnValue+=returnDateAsXML('creationdate','%d-%d-%d'%crackPalmDate(self['createDate']))
+        returnValue+=returnDateAsXML('modificationDate','%d-%d-%d'%crackPalmDate(self['modifyDate']))
+        returnValue+=returnDateAsXML('backupDate','%d-%d-%d'%crackPalmDate(self['backupDate']))
+        returnValue+=returnIntegerAsXML('modificationNumber',self['modnum'])
+        returnValue+=returnIntegerAsXML('version',self['version'])
      
-        return returnAsXMLItem('PalmHeaderInfo',returnValue,escape=False)
+        return returnAsXMLItem('palmHeaderInfo',returnValue,escape=False)
 
 def filterForRecordsByCategory(records,category=None):
     '''
@@ -565,10 +574,10 @@ class PRecord:
         return returnValue
 
     def getCategoryAsXML(self,categories):
-        return returnAttributeAsXML('PalmCategory','String',categories[self.category])
+        return returnStringAsXML('PalmCategory',categories[self.category])
 
     def getIDAsXML(self):
-        return returnAttributeAsXML('PalmID','Integer',self.id)
+        return returnIntegerAsXML('PalmID',self.id)
 
     def getAttrBitsAsXML(self):
         '''
@@ -581,16 +590,16 @@ class PRecord:
         secret=getBits(self.attr,0)
         
         if deleted:
-            returnValue+=returnBooleanAsXML('Deleted',True)
+            returnValue+=returnBooleanAsXML('deleted',True)
         if dirty:
-            returnValue+=returnBooleanAsXML('Dirty',True)
+            returnValue+=returnBooleanAsXML('dirty',True)
         if busy:
-            returnValue+=returnBooleanAsXML('Busy',True)
+            returnValue+=returnBooleanAsXML('busy',True)
         if secret:
-            returnValue+=returnBooleanAsXML('Secret',True)
+            returnValue+=returnBooleanAsXML('secret',True)
 
         if len(returnValue):
-            returnValue=returnAsXMLItem('PalmRecordAttributes',returnValue,escape=False)
+            returnValue=returnAsXMLItem('palmRecordAttributes',returnValue,escape=False)
         return returnValue
 
 def filterForResourcesByTypeID(records,type=None,id=None):
