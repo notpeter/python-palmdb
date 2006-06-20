@@ -68,6 +68,7 @@ __copyright__ = 'Copyright 2004 Rick Price <rick_price@users.sourceforge.net>'
 # then appinfo then sortinfo
 #
 
+import datetime,time
 import sys, os, stat, struct
 
 PI_RESOURCE_ENT_SIZE = 10
@@ -130,25 +131,13 @@ def setBits(value,variable,MSBBitIndex,bitCount=1):
 	pass
 
 def crackPalmDate(variable):
-	# Date due field:
-    	# This field seems to be layed out like this:
-    	#     year  7 bits (0-128)
-    	#     month 4 bits (0-16)
-    	#     day   5 bits (0-32)
-	year = getBits(variable,15,7)
-	if year <> 0:
-		year += 1904
+        if variable == 0:
+            return None
+        else:
+            return datetime.datetime.fromtimestamp(variable-PILOT_TIME_DELTA)
 
-	# +++ FIX THIS +++ Month and day should be one based, need to check
-	return(year,getBits(8,4),getBits(4,5))
-
-def packPalmDate(year,month,day):
-	# +++ FIX THIS +++ Month and day should be one based, need to check
-	returnValue=0
-	returnValue=setBits(year,returnValue,15,7)
-	returnValue=setBits(month,returnValue,8,4)
-	returnValue=setBits(day,returnValue,4,5)
-	return returnValue
+def packPalmDate(variable):
+        return time.mktime(variable.timetuple())+PILOT_TIME_DELTA
 
 #
 # XML Helper Functions
@@ -187,8 +176,11 @@ def returnIntegerAsXML(itemName,item):
 def returnStringAsXML(itemName,item):
     return returnAttributeAsXML(itemName,'string',item)
 
-def returnDateAsXML(itemName,item):
-    return returnAttributeAsXML(itemName,'date',item)
+def returnDateAsXML(itemName,date):
+    if date == None:
+        return ''
+    (year,month,day,hour,minutes,seconds,weekday,yearday,dstAdjustment)=date.timetuple()
+    return '<attribute name="%s"><date year="%d" month="%d" day="%d" hour="%d" minutes="%d" seconds="%d"/></attribute>\n'%(itemName,year,month,day,hour,minutes,seconds)
 
 def returnRationalAsXML(itemName,numerator,denominator):
     return '<attribute name="%s"><rational numerator="%d" denominator="%d"/></attribute>\n'%(itemName,numerator,denominator)
@@ -402,9 +394,9 @@ class PalmDatabaseInfo(dict):
             'name': name.split('\0')[0],
             'type': typ,
             'creator': creator,
-            'createDate': ctime - PILOT_TIME_DELTA,
-            'modifyDate': mtime - PILOT_TIME_DELTA,
-            'backupDate': btime - PILOT_TIME_DELTA,
+            'createDate': ctime,
+            'modifyDate': mtime,
+            'backupDate': btime,
             'modnum': mnum,
             'version': ver,
             'flagReset': flags & flagReset,
@@ -477,9 +469,9 @@ class PalmDatabaseInfo(dict):
         returnValue+=returnStringAsXML('databaseName',self['name'])
         returnValue+=returnStringAsXML('type',self['type'])
         returnValue+=returnStringAsXML('creatorID',self['creator'])
-        returnValue+=returnDateAsXML('creationdate','%d-%d-%d'%crackPalmDate(self['createDate']))
-        returnValue+=returnDateAsXML('modificationDate','%d-%d-%d'%crackPalmDate(self['modifyDate']))
-        returnValue+=returnDateAsXML('backupDate','%d-%d-%d'%crackPalmDate(self['backupDate']))
+        returnValue+=returnDateAsXML('creationdate',crackPalmDate(self['createDate']))
+        returnValue+=returnDateAsXML('modificationDate',crackPalmDate(self['modifyDate']))
+        returnValue+=returnDateAsXML('backupDate',crackPalmDate(self['backupDate']))
         returnValue+=returnIntegerAsXML('modificationNumber',self['modnum'])
         returnValue+=returnIntegerAsXML('version',self['version'])
      
