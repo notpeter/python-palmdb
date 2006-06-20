@@ -21,6 +21,8 @@
 #  This code was based on code written by Rob Tillotson <rob@pyrite.org>, but has been heavily
 #  modified so that it is now basically code I have written.
 
+# This file includes changes made (including better naming, comments and design changes) by Mark Edgington, many thanks Mark.
+
 
 """PRC/PDB file I/O in pure Python.
 
@@ -84,8 +86,8 @@ __copyright__ = 'Copyright 2006 Rick Price <rick_price@users.sourceforge.net>'
 import datetime,time
 import sys, os, stat, struct
 
-PI_RESOURCE_ENT_SIZE = 10
-PI_RECORD_ENT_SIZE = 8
+RESOURCE_ENTRY_SIZE = 10  # size of a resource entry
+RECORD_ENTRY_SIZE = 8 # size of a record entry
 
 PILOT_TIME_DELTA = 2082844800L
 
@@ -124,18 +126,16 @@ def _(x):
     return x
 
 def getBits(variable,MSBBitIndex,bitCount=1):
-	# MSBBitIndex is zero based
-        shift=MSBBitIndex-bitCount+1
-#        print 'Variable %X'%variable
-        bitsToMask=pow(2,bitCount)-1
-#        print 'bitsToMask %X'%bitsToMask
-	mask=bitsToMask<<shift
-#        print 'Shifted mask %X'%mask
-	result=variable & mask
-#        print 'result %X' %result
-	result=result>>shift
-#        print 'result %X' %result
-	return result
+    """
+    This function is for.... Does ....?
+    """
+    # MSBBitIndex is zero based
+    shift=MSBBitIndex-bitCount+1
+    bitsToMask=pow(2,bitCount)-1
+    mask=bitsToMask<<shift
+    result=variable & mask
+    result=result>>shift
+    return result
 
 def setBits(value,variable,MSBBitIndex,bitCount=1):
 	# MSBBitIndex is zero based
@@ -230,6 +230,10 @@ class Categories(dict):
     Currently renaming categories or adding/deleting categories is not supported.
     As of this writing, you may only have 16 categories, and this code us unable
     to handle anything other than that.
+    
+    This class is not used by any other class in this module. Its only purpose
+    is if you want to extract category data from the AppInfo block (provided
+    that it contains category data...)
     '''
     def __init__(self,raw=None):
         '''
@@ -320,6 +324,9 @@ class PalmDatabaseInfo(dict):
     recommended way of doing it.
     x = PalmDB.PalmDatabaseInfo()
     x.SetRaw(rawData[:x.calcsize())
+    
+    All times (i.e. modifyDate, backupDate, createDate) are the number of
+    seconds since the epoch (Jan. 1, 1970, 12AM).
     '''
     def __init__(self,raw=None):
         '''
@@ -381,6 +388,15 @@ class PalmDatabaseInfo(dict):
         '''
         self.clear()
         return self.getRaw()
+
+    def _updateNumberOfRecords(self,parentDbObject):
+        """
+        Takes a PalmDatabase instance as the argument, and updates the
+        number-of-records field of the this PalmDatabaseInfo class instance.
+        """
+        
+        numberOfRecords = len(parentDbObject)
+        self['numrec'] = numberOfRecords
 
     def setRaw(self,raw):
         '''
@@ -495,7 +511,8 @@ def filterForRecordsByCategory(records,category=None):
     This function lets you filter a list of records by category.
 
     When passed a list of records, and the appropriate category it will
-    return a list of records that match the criteria.
+    return a list of records that match the criteria.  When category=None,
+    all records are returned.
     '''
     return filter(lambda x : (category == None or x.category == category), records)
 
@@ -521,7 +538,8 @@ def resetRecordDirtyFlags(records):
 
     When passed a list of records, this function will reset the dirty bit on each record.
     '''
-    map(lambda x : x.attr & ~attrDirty,records)
+    for record in records:
+        record.attr = record.attr & ~attrDirty
 
 def defaultRecordFactory(attributes,id,category):
     '''
@@ -549,16 +567,13 @@ class PRecord:
         self.raw=''
 
     def __repr__(self):
-        return 'PRecord(attr=' + str(self.attr) + ',id='+str(self.id)+',category='+str(self.category)+',raw=\''+self.raw+'\')'
+        return "PRecord(attr=" + str(self.attr) + ",id=" + str(self.id) + ",category=" + str(self.category) + ",raw=" + repr(self.raw) + ")"
 
-    def __cmp__(self, obj):
-        if type(obj) == type(0):
-            return cmp(self.id, obj)
-        else:
-            return cmp(self.id, obj.id)
-
-    def __hash__(self):
-        return self.id
+    # removing __cmp__() and __hash__() allows one to do things like
+    # database.remove(recordObj) and have the first occurance of that object
+    # removed -- otherwise only the id variable is considered, which is
+    # not of much use in the case where all id's are the same.  If it is
+    # desired to remove by id, a custom function should be made to do this.
 
     def setRaw(self,raw):
         '''
@@ -636,17 +651,18 @@ class PResource:
         self.type = type
         self.raw=''
 
-    def __cmp__(self, obj):
-        if type(obj) == type(()):
-            return cmp( (self.type, self.id), obj)
-        else:
-            return cmp( (self.type, self.id), (obj.type, obj.id) )
-
     def __repr__(self):
-        return 'PResource(type=\'' + self.type + '\',id='+str(self.id)+',raw=\''+self.raw+'\')'
+        return "PResource(type='" + self.type + "',id=" + str(self.id) + ",raw=" + repr(self.raw) + ")"
 
-    def __hash__(self):
-        return hash((self.type, self.id))
+# see in PRecord object for why this is commented out
+##    def __cmp__(self, obj):
+##        if type(obj) == type(()):
+##            return cmp( (self.type, self.id), obj)
+##        else:
+##            return cmp( (self.type, self.id), (obj.type, obj.id) )
+##
+##    def __hash__(self):
+##        return hash((self.type, self.id))
 
     def setRaw(self,raw):
         '''
@@ -677,58 +693,77 @@ class PalmDatabase:
         self.records = []
         self.appblock = ''
         self.sortblock = ''
-        self.dirty = 0
-        # if allow_zero_ids is 1, then this prc behaves appropriately
-        # for a desktop database.  That is, it never attempts to assign
-        # an ID, and lets new records be inserted with an ID of zero.
-        self.allow_zero_ids = 0
+        self.palmDBInfo = PalmDatabaseInfo()
+        self.dirty = False
 
     def getAppBlock(self): return self.appblock and self.appblock or None
     def setAppBlock(self, raw):
-        self.dirty = 1
+        self.dirty = True
         self.appblock = raw
 
     def getSortBlock(self): return self.sortblock and self.sortblock or None
     def setSortBlock(self, raw):
-        self.dirty = 1
+        self.dirty = True
         self.appblock = raw
 
     def getPalmDBInfo(self): return self.palmDBInfo
     def setPalmDBInfo(self, info):
-        self.dirty = 1
+        self.dirty = True
         self.palmDBInfo=info
 
     def getRecords(self):
         return self.records
     def setRecords(self,records):
         self.records = records
-        self.dirty = 1
+        self.dirty = True
 
     # sequence/map API Begins
     def __len__(self): return len(self.records)
+    def __add__(self,addend2):
+        """
+        permits one to create a new PDB which contains the palm header, AppBlock,
+        and SortBlock of the first addend, and concatenates the record list
+        of both addends into the new record list.
+        Example:
+        newDb = db1 + db2
+        now newDb is a separate object, a copy of db1, with the records of db2
+        tacked on to the record list.
+        """
+        newRecordList = copy.deepcopy(self.records) + copy.deepcopy(addend2.records)
+        newDatabase = copy.deepcopy(self)
+        newDatabase.records = newRecordList
+        newDatabase.palmDBInfo._updateNumberOfRecords(newDatabase)
+        return newDatabase
+    
     def __getitem__(self, index):
         return self.records[index]
-    def __setitem__(self, i,record):
+    def __setitem__(self, index,record):
         self.records[index]=record
-        self.dirty = 1
+        self.dirty = True
     def __delitem__(self, index):
         del(self.records[index])
-        self.dirty = 1
+        self.dirty = True
+        self.palmDBInfo._updateNumberOfRecords(self)
     def clear(self):
         self.records = []
-        self.dirty = 1
+        self.dirty = True
+        self.palmDBInfo._updateNumberOfRecords(self)
     def append(self,record):
         self.records.append(record)
-        self.dirty = 1
+        self.dirty = True
+        self.palmDBInfo._updateNumberOfRecords(self)
     def insert(self,index,record):
         self.records.insert(index,record)
-        self.dirty = 1
+        self.dirty = True
+        self.palmDBInfo._updateNumberOfRecords(self)
     def remove(self,record):
+        "Remove the first record with the specified ID"
         self.records.remove(record)
-        self.dirty = 1
+        self.dirty = True
+        self.palmDBInfo._updateNumberOfRecords(self)
     def index(self,record):
         return self.records.index(record)
-    def __contains__in(self,record):
+    def __contains__(self,record):
         return self.records.__contains__(record)
     # Sequence/map API Ends
 
@@ -773,17 +808,21 @@ class PalmDatabase:
         '''
         self.recordFactory = factory
 
-
-
-    def addRecordFromByteArray( self, hstr):
+    def createRecordFromByteArray(self, hstr):
         '''
-        This function parses out a record entry
-        and returns the physical offset of the record data
-        Note that "deleted" records are NOT added and return 0
+        This function parses out a record entry from the corresponding segment
+        of binary data taken from the PDB file (hstr), and returns a tuple
+        containing the physical offset of the record data, and a record
+        object populated with the record-entry information.
+        
+        Note that "deleted" records are NOT processed and return 0
         '''
+        
         (offset, auid) = struct.unpack('>ll', hstr)
         attr = (auid & 0xff000000) >> 24
         uid = auid & 0x00ffffff
+        attributes = attr & 0xf0
+        category  = attr & 0x0f
 
         # debugging:
         # print 'offset', offset, 'Attr', attr2string(attr), 'UID', uid
@@ -791,22 +830,27 @@ class PalmDatabase:
         # don't add deleted records... I have only seen these once!
         if attr & attrDeleted:
             return (0,0);
+        newRecordObject = self.recordFactory(attributes, uid, category)
+        return (offset, newRecordObject)
         
-        return (offset, self.recordFactory(attr & 0xf0, uid, attr & 0x0f))
-
-
-    def addResourceFromByteArray( self, hstr):
+    def createResourceFromByteArray(self, hstr):
         '''
-        This function parses out a resource entry
-        and returns the physical offset of the resource data
+        This function parses out a resource entry from the corresponding segment
+        of binary data taken from the PDB file (hstr), and returns a tuple
+        containing the physical offset of the resource data, and a resource
+        object populated with the resource-entry information.
         '''
-        (typ, id, offset) = struct.unpack('>4shl', hstr)
-        return (offset, self.recordFactory(typ, id)) 
 
+        (resourceType, id, offset) = struct.unpack('>4shl', hstr)
+        # if createResourceFromByteArray is called, it is assumed that
+        # self.recordFactory is actually assigned to a resource factory
+        newResourceObject = self.recordFactory(resourceType, id)
+        return (offset, newResourceObject) 
         
     def fromByteArray(self, raw, headerOnly = False):
         '''
-        This function initializes the class with the Palm database data.
+        This function initializes this class instance, clearing the instance's
+        existing data, and populating it using the complete raw data read from a PDB.
 
         For example:
         x = PalmDB.PalmDatabase()
@@ -830,20 +874,24 @@ class PalmDatabase:
         if info[ 'creator'] == 'Gtkr':
             ...
         '''
+
+        # clear all existing records
+        self.clear()
+
+        # instantiate and initialize database header
         self.palmDBInfo = PalmDatabaseInfo()
-
         palmHeaderSize = self.palmDBInfo.calcsize()
-
         self.palmDBInfo.setRaw(raw)  
 
         if headerOnly:
             return
 
-        rsrc = self.palmDBInfo['flagResource']
-        numrec = self.palmDBInfo['numrec']
-        appinfo_offset = self.palmDBInfo['appinfo_offset']
-        sortinfo_offset = self.palmDBInfo['sortinfo_offset']
-        rawsize = len(raw)
+        # assign some needed variables that were retrieved from the header
+        rsrc = self.palmDBInfo['flagResource'] # is this a resource database?
+        numrec = self.palmDBInfo['numrec'] # number of records
+        appinfo_offset = self.palmDBInfo['appinfo_offset'] # offset location of AppInfo block
+        sortinfo_offset = self.palmDBInfo['sortinfo_offset'] # offset location of SortInfo block
+        rawsize = len(raw) # length of entire database
 
         # debugging
 #        print 'Debug: Scanning PDB of size', rawsize
@@ -852,19 +900,21 @@ class PalmDatabase:
 #        print 'Debug: Found', numrec, 'records'
 #        print 'Debug: Palm Header Size %d'%(palmHeaderSize)
 
+        #-----BEGIN: INSTANTIATE AND APPEND DATABASE RECORDS / RESOURCES------
+
         if self.recordFactory == None:
-            if rsrc: 
+            if rsrc: # if this is a resource database
                 self.setDatabaseRecordFactory(defaultResourceFactory)
             else: 
                 self.setDatabaseRecordFactory(defaultRecordFactory)
 
         if rsrc: 
-            s = PI_RESOURCE_ENT_SIZE
-            recordMaker = PalmDatabase.addResourceFromByteArray
+            s = RESOURCE_ENTRY_SIZE
+            recordMaker = PalmDatabase.createResourceFromByteArray
 #            print "Debug: resource type"
         else: 
-            s = PI_RECORD_ENT_SIZE
-            recordMaker = PalmDatabase.addRecordFromByteArray
+            s = RECORD_ENTRY_SIZE
+            recordMaker = PalmDatabase.createRecordFromByteArray
 #            print "Debug: record type"
 
         first_offset = 0        # need this to find the sort/app info blocks
@@ -882,16 +932,19 @@ class PalmDatabase:
         for count in range(numrec-1,-1,-1):
 #            print "Debug: count (%d)"%(count)
             startingRecordOffset=count*s+palmHeaderSize
-            endingRecordOffset=(count+1)*s+palmHeaderSize
             # we have to offset by one because we have to skip the Palm header
+            endingRecordOffset = (count+1)*s + palmHeaderSize
+            
+            # extract the raw data for the current record/resource entry
             hstr=raw[startingRecordOffset:endingRecordOffset]
 
 #            print "Debug: using range of %d to %d"%(startingRecordOffset,endingRecordOffset)
             # make sure we got the data we are looking for
-            if not hstr or len(hstr) <> s:
+            if (not hstr) or (len(hstr) <> s):
                 raise IOError, _("Error: problem reading record entry, size was (%d), size should have been (%d)")%(len(hstr),s)
 
             # Create an instance of the record
+            # recordMaker is either createRecordFromByteArray() or createResourceFromByteArray()
             (offset, record) = recordMaker( self, hstr)
 #            print "Debug: offset (%d) record (%s)"%(offset,record)
 
@@ -903,12 +956,13 @@ class PalmDatabase:
                 if offset > prev_offset:
                         raise IOError, _("Error: Invalid offset (%d), greater than previous offset (records being processed in reverse order)")%(offset)
 
+                # populate the record with the chunk data that it points to
                 record.setRaw( raw[offset:prev_offset])
 
-                # Add to beginning because we are going backwards
+                # Add to beginning of self.records list because we are going backwards
                 self.records.insert(0,record)
                 prev_offset = offset 
-
+        #-------END: INSTANTIATE AND APPEND DATABASE RECORDS / RESOURCES-------
 
 
         # Now take care of the sortinfo and appinfo blocks
@@ -922,23 +976,24 @@ class PalmDatabase:
 
 
         # Calculate SortInfo block size
-        # If no block, the of course size is zero
+        # If no block, then of course size is zero
         # If we have records, then the offset of the first record is the bounds of the sortinfo block because they are on the end
         # Otherwise, the bounds must be the end of the file
         sortinfo_size=0
-        if sortinfo_offset:
+        if sortinfo_offset: # if there is no SortInfo block, the offset=0
             if numrec > 0:
-                sortinfo_size=prev_offset-sortinfo_offset
-            else:
+                # prev_offset is the beginning of the first record's data chunk
+                sortinfo_size=prev_offset-sortinfo_offsets
+            else: # if there are no records, then the SortInfo block ends at the end of the database
                 sortinfo_size=rawsize-sortinfo_offset
 
         # Calculate the AppInfo block size
-        # If we have a sort block, the offset to that is the bounds of the AppInfo block
-        # Otherwise, if we have records, then the offset of the first record is the bounds of the AppInfo block
-        # Finally if none of the previous things are true, then the bounds is the end of the file
+        # If we have a sort block, the offset to that is what bounds the AppInfo block
+        # Otherwise, if we have records, then the offset of the first record is what bounds the AppInfo block
+        # Finally if none of the previous things are true, then the boundary is the end of the file
         appinfo_size=0
-        if appinfo_offset:
-            if sortinfo_offset > 0:
+        if appinfo_offset: # if there is no AppInfo block, the offset=0
+            if sortinfo_offset > 0: # if there is a SortInfo block
                 appinfo_size=sortinfo_offset-appinfo_offset
             elif numrec > 0:
                 appinfo_size=prev_offset-appinfo_offset
@@ -951,78 +1006,88 @@ class PalmDatabase:
         if sortinfo_size < 0:
             raise IOError, _("Error: bad database header SortInfo Block size < 0 (%d)")%(sortinfo_size)
 
-        if appinfo_size:
+        if appinfo_size: # if AppInfo block exists
             self.appblock = raw[appinfo_offset:appinfo_offset+appinfo_size]
             if len(self.appblock) != appinfo_size:
                 raise IOError, _("Error: failed to read appinfo block")
 
-        if sortinfo_size:
+        if sortinfo_size: # if SortInfo block exists
             self.sortblock = raw[sortinfo_offset:sortinfo_offset+sortinfo_size]
             if len(self.sortblock) != sortinfo_size:
                 raise IOError, _("Error: failed to read sortinfo block")
 
     def toByteArray(self):
         '''
-        This function returns the data for the complete Palm database.
+        This function returns the data for the complete Palm database as a
+        string, which can then be written directly as a PDB file.
 
         For example:
         x = PalmDB.PalmDatabase()
+        [ ... various operations on the database
+                    (adding/changing/deleting records, etc.) ...]
         f = open('palmdb.pdb', 'wb')
         f.write(x.toByteArray())
         f.close()       
         '''
+        
         palmHeaderSize = self.palmDBInfo.calcsize()
         rsrc = self.palmDBInfo['flagResource']
 
         # first, we need to precalculate the offsets.
         if rsrc:
-            entries_len = 10 * len(self.records)
+            entries_len = RESOURCE_ENTRY_SIZE * len(self.records)
         else: 
-            entries_len = 8 * len(self.records)
+            entries_len = RECORD_ENTRY_SIZE * len(self.records)
 
-        off = palmHeaderSize + entries_len + 2
+        offset = palmHeaderSize + entries_len + 2  #position following the entries
         if self.appblock:
-            appinfo_offset = off
-            off = off + len(self.appblock)
+            appinfo_offset = offset
+            offset = offset + len(self.appblock)
         else:
             appinfo_offset = 0
 
         if self.sortblock:
-            sortinfo_offset = off
-            off = off + len(self.sortblock)
+            sortinfo_offset = offset
+            offset = offset + len(self.sortblock)
         else:
             sortinfo_offset = 0
 
+        # make list containing offsets for record/resource data-chunk locations
         rec_offsets = []
         for x in self.records:
-            rec_offsets.append(off)
-            off = off + len(x.getRaw())
+            rec_offsets.append(offset)
+            offset = offset + len(x.getRaw())
 
         self.palmDBInfo['appinfo_offset']=appinfo_offset
         self.palmDBInfo['sortinfo_offset']=sortinfo_offset
         self.palmDBInfo['numrec']=len(self.records)
 
+        # begin to assemble the string to return (raw); start with database header
         raw = self.palmDBInfo.getRaw()
 
-        entries = []
-        record_data = []
-        for x, off in map(None, self.records, rec_offsets):
+        entries = [] # a list which holds all of the record/resource entries
+        record_data = [] # holds record/resource data-chunks
+        # populate the lists...
+        for x, offset in map(None, self.records, rec_offsets):
             if rsrc:
                 record_data.append(x.getRaw())
-                entries.append(struct.pack('>4shl', x.type, x.id, off))
+                entries.append(struct.pack('>4shl', x.type, x.id, offset))
             else:
                 record_data.append(x.getRaw())
                 a = ((x.attr | x.category) << 24) | x.id
-                entries.append(struct.pack('>ll', off, a))
+                entries.append(struct.pack('>ll', offset, a))
 
+        # add the record/resource entries onto the data to be returned
         for x in entries: 
             raw = raw + x
 
-        raw = raw + '\0\0' # padding?  dunno, it's always there.
+        raw = raw + '\0\0' # padding?  dunno, it's always there
 
+        # add the AppInfo and/or SortInfo blocks
         if self.appblock: raw = raw + self.appblock
         if self.sortblock: raw = raw + self.sortblock
 
+        # finally, add the record/resource data chunks
         for x in record_data: 
             raw = raw + x
 
@@ -1030,40 +1095,93 @@ class PalmDatabase:
     # Load/Save API Ends
 
 class File(PalmDatabase):
-    def __init__(self, name=None, factory=None,read=1, write=0):
+    """
+    Class for directly reading from / writing to PDB files.
+
+    Arguments are as follows:
+
+    fileName:       name of file to be read/written
+    
+    recordFactory:  a function which is called to return record objects during
+                    loading of file.  Optional; usually not necessary to specify.
+
+    read:           Attempt to load the data contained in the specified file.
+                    Should be set to False if creating a new file which does
+                    not yet exist.
+
+    writeBack:      When this is set to True, deleting the object will cause 
+                    any changes to the database to be written back to the most
+                    recently specified file (specified for reading or writing).
+    """
+    
+    def __init__(self, fileName=None, recordFactory=None, read=True, writeBack=False):
         PalmDatabase.__init__(self)
-        self.filename = name
-        self.writeback = write
-        self.isopen = 0
-        if factory <> None:
-            self.setDatabaseRecordFactory(factory)
+        self.fileName = fileName
+        self.writeBack = writeBack
+        if recordFactory <> None:
+            self.setDatabaseRecordFactory(recordFactory)
 
-        if read:
-            self.load(name)
-        self.isopen = 1
-
-    def close(self):
-        if self.writeback and self.dirty:
-            self.save(self.filename)
-        self.isopen = 0
+        if self.fileName and read:
+            self.load(fileName)
 
     def __del__(self):
-        if self.isopen: 
-            self.close()
+        if self.writeBack and self.fileName:
+            self.save()
 
-    def load(self, fileName):
+    def load(self, fileName=None):
         '''
-        Open fileName and load the Palm database file contents.
+        Open fileName and load the Palm database file contents.  If no filename
+        provided, then attempt to load the file specified in the self.fileName
+        class varaiable.
+        
+        Any existing records of this object are cleared prior to loading the
+        new info.
         '''
-        f = open(fileName, 'rb')
+        
+        if not fileName:
+            if not self.fileName:
+                raise UserWarning, "No filename specified from which to load data"
+        else:
+            self.fileName = fileName # store current filename as class variable
+        f = open(self.fileName, 'rb')
         data = f.read()
         self.fromByteArray(data)
         f.close()
 
-    def save(self, fileName):
+    def close(self):
+        """
+        Deprecated. Just a wrapper for backward compatibility.  There is little
+        benefit to using this function.  Use save() instead.
+        """
+        if self.writeBack: self.save()
+    
+    def save(self, fileName=None, saveCopyOnly=False):
         '''
-        Open fileName and save the Palm database to the open file.
+        Save the Palm database to the specified file, or if no file is specified,
+        attept to save it to the file from which the current database was loaded.
+        
+        By default, when a filename is specified, it becomes the new default
+        filename (the one written to when just a save() is called without
+        arguments).
+        
+        If saveCopyOnly is True, then only a *copy* of the current database is
+        saved to the specified file, but the default filename (self.fileName)
+        is not changed.
+
         '''
-        f = open(fileName, 'wb')
-        f.write(self.toByteArray())
-        f.close()
+        if self.fileName: # if a filename is defined
+            if not fileName: # by default save to same file
+                if self.dirty: # if no filename given, only write if dirty
+                    f = open(self.fileName, 'wb')
+                    f.write(self.toByteArray())
+                    f.close()
+            else: #  if a filename is given, write to it with no regard for its "dirtyness"
+                if not saveCopyOnly:
+                    self.fileName = fileName # set new filename class variable
+        	    f = open(fileName, 'wb')
+	            f.write(self.toByteArray())
+                    f.close()
+	            self.dirty = False # now 'clean' since it's been saved
+                else:
+                    raise UserWarning, "Cannot save: no fileName available"
+
