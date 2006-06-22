@@ -168,33 +168,25 @@ def escapeForXML(text):
 XMLuseNumeric=False
 XMLsuppressFalseOrBlank=True
 
-def returnBooleanAsXML(itemName,item):
-    returnValue=''
-    if  item:
-        if XMLuseNumeric:
-            returnValue=returnIntegerAsXML(itemName,'integer',1)
-        else:
-            returnValue=returnAttributeAsXML(itemName,'boolean',True)
-    else:
-        if not XMLsuppressFalseOrBlank:
-            if XMLuseNumeric:
-                returnValue=returnIntegerAsXML(itemName,'integer',0)
-            else:
-                returnValue=returnAttributeAsXML(itemName,'boolean',False)
-    return returnValue
+def returnObjectAsXML(itemName,item):
+    if item == None:
+	return ''
 
-def returnIntegerAsXML(itemName,item):
-    return returnAttributeAsXML(itemName,'integer',item)
+    if item.__class__.__name__ == 'int':
+	return returnAttributeAsXML(itemName,'integer',item)
+    if item.__class__.__name__ == 'float':
+	return returnAttributeAsXML(itemName,'real',item)
+    if item.__class__.__name__ == 'str':
+	return returnAttributeAsXML(itemName,'string',item)
+    if item.__class__.__name__ == 'bool':
+	return returnAttributeAsXML(itemName,'boolean',item)
+    if item.__class__.__name__.startswith('date'):
+        (year,month,day,hour,minutes,seconds,weekday,yearday,dstAdjustment)=item.timetuple()
+        return '<attribute name="%s"><date year="%d" month="%d" day="%d" hour="%d" minutes="%d" seconds="%d"/></attribute>\n'%\
+            (itemName,year,month,day,hour,minutes,seconds)
 
-def returnStringAsXML(itemName,item):
-    return returnAttributeAsXML(itemName,'string',item)
-
-def returnDateAsXML(itemName,date):
-    if date == None:
-        return ''
-    (year,month,day,hour,minutes,seconds,weekday,yearday,dstAdjustment)=date.timetuple()
-    return '<attribute name="%s"><date year="%d" month="%d" day="%d" hour="%d" minutes="%d" seconds="%d"/></attribute>\n'%(itemName,year,month,day,hour,minutes,seconds)
-
+    return returnAttributeAsXML(itemName,'unknownType',item)
+    
 def returnRationalAsXML(itemName,numerator,denominator):
     return '<attribute name="%s"><rational numerator="%d" denominator="%d"/></attribute>\n'%(itemName,numerator,denominator)
 
@@ -205,7 +197,7 @@ def returnAttributeAsXML(itemName,itemType,item,escape=True):
         itemAsString=str(item)
 
     if len(itemAsString) or not XMLsuppressFalseOrBlank:
-        return '<attribute name="%s"><%s val="%s"/></attribute>\n'%(itemName,itemType,itemAsString)
+        return '<attribute name="%s"><%s value="%s"/></attribute>\n'%(itemName,itemType,itemAsString)
     else:
         return ''
 
@@ -292,7 +284,7 @@ class Categories(dict):
     def getXML(self):
         returnValue=''
         for key in self.keys():
-            returnValue+=returnAsXMLItem('category',returnIntegerAsXML('CategoryID',key)+returnStringAsXML('CategoryName',self[key]),escape=False)
+            returnValue+=returnAsXMLItem('category',returnObjectAsXML('CategoryID',key)+returnObjectAsXML('CategoryName',self[key]),escape=False)
         return returnAsXMLItem('palmCategories',returnValue,escape=False)
 
     def calcsize(self):
@@ -360,14 +352,14 @@ class PalmDatabaseInfo(dict):
             'backupDate': 0,
             'modnum': 0,
             'version': 0,
-            'flagReset': 0,
-            'flagResource': 0,
-            'flagNewer': 0,
-            'flagExcludeFromSync': 0,
-            'flagAppInfoDirty': 0,
-            'flagReadOnly': 0,
-            'flagBackup': 0,
-            'flagOpen': 0,
+            'flagReset': False,
+            'flagResource': False,
+            'flagNewer': False,
+            'flagExcludeFromSync': False,
+            'flagAppInfoDirty': False,
+            'flagReadOnly': False,
+            'flagBackup': False,
+            'flagOpen': False,
             'more': 0,
             'index': 0,
             'uid' : 0,
@@ -428,14 +420,14 @@ class PalmDatabaseInfo(dict):
             'backupDate': btime,
             'modnum': mnum,
             'version': ver,
-            'flagReset': flags & flagReset,
-            'flagResource': flags & flagResource,
-            'flagNewer': flags & flagNewer,
-            'flagExcludeFromSync': flags & flagExcludeFromSync,
-            'flagAppInfoDirty': flags & flagAppInfoDirty,
-            'flagReadOnly': flags & flagReadOnly,
-            'flagBackup': flags & flagBackup,
-            'flagOpen': flags & flagOpen,
+            'flagReset': bool(flags & flagReset),
+            'flagResource': bool(flags & flagResource),
+            'flagNewer': bool(flags & flagNewer),
+            'flagExcludeFromSync': bool(flags & flagExcludeFromSync),
+            'flagAppInfoDirty': bool(flags & flagAppInfoDirty),
+            'flagReadOnly': bool(flags & flagReadOnly),
+            'flagBackup': bool(flags & flagBackup),
+            'flagOpen': bool(flags & flagOpen),
             'appinfo_offset' : appinfo_offset,
             'sortinfo_offset': sortinfo_offset,
             'more': 0,
@@ -484,25 +476,25 @@ class PalmDatabaseInfo(dict):
     def getXML(self):
         returnValue=''
 
-        returnValue+=returnBooleanAsXML('reset',self['flagReset'])
-        returnValue+=returnBooleanAsXML('resource',self['flagResource'])
-        returnValue+=returnBooleanAsXML('newer',self['flagNewer'])
-        returnValue+=returnBooleanAsXML('excludeFromSync',self['flagExcludeFromSync'])
-        returnValue+=returnBooleanAsXML('appInfoDirty',self['flagAppInfoDirty'])
-        returnValue+=returnBooleanAsXML('readOnly',self['flagReadOnly'])
-        returnValue+=returnBooleanAsXML('backup',self['flagBackup'])
-        returnValue+=returnBooleanAsXML('open',self['flagOpen'])
+        returnValue+=returnObjectAsXML('reset',self['flagReset'])
+        returnValue+=returnObjectAsXML('resource',self['flagResource'])
+        returnValue+=returnObjectAsXML('newer',self['flagNewer'])
+        returnValue+=returnObjectAsXML('excludeFromSync',self['flagExcludeFromSync'])
+        returnValue+=returnObjectAsXML('appInfoDirty',self['flagAppInfoDirty'])
+        returnValue+=returnObjectAsXML('readOnly',self['flagReadOnly'])
+        returnValue+=returnObjectAsXML('backup',self['flagBackup'])
+        returnValue+=returnObjectAsXML('open',self['flagOpen'])
         if len(returnValue):
             returnValue=returnAsXMLItem('PalmDatabaseFlags',returnValue,escape=False)
 
-        returnValue+=returnStringAsXML('databaseName',self['name'])
-        returnValue+=returnStringAsXML('type',self['type'])
-        returnValue+=returnStringAsXML('creatorID',self['creator'])
-        returnValue+=returnDateAsXML('creationdate',crackPalmDate(self['createDate']))
-        returnValue+=returnDateAsXML('modificationDate',crackPalmDate(self['modifyDate']))
-        returnValue+=returnDateAsXML('backupDate',crackPalmDate(self['backupDate']))
-        returnValue+=returnIntegerAsXML('modificationNumber',self['modnum'])
-        returnValue+=returnIntegerAsXML('version',self['version'])
+        returnValue+=returnObjectAsXML('databaseName',self['name'])
+        returnValue+=returnObjectAsXML('type',self['type'])
+        returnValue+=returnObjectAsXML('creatorID',self['creator'])
+        returnValue+=returnObjectAsXML('creationdate',crackPalmDate(self['createDate']))
+        returnValue+=returnObjectAsXML('modificationDate',crackPalmDate(self['modifyDate']))
+        returnValue+=returnObjectAsXML('backupDate',crackPalmDate(self['backupDate']))
+        returnValue+=returnObjectAsXML('modificationNumber',self['modnum'])
+        returnValue+=returnObjectAsXML('version',self['version'])
      
         return returnAsXMLItem('palmHeaderInfo',returnValue,escape=False)
 
@@ -594,29 +586,29 @@ class PRecord:
         return returnValue
 
     def getCategoryAsXML(self,categories):
-        return returnStringAsXML('PalmCategory',categories[self.category])
+        return returnObjectAsXML('PalmCategory',categories[self.category])
 
     def getIDAsXML(self):
-        return returnIntegerAsXML('PalmID',self.id)
+        return returnObjectAsXML('PalmID',self.id)
 
     def getAttrBitsAsXML(self):
         '''
         Get record attributes as XML records
         '''
         returnValue=''
-        deleted=getBits(self.attr,3)
-        dirty=getBits(self.attr,2)
-        busy=getBits(self.attr,1)
-        secret=getBits(self.attr,0)
+        deleted=bool(getBits(self.attr,3))
+        dirty=bool(getBits(self.attr,2))
+        busy=bool(getBits(self.attr,1))
+        secret=bool(getBits(self.attr,0))
         
         if deleted:
-            returnValue+=returnBooleanAsXML('deleted',True)
+            returnValue+=returnObjectAsXML('deleted',deleted)
         if dirty:
-            returnValue+=returnBooleanAsXML('dirty',True)
+            returnValue+=returnObjectAsXML('dirty',dirty)
         if busy:
-            returnValue+=returnBooleanAsXML('busy',True)
+            returnValue+=returnObjectAsXML('busy',busy)
         if secret:
-            returnValue+=returnBooleanAsXML('secret',True)
+            returnValue+=returnObjectAsXML('secret',secret)
 
         if len(returnValue):
             returnValue=returnAsXMLItem('palmRecordAttributes',returnValue,escape=False)
