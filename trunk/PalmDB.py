@@ -38,52 +38,6 @@ __copyright__ = 'Copyright 2006 Rick Price <rick_price@users.sourceforge.net>'
 
 import PalmDatabase
 
-# Class to encapsulate PDB file plugin
-class PDBFilePlugin:
-	#+++ FIX THIS +++ This HAS to be redefined in child classes otherwise things won't work
-	def getPDBCreatorID():
-		return None
-
-	#+++ FIX THIS +++ this will be called before any of the other functions are called
-	def setVersion(version):
-		pass
-
-	def createCategoriesObject(self,raw):
-		return Categories(raw)
-
-        def palmDatabaseInfoObject(self,raw):
-		return PalmDatabaseInfo(raw)
-
-	def getDatabaseRecordFactory(self):
-		return None # +++ FIX THIS +++ obviously this needs to be fixed
-
-PDBPlugins={}
-def registerPDBPlugin(PDBFilePluginClass):
-	type=PDBFilePluginClass.getPDBCreatorID()
-	if type == None:
-		#+++ FIX THIS +++ need to throw a "what are you trying to do exception"
-		pass
-	PDBPlugins[type]=PDBFilePluginClass
-
-def getPDBPlugin(CreatorID):
-	pass
-#+++ FIX THIS +++ implement
-# if we cannot find an appropriate plugin, default to one that can handle any type
-
-#
-#--------- Register Standard Plugins that come with Library ---------
-#
-
-#import ProgectPDBPlugin
-#import StandardNotepadPDBPlugin
-
-#registerPDBPLugin(ProgectPDBPlugin.plugin)
-#registerPDBPLugin(StandardNotepadPDBPlugin.plugin)
-
-#
-#--------- Register Standard Plugins that come with Library ---------
-#
-
 def filterForRecordsByCategory(records,category=None):
     '''
     This function lets you filter a list of records by category.
@@ -119,7 +73,7 @@ def resetRecordDirtyFlags(records):
     for record in records:
         record.attr = record.attr & ~attrDirty
 
-class File(PalmDatabase.PalmDatabase):
+class PDBFile(PalmDatabase.PalmDatabase):
     """
     Class for directly reading from / writing to PDB files.
 
@@ -139,7 +93,7 @@ class File(PalmDatabase.PalmDatabase):
                     recently specified file (specified for reading or writing).
     """
     
-    def __init__(self, fileName=None, recordFactory=None, read=True, writeBack=False):
+    def __init__(self, fileName=None, read=True, writeBack=False):
         PalmDatabase.__init__(self)
         self.fileName = fileName
         self.writeBack = writeBack
@@ -212,6 +166,6 @@ class File(PalmDatabase.PalmDatabase):
 
 
 if __name__ == "__main__":
-#    toPrint=getXMLFromProgectPDB('lbPG-tutorial.PDB')
-#    print toPrint
-	pass
+	print 'running file'
+	ProgectDB=PDBFile('lbPG-tutorial.PDB')
+

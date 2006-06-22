@@ -36,6 +36,24 @@ __version__ = '$Id: PalmDB.py,v 1.11 2005/12/13 03:12:12 rprice Exp $'
 __copyright__ = 'Copyright 2006 Rick Price <rick_price@users.sourceforge.net>'
 
 
+class BasePDBFilePlugin:
+	#+++ FIX THIS +++ This HAS to be redefined in child classes otherwise things won't work
+	def getPDBCreatorID():
+		return None
+
+	#+++ FIX THIS +++ this will be called before any of the other functions are called
+	def setVersion(version):
+		pass
+
+	def createCategoriesObject(self,raw):
+		return Categories(raw)
+
+        def createPalmDatabaseInfoObject(self,raw):
+		return PalmDatabaseInfo(raw)
+
+	def createPalmDatabaseRecord(self,raw):
+		return None # +++ FIX THIS +++ obviously this needs to be fixed
+
 # you need to pass the AppBlock into this class in the constructor
 class Categories(dict):
     '''
