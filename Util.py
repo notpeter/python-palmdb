@@ -45,7 +45,7 @@ def getBits(variable,MSBBitIndex,bitCount=1):
     result=result>>shift
     return result
 
-def setBits(value,variable,MSBBitIndex,bitCount=1):
+def setBits(variable,value,MSBBitIndex,bitCount=1):
 	# MSBBitIndex is zero based
 
 	# +++ FIX THIS +++ this needs to be implemented

@@ -94,11 +94,11 @@ class PDBFile(PalmDatabase.PalmDatabase):
     """
     
     def __init__(self, fileName=None, read=True, writeBack=False):
-        PalmDatabase.__init__(self)
+        PalmDatabase.PalmDatabase.__init__(self)
         self.fileName = fileName
         self.writeBack = writeBack
-        if recordFactory <> None:
-            self.setDatabaseRecordFactory(recordFactory)
+#        if recordFactory <> None:
+#            self.setDatabaseRecordFactory(recordFactory)
 
         if self.fileName and read:
             self.load(fileName)
