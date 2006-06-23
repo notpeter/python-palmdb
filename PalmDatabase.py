@@ -98,25 +98,25 @@ class PalmDatabase():
         if nextrec or appinfo_offset < 0 or sortinfo_offset < 0 or numrec < 0:
             raise ValueError, _("Invalid database header.")
 
-	self['fileName']=name.split('\0')[0]
-	self['databaseType']=databaseType
-	self['creator']=creator
-	self['createdTime']=Util.crackPalmDate(createdTime)
-	self['modifiedTime']=Util.crackPalmDate(modifiedTime)
-	self['backedUpTime']=Util.crackPalmDate(backedUpTime)
-	self['modificationNumber']=modificationNumber
-	self['version']=version
-	self['uid']=uid
-	self['nextRecord']=nextRecord
+	self.attributes.['fileName']=name.split('\0')[0]
+	self.attributes.['databaseType']=databaseType
+	self.attributes.['creator']=creator
+	self.attributes.['createdTime']=Util.crackPalmDate(createdTime)
+	self.attributes.['modifiedTime']=Util.crackPalmDate(modifiedTime)
+	self.attributes.['backedUpTime']=Util.crackPalmDate(backedUpTime)
+	self.attributes.['modificationNumber']=modificationNumber
+	self.attributes.['version']=version
+	self.attributes.['uid']=uid
+	self.attributes.['nextRecord']=nextRecord
 
-	self['flagReset']=bool(getBits(flags,flagResetPosition))
-	self['flagResource']=bool(getBits(flags,flagResourcePosition))
-	self['flagNewer']=bool(getBits(flags,flagNewerPosition))
-	self['flagExcludeFromSync']=bool(getBits(flags,flagExcludeFromSyncPosition))
-	self['flagAppInfoDirty']=bool(getBits(flags,flagAppInfoDirtyPosition))
-	self['flagReadOnly']=bool(getBits(flags,flagReadOnlyPosition))
-	self['flagBackup']=bool(getBits(flags,flagBackupPosition))
-	self['flagOpen']=bool(getBits(flags,flagOpenPosition))
+	self.attributes.['flagReset']=bool(getBits(flags,flagResetPosition))
+	self.attributes.['flagResource']=bool(getBits(flags,flagResourcePosition))
+	self.attributes.['flagNewer']=bool(getBits(flags,flagNewerPosition))
+	self.attributes.['flagExcludeFromSync']=bool(getBits(flags,flagExcludeFromSyncPosition))
+	self.attributes.['flagAppInfoDirty']=bool(getBits(flags,flagAppInfoDirtyPosition))
+	self.attributes.['flagReadOnly']=bool(getBits(flags,flagReadOnlyPosition))
+	self.attributes.['flagBackup']=bool(getBits(flags,flagBackupPosition))
+	self.attributes.['flagOpen']=bool(getBits(flags,flagOpenPosition))
 
     def toByteArray(self):
         '''
@@ -127,56 +127,47 @@ class PalmDatabase():
         Palm database file. The string returned will be calcsize() bytes long.
         '''
 	flag=0
-	flag=setBits(flags,self['flagReset'],flagResetPosition)
-	flag=setBits(flag,self['flagResource'],flagResourcePosition)
-	flag=setBits(flag,self['flagNewer'],flagNewerPosition)
-	flag=setBits(flag,self['flagExcludeFromSync'],flagExcludeFromSyncPosition)
-	flag=setBits(flag,self['flagAppInfoDirty'],flagAppInfoDirtyPosition)
-	flag=setBits(flag,self['flagReadOnly'],flagReadOnlyPosition)
-	flag=setBits(flag,self['flagBackup'],flagBackupPosition)
-	flag=setBits(flag,self['flagOpen'],flagOpenPosition)
+	flag=setBits(flags,self.attributes.['flagReset'],flagResetPosition)
+	flag=setBits(flag,self.attributes.['flagResource'],flagResourcePosition)
+	flag=setBits(flag,self.attributes.['flagNewer'],flagNewerPosition)
+	flag=setBits(flag,self.attributes.['flagExcludeFromSync'],flagExcludeFromSyncPosition)
+	flag=setBits(flag,self.attributes.['flagAppInfoDirty'],flagAppInfoDirtyPosition)
+	flag=setBits(flag,self.attributes.['flagReadOnly'],flagReadOnlyPosition)
+	flag=setBits(flag,self.attributes.['flagBackup'],flagBackupPosition)
+	flag=setBits(flag,self.attributes.['flagOpen'],flagOpenPosition)
 
         raw = struct.pack(HeaderInfo.PDBHeaderStructString,
-            self['fileName'],
+            self.attributes.['fileName'],
             flag,
-            self['version'],
-            Util.packPalmDate(self['createdTime']),
-            Util.packPalmDate(self['modifyDate']),
-            Util.packPalmDate(self['backupDate']),
-            self['modificationNumber'],
-            self.appinfo_offset,
-            self.sortinfo_offset,
-            self['databaseType'],
-            self['creator'],
-            self['uid'],
-            self['nextRecord'],
+            self.attributes.['version'],
+            Util.packPalmDate(self.attributes.['createdTime']),
+            Util.packPalmDate(self.attributes.['modifyDate']),
+            Util.packPalmDate(self.attributes.['backupDate']),
+            self.attributes.['modificationNumber'],
+            self.attributes..appinfo_offset,
+            self.attributes..sortinfo_offset,
+            self.attributes.['databaseType'],
+            self.attributes.['creator'],
+            self.attributes.['uid'],
+            self.attributes.['nextRecord'],
             self.numRecords)
         return raw
 
+    # +++ FIX THIS +++ This has to be put into the default plugin so we can modify how this stuff is created
+    # This may also need the whole XML header stuff, but then again, maybe it should be added somewhere else to make things more flexible
     def getXML(self):
         returnValue=''
+	
+	PalmHeaderAttributes=Util.returnDictionaryAsXML(self.attributes)
+#	PalmHeaderAttributes+=Util.returnObjectAsXML(self.numRecords) # Actually we don't want/need to spit this out do we?
+	PalmHeaderAttributes=Util.returnAsXMLItem('PalmHeader',returnValue,escape=False)
 
-        returnValue+=returnObjectAsXML('reset',self['flagReset'])
-        returnValue+=returnObjectAsXML('resource',self['flagResource'])
-        returnValue+=returnObjectAsXML('newer',self['flagNewer'])
-        returnValue+=returnObjectAsXML('excludeFromSync',self['flagExcludeFromSync'])
-        returnValue+=returnObjectAsXML('appInfoDirty',self['flagAppInfoDirty'])
-        returnValue+=returnObjectAsXML('readOnly',self['flagReadOnly'])
-        returnValue+=returnObjectAsXML('backup',self['flagBackup'])
-        returnValue+=returnObjectAsXML('open',self['flagOpen'])
-        if len(returnValue):
-            returnValue=returnAsXMLItem('PalmDatabaseFlags',returnValue,escape=False)
+	PalmRecords=Util.returnAsXMLItem('PalmRecords',Util.returnObjectAsXML(self.records),escape=False)
 
-        returnValue+=returnObjectAsXML('databaseName',self['name'])
-        returnValue+=returnObjectAsXML('type',self['type'])
-        returnValue+=returnObjectAsXML('creatorID',self['creator'])
-        returnValue+=returnObjectAsXML('creationdate',crackPalmDate(self['createDate']))
-        returnValue+=returnObjectAsXML('modificationDate',crackPalmDate(self['modifyDate']))
-        returnValue+=returnObjectAsXML('backupDate',crackPalmDate(self['backupDate']))
-        returnValue+=returnObjectAsXML('modificationNumber',self['modnum'])
-        returnValue+=returnObjectAsXML('version',self['version'])
-     
-        return returnAsXMLItem('palmHeaderInfo',returnValue,escape=False)
+	# +++ FIX THIS +++ Missing App block and Sort Info block
+	returnValue+=Util.returnAsXMLItem('PalmDatabase',PalmHeaderAttributes+PalmRecords,escape=False)
+
+	return returnValue
 
     def getAppBlock(self): return self.appblock and self.appblock or None
     def setAppBlock(self, raw):
@@ -188,16 +179,13 @@ class PalmDatabase():
         self.dirty = True
         self.appblock = raw
 
-    def getPalmDBInfo(self): return self.palmDBInfo
-    def setPalmDBInfo(self, info):
-        self.dirty = True
-        self.palmDBInfo=info
-
+    # +++ CHECK THIS +++ Should this even exist if we support the sequence/map API?
     def getRecords(self):
         return self.records
     def setRecords(self,records):
         self.records = records
         self.dirty = True
+    # +++ CHECK THIS +++ Should this even exist if we support the sequence/map API?
 
     # sequence/map API Begins
     def __len__(self): return len(self.records)
@@ -251,7 +239,7 @@ class PalmDatabase():
 
 
     # Load/Save API Begins
-    def createRecordFromByteArray(self, hstr):
+    def toByteArray(self, hstr):
         '''
         This function parses out a record entry from the corresponding segment
         of binary data taken from the PDB file (hstr), and returns a tuple
@@ -270,6 +258,7 @@ class PalmDatabase():
         # debugging:
         # print 'offset', offset, 'Attr', attr2string(attr), 'UID', uid
 
+	# +++ FIX THIS +++ This does not actually seem reasonable, why shouldn't we handle them?
         # don't add deleted records... I have only seen these once!
         if attr & attrDeleted:
             return (0,0);
