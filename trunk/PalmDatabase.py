@@ -35,12 +35,13 @@ __version__ = '$Id: PalmDB.py,v 1.11 2005/12/13 03:12:12 rprice Exp $'
 
 __copyright__ = 'Copyright 2006 Rick Price <rick_price@users.sourceforge.net>'
 
-#import PalmDB
+import struct
+import Util
 
-class PalmHeaderInfo():
+class PalmHeaderInfo:
 	# Header Struct
 	PDBHeaderStructString='>32shhLLLlll4s4sllh'
-	PDBHeaderStructSize=struct.calcsize(self.PDBHeaderStructString)
+	PDBHeaderStructSize=struct.calcsize(PDBHeaderStructString)
 	# Header Flags
 	flagResourcePosition = 0
 	flagReadOnlyPosition = 1
@@ -54,7 +55,7 @@ class PalmHeaderInfo():
 
 HeaderInfo=PalmHeaderInfo()
 
-class PalmDatabase():
+class PalmDatabase:
     '''
     This class encapsulates a Palm database.
 
@@ -67,14 +68,14 @@ class PalmDatabase():
     f.close()
     '''
     def __init__(self):
-	attributes={}
+	self.attributes={}
 	self.reset()
 
     def reset(self):
         '''
         Reset all class data to the defaults.
         '''
-        attributes.clear()
+        self.attributes.clear()
 
         self.records = []
         self.appblock = ''
@@ -89,36 +90,36 @@ class PalmDatabase():
 
         (fileName, flags, version, \
 	createdTime, modifiedTime, backedUpTime, \
-	modificationNumber, appinfo_offset, sortinfo_offset, \
+	modificationNumber, self.appinfo_offset, self.sortinfo_offset, \
         databaseType, creator, uid, \
 	nextRecord, self.numRecords) \
         = struct.unpack(HeaderInfo.PDBHeaderStructString, raw[:HeaderInfo.PDBHeaderStructSize])
 
 	# Do some sanity checking
-        if nextrec or appinfo_offset < 0 or sortinfo_offset < 0 or numrec < 0:
+        if nextRecord or self.appinfo_offset < 0 or self.sortinfo_offset < 0 or self.numRecords < 0:
             raise ValueError, _("Invalid database header.")
 
-	self.attributes.['fileName']=name.split('\0')[0]
-	self.attributes.['databaseType']=databaseType
-	self.attributes.['creator']=creator
-	self.attributes.['createdTime']=Util.crackPalmDate(createdTime)
-	self.attributes.['modifiedTime']=Util.crackPalmDate(modifiedTime)
-	self.attributes.['backedUpTime']=Util.crackPalmDate(backedUpTime)
-	self.attributes.['modificationNumber']=modificationNumber
-	self.attributes.['version']=version
-	self.attributes.['uid']=uid
-	self.attributes.['nextRecord']=nextRecord
+	self.attributes['fileName']=fileName.split('\0')[0]
+	self.attributes['databaseType']=databaseType
+	self.attributes['creator']=creator
+	self.attributes['createdTime']=Util.crackPalmDate(createdTime)
+	self.attributes['modifiedTime']=Util.crackPalmDate(modifiedTime)
+	self.attributes['backedUpTime']=Util.crackPalmDate(backedUpTime)
+	self.attributes['modificationNumber']=modificationNumber
+	self.attributes['version']=version
+	self.attributes['uid']=uid
+	self.attributes['nextRecord']=nextRecord
 
-	self.attributes.['flagReset']=bool(getBits(flags,flagResetPosition))
-	self.attributes.['flagResource']=bool(getBits(flags,flagResourcePosition))
-	self.attributes.['flagNewer']=bool(getBits(flags,flagNewerPosition))
-	self.attributes.['flagExcludeFromSync']=bool(getBits(flags,flagExcludeFromSyncPosition))
-	self.attributes.['flagAppInfoDirty']=bool(getBits(flags,flagAppInfoDirtyPosition))
-	self.attributes.['flagReadOnly']=bool(getBits(flags,flagReadOnlyPosition))
-	self.attributes.['flagBackup']=bool(getBits(flags,flagBackupPosition))
-	self.attributes.['flagOpen']=bool(getBits(flags,flagOpenPosition))
+	self.attributes['flagReset']=bool(Util.getBits(flags,PalmHeaderInfo.flagResetPosition))
+	self.attributes['flagResource']=bool(Util.getBits(flags,PalmHeaderInfo.flagResourcePosition))
+	self.attributes['flagNewer']=bool(Util.getBits(flags,PalmHeaderInfo.flagNewerPosition))
+	self.attributes['flagExcludeFromSync']=bool(Util.getBits(flags,PalmHeaderInfo.flagExcludeFromSyncPosition))
+	self.attributes['flagAppInfoDirty']=bool(Util.getBits(flags,PalmHeaderInfo.flagAppInfoDirtyPosition))
+	self.attributes['flagReadOnly']=bool(Util.getBits(flags,PalmHeaderInfo.flagReadOnlyPosition))
+	self.attributes['flagBackup']=bool(Util.getBits(flags,PalmHeaderInfo.flagBackupPosition))
+	self.attributes['flagOpen']=bool(Util.getBits(flags,PalmHeaderInfo.flagOpenPosition))
 
-    def toByteArray(self):
+    def _headerInfoToByteArray(self):
         '''
         Get raw data to marshall class.
 
@@ -127,30 +128,30 @@ class PalmDatabase():
         Palm database file. The string returned will be calcsize() bytes long.
         '''
 	flag=0
-	flag=setBits(flags,self.attributes.['flagReset'],flagResetPosition)
-	flag=setBits(flag,self.attributes.['flagResource'],flagResourcePosition)
-	flag=setBits(flag,self.attributes.['flagNewer'],flagNewerPosition)
-	flag=setBits(flag,self.attributes.['flagExcludeFromSync'],flagExcludeFromSyncPosition)
-	flag=setBits(flag,self.attributes.['flagAppInfoDirty'],flagAppInfoDirtyPosition)
-	flag=setBits(flag,self.attributes.['flagReadOnly'],flagReadOnlyPosition)
-	flag=setBits(flag,self.attributes.['flagBackup'],flagBackupPosition)
-	flag=setBits(flag,self.attributes.['flagOpen'],flagOpenPosition)
+	flag=Util.setBits(flags,self.attributes['flagReset'],PalmHeaderInfo.flagResetPosition)
+	flag=Util.setBits(flag,self.attributes['flagResource'],PalmHeaderInfo.flagResourcePosition)
+	flag=Util.setBits(flag,self.attributes['flagNewer'],PalmHeaderInfo.flagNewerPosition)
+	flag=Util.setBits(flag,self.attributes['flagExcludeFromSync'],PalmHeaderInfo.flagExcludeFromSyncPosition)
+	flag=Util.setBits(flag,self.attributes['flagAppInfoDirty'],PalmHeaderInfo.flagAppInfoDirtyPosition)
+	flag=Util.setBits(flag,self.attributes['flagReadOnly'],PalmHeaderInfo.flagReadOnlyPosition)
+	flag=Util.setBits(flag,self.attributes['flagBackup'],PalmHeaderInfo.flagBackupPosition)
+	flag=Util.setBits(flag,self.attributes['flagOpen'],PalmHeaderInfo.flagOpenPosition)
 
         raw = struct.pack(HeaderInfo.PDBHeaderStructString,
-            self.attributes.['fileName'],
+            self.attributes['fileName'],
             flag,
-            self.attributes.['version'],
-            Util.packPalmDate(self.attributes.['createdTime']),
-            Util.packPalmDate(self.attributes.['modifyDate']),
-            Util.packPalmDate(self.attributes.['backupDate']),
-            self.attributes.['modificationNumber'],
-            self.attributes..appinfo_offset,
-            self.attributes..sortinfo_offset,
-            self.attributes.['databaseType'],
-            self.attributes.['creator'],
-            self.attributes.['uid'],
-            self.attributes.['nextRecord'],
-            self.numRecords)
+            self.attributes['version'],
+            Util.packPalmDate(self.attributes['createdTime']),
+            Util.packPalmDate(self.attributes['modifyDate']),
+            Util.packPalmDate(self.attributes['backupDate']),
+            self.attributes['modificationNumber'],
+            self.attributesappinfo_offset,
+            self.attributessortinfo_offset,
+            self.attributes['databaseType'],
+            self.attributes['creator'],
+            self.attributes['uid'],
+            self.attributes['nextRecord'],
+            self.__len__())
         return raw
 
     # +++ FIX THIS +++ This has to be put into the default plugin so we can modify how this stuff is created
@@ -160,9 +161,10 @@ class PalmDatabase():
 	
 	PalmHeaderAttributes=Util.returnDictionaryAsXML(self.attributes)
 #	PalmHeaderAttributes+=Util.returnObjectAsXML(self.numRecords) # Actually we don't want/need to spit this out do we?
-	PalmHeaderAttributes=Util.returnAsXMLItem('PalmHeader',returnValue,escape=False)
+	PalmHeaderAttributes=Util.returnAsXMLItem('PalmHeader',PalmHeaderAttributes,escape=False)
 
-	PalmRecords=Util.returnAsXMLItem('PalmRecords',Util.returnObjectAsXML(self.records),escape=False)
+	PalmRecords=Util.returnObjectAsXML('PalmRecords',[1,2,3])
+#	PalmRecords=Util.returnObjectAsXML('PalmRecords',self.records)
 
 	# +++ FIX THIS +++ Missing App block and Sort Info block
 	returnValue+=Util.returnAsXMLItem('PalmDatabase',PalmHeaderAttributes+PalmRecords,escape=False)
@@ -239,14 +241,12 @@ class PalmDatabase():
 
 
     # Load/Save API Begins
-    def toByteArray(self, hstr):
+    def _parseRecord(self, hstr):
         '''
         This function parses out a record entry from the corresponding segment
         of binary data taken from the PDB file (hstr), and returns a tuple
         containing the physical offset of the record data, and a record
         object populated with the record-entry information.
-        
-        Note that "deleted" records are NOT processed and return 0
         '''
         
         (offset, auid) = struct.unpack('>ll', hstr)
@@ -258,10 +258,6 @@ class PalmDatabase():
         # debugging:
         # print 'offset', offset, 'Attr', attr2string(attr), 'UID', uid
 
-	# +++ FIX THIS +++ This does not actually seem reasonable, why shouldn't we handle them?
-        # don't add deleted records... I have only seen these once!
-        if attr & attrDeleted:
-            return (0,0);
         newRecordObject = self.recordFactory(attributes, uid, category)
         return (offset, newRecordObject)
         
@@ -308,12 +304,13 @@ class PalmDatabase():
         '''
 
         # clear all existing records
-        self.clear()
+        self.reset()
 
-        # instantiate and initialize database header
-        self.palmDBInfo = PalmDatabaseInfo()
-        palmHeaderSize = self.palmDBInfo.calcsize()
-        self.palmDBInfo.fromByteArray(raw)  
+	self._headerInfoFromByteArray(raw)
+
+	#+++ REMOVE THIS +++
+	return
+	#+++ REMOVE THIS +++
 
         if headerOnly:
             return
@@ -525,3 +522,8 @@ class PalmDatabase():
 
         return raw
     # Load/Save API Ends
+
+if __name__ == "__main__":
+	print 'running file'
+	a=PalmDatabase()
+	print 'finished'

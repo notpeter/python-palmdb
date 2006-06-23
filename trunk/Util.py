@@ -33,6 +33,10 @@ __version__ = '$Id: PalmDB.py,v 1.11 2005/12/13 03:12:12 rprice Exp $'
 
 __copyright__ = 'Copyright 2006 Rick Price <rick_price@users.sourceforge.net>'
 
+import datetime
+
+XMLsuppressFalseOrBlank=False
+
 def getBits(variable,MSBBitIndex,bitCount=1):
     """
     This function is for.... Does ....?
@@ -51,6 +55,7 @@ def setBits(variable,value,MSBBitIndex,bitCount=1):
 	# +++ FIX THIS +++ this needs to be implemented
 	pass
 
+PILOT_TIME_DELTA = 2082844800L
 def crackPalmDate(variable):
         if variable == 0:
             return None
@@ -87,16 +92,16 @@ def returnObjectAsXML(itemName,item):
     if item.__class__.__name__ == 'dict':
 	return returnAttributeAsXML(itemName,'dictionary',returnDictionaryAsXML(item),escape=False)
     if item.__class__.__name__ == 'list':
-	returnSequenceAsXML(itemName,'list',returnSequenceAsXML(item),escape=False)
+	return returnAsXMLItem(itemName,returnAsXMLItem('list',returnSequenceAsXML(item),escape=False),escape=False)
     if item.__class__.__name__ == 'tuple':
-	returnSequenceAsXML(itemName,'tuple',returnSequenceAsXML(item),escape=False)
+	return returnAsXMLItem(itemName,returnAsXMLItem('tuple',returnSequenceAsXML(item),escape=False),escape=False)
 
     if item.__class__.__name__.startswith('date'):
         (year,month,day,hour,minutes,seconds,weekday,yearday,dstAdjustment)=item.timetuple()
         return '<attribute name="%s"><date year="%d" month="%d" day="%d" hour="%d" minutes="%d" seconds="%d"/></attribute>\n'%\
             (itemName,year,month,day,hour,minutes,seconds)
 
-    return returnAttributeAsXML(itemName,'unknownType',item)
+    return returnAttributeAsXML(itemName,'Unknown-'+item.__class__.__name__,item)
     
 def returnRationalAsXML(itemName,numerator,denominator):
     return '<attribute name="%s"><rational numerator="%d" denominator="%d"/></attribute>\n'%(itemName,numerator,denominator)
