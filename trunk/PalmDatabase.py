@@ -37,8 +37,24 @@ __copyright__ = 'Copyright 2006 Rick Price <rick_price@users.sourceforge.net>'
 
 #import PalmDB
 
+class PalmHeaderInfo():
+	# Header Struct
+	PDBHeaderStructString='>32shhLLLlll4s4sllh'
+	PDBHeaderStructSize=struct.calcsize(self.PDBHeaderStructString)
+	# Header Flags
+	flagResourcePosition = 0
+	flagReadOnlyPosition = 1
+	flagAppInfoDirtyPosition = 2
+	flagBackupPosition = 3
+	flagOpenPosition = 15
+	# 2.x
+	flagNewerPosition = 4
+	flagResetPosition = 5
+	flagExcludeFromSyncPosition = 7
 
-class PalmDatabase:
+HeaderInfo=PalmHeaderInfo()
+
+class PalmDatabase():
     '''
     This class encapsulates a Palm database.
 
@@ -51,12 +67,116 @@ class PalmDatabase:
     f.close()
     '''
     def __init__(self):
-        self.recordFactory = None
+	attributes={}
+	self.reset()
+
+    def reset(self):
+        '''
+        Reset all class data to the defaults.
+        '''
+        attributes.clear()
+
         self.records = []
         self.appblock = ''
         self.sortblock = ''
-        self.palmDBInfo = PalmDatabaseInfo()
         self.dirty = False
+
+    def _headerInfoFromByteArray(self,raw):
+        '''
+	Initialize Palm Database Header Data
+	'''
+        if len(raw) < HeaderInfo.PDBHeaderStructSize: raise ValueError, _("Too little data passed in.")
+
+        (fileName, flags, version, \
+	createdTime, modifiedTime, backedUpTime, \
+	modificationNumber, appinfo_offset, sortinfo_offset, \
+        databaseType, creator, uid, \
+	nextRecord, self.numRecords) \
+        = struct.unpack(HeaderInfo.PDBHeaderStructString, raw[:HeaderInfo.PDBHeaderStructSize])
+
+	# Do some sanity checking
+        if nextrec or appinfo_offset < 0 or sortinfo_offset < 0 or numrec < 0:
+            raise ValueError, _("Invalid database header.")
+
+	self['fileName']=name.split('\0')[0]
+	self['databaseType']=databaseType
+	self['creator']=creator
+	self['createdTime']=Util.crackPalmDate(createdTime)
+	self['modifiedTime']=Util.crackPalmDate(modifiedTime)
+	self['backedUpTime']=Util.crackPalmDate(backedUpTime)
+	self['modificationNumber']=modificationNumber
+	self['version']=version
+	self['uid']=uid
+	self['nextRecord']=nextRecord
+
+	self['flagReset']=bool(getBits(flags,flagResetPosition))
+	self['flagResource']=bool(getBits(flags,flagResourcePosition))
+	self['flagNewer']=bool(getBits(flags,flagNewerPosition))
+	self['flagExcludeFromSync']=bool(getBits(flags,flagExcludeFromSyncPosition))
+	self['flagAppInfoDirty']=bool(getBits(flags,flagAppInfoDirtyPosition))
+	self['flagReadOnly']=bool(getBits(flags,flagReadOnlyPosition))
+	self['flagBackup']=bool(getBits(flags,flagBackupPosition))
+	self['flagOpen']=bool(getBits(flags,flagOpenPosition))
+
+    def toByteArray(self):
+        '''
+        Get raw data to marshall class.
+
+        This function returns the binary form of the Palm database header.
+        You need to copy the bytes returned by this function to the beginning of the 
+        Palm database file. The string returned will be calcsize() bytes long.
+        '''
+	flag=0
+	flag=setBits(flags,self['flagReset'],flagResetPosition)
+	flag=setBits(flag,self['flagResource'],flagResourcePosition)
+	flag=setBits(flag,self['flagNewer'],flagNewerPosition)
+	flag=setBits(flag,self['flagExcludeFromSync'],flagExcludeFromSyncPosition)
+	flag=setBits(flag,self['flagAppInfoDirty'],flagAppInfoDirtyPosition)
+	flag=setBits(flag,self['flagReadOnly'],flagReadOnlyPosition)
+	flag=setBits(flag,self['flagBackup'],flagBackupPosition)
+	flag=setBits(flag,self['flagOpen'],flagOpenPosition)
+
+        raw = struct.pack(HeaderInfo.PDBHeaderStructString,
+            self['fileName'],
+            flag,
+            self['version'],
+            Util.packPalmDate(self['createdTime']),
+            Util.packPalmDate(self['modifyDate']),
+            Util.packPalmDate(self['backupDate']),
+            self['modificationNumber'],
+            self.appinfo_offset,
+            self.sortinfo_offset,
+            self['databaseType'],
+            self['creator'],
+            self['uid'],
+            self['nextRecord'],
+            self.numRecords)
+        return raw
+
+    def getXML(self):
+        returnValue=''
+
+        returnValue+=returnObjectAsXML('reset',self['flagReset'])
+        returnValue+=returnObjectAsXML('resource',self['flagResource'])
+        returnValue+=returnObjectAsXML('newer',self['flagNewer'])
+        returnValue+=returnObjectAsXML('excludeFromSync',self['flagExcludeFromSync'])
+        returnValue+=returnObjectAsXML('appInfoDirty',self['flagAppInfoDirty'])
+        returnValue+=returnObjectAsXML('readOnly',self['flagReadOnly'])
+        returnValue+=returnObjectAsXML('backup',self['flagBackup'])
+        returnValue+=returnObjectAsXML('open',self['flagOpen'])
+        if len(returnValue):
+            returnValue=returnAsXMLItem('PalmDatabaseFlags',returnValue,escape=False)
+
+        returnValue+=returnObjectAsXML('databaseName',self['name'])
+        returnValue+=returnObjectAsXML('type',self['type'])
+        returnValue+=returnObjectAsXML('creatorID',self['creator'])
+        returnValue+=returnObjectAsXML('creationdate',crackPalmDate(self['createDate']))
+        returnValue+=returnObjectAsXML('modificationDate',crackPalmDate(self['modifyDate']))
+        returnValue+=returnObjectAsXML('backupDate',crackPalmDate(self['backupDate']))
+        returnValue+=returnObjectAsXML('modificationNumber',self['modnum'])
+        returnValue+=returnObjectAsXML('version',self['version'])
+     
+        return returnAsXMLItem('palmHeaderInfo',returnValue,escape=False)
 
     def getAppBlock(self): return self.appblock and self.appblock or None
     def setAppBlock(self, raw):
@@ -131,45 +251,6 @@ class PalmDatabase:
 
 
     # Load/Save API Begins
-    def setDatabaseRecordFactory(self,factory):
-        '''
-        This function sets the function to be used to create new records.
-
-        When you call this function with something other than None, it will
-        use the function you have provided to create new records when it
-        reads the database. The function you have passed in will be called to
-        with either 3 or 4 parameters depending on whether the database is a
-        PDB or PRC database.
-
-        For a PRC database the function will be called with 3 parameters:
-        Factory(type,id,raw). The type is the 4 character type of the resource,
-        the id is the id of the resource, and raw is the raw resource data.
-
-        For a PDB database the function will be called with 4 parameters:
-        Factory(attributes,id,category,raw). The attributes are the record
-        attributes (dirty,deleted,etc), the id is the record ID, the category is
-        the record category and raw is the raw record data.
-
-        The function is expected to return an object which has at least the
-        interfaces exposed by PResource or PRecord depending on the type of the
-        database.
-
-        Calling setRecordFactory() with None as the parameter returns the behaviour
-        to the default.
-
-        For example:
-        def myFactory(type,id,raw):
-            return MyPResource(type,id,raw)
-        
-        x = PalmDB.PalmDatabase()
-        x.setRecordFactory(myFactory)
-        f = open('palmdb.pdb','r')
-        data = f.read()
-        x.fromByteArray(data)
-        f.close()
-        '''
-        self.recordFactory = factory
-
     def createRecordFromByteArray(self, hstr):
         '''
         This function parses out a record entry from the corresponding segment
@@ -243,7 +324,7 @@ class PalmDatabase:
         # instantiate and initialize database header
         self.palmDBInfo = PalmDatabaseInfo()
         palmHeaderSize = self.palmDBInfo.calcsize()
-        self.palmDBInfo.setRaw(raw)  
+        self.palmDBInfo.fromByteArray(raw)  
 
         if headerOnly:
             return
