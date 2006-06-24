@@ -90,13 +90,13 @@ class PalmDatabase:
 
         (fileName, flags, version, \
 	createdTime, modifiedTime, backedUpTime, \
-	modificationNumber, self.appinfo_offset, self.sortinfo_offset, \
+	modificationNumber, applicationInformationOffset, sortInformationOffset, \
         databaseType, creator, uid, \
-	nextRecord, self.numRecords) \
+	nextRecord, numberOfRecords) \
         = struct.unpack(HeaderInfo.PDBHeaderStructString, raw[:HeaderInfo.PDBHeaderStructSize])
 
 	# Do some sanity checking
-        if nextRecord or self.appinfo_offset < 0 or self.sortinfo_offset < 0 or self.numRecords < 0:
+        if nextRecord or applicationInformationOffset < 0 or sortInformationOffset < 0 or numberOfRecords < 0:
             raise ValueError, _("Invalid database header.")
 
 	self.attributes['fileName']=fileName.split('\0')[0]
@@ -118,6 +118,8 @@ class PalmDatabase:
 	self.attributes['flagReadOnly']=bool(Util.getBits(flags,PalmHeaderInfo.flagReadOnlyPosition))
 	self.attributes['flagBackup']=bool(Util.getBits(flags,PalmHeaderInfo.flagBackupPosition))
 	self.attributes['flagOpen']=bool(Util.getBits(flags,PalmHeaderInfo.flagOpenPosition))
+
+	return (applicationInformationOffset,sortInformationOffset,numberOfRecords)
 
     def _headerInfoToByteArray(self):
         '''
@@ -306,7 +308,7 @@ class PalmDatabase:
         # clear all existing records
         self.reset()
 
-	self._headerInfoFromByteArray(raw)
+	(applicationInformationOffset,sortInformationOffset,numberOfRecords)=self._headerInfoFromByteArray(raw)
 
 	#+++ REMOVE THIS +++
 	return
@@ -317,16 +319,13 @@ class PalmDatabase:
 
         # assign some needed variables that were retrieved from the header
         rsrc = self.palmDBInfo['flagResource'] # is this a resource database?
-        numrec = self.palmDBInfo['numrec'] # number of records
-        appinfo_offset = self.palmDBInfo['appinfo_offset'] # offset location of AppInfo block
-        sortinfo_offset = self.palmDBInfo['sortinfo_offset'] # offset location of SortInfo block
         rawsize = len(raw) # length of entire database
 
         # debugging
 #        print 'Debug: Scanning PDB of size', rawsize
-#        print 'Debug: AppInfo at', appinfo_offset
-#        print 'Debug: SortInfo at', sortinfo_offset
-#        print 'Debug: Found', numrec, 'records'
+#        print 'Debug: AppInfo at', applicationInformationOffset
+#        print 'Debug: SortInfo at', sortInformationOffset
+#        print 'Debug: Found', numberOfRecords, 'records'
 #        print 'Debug: Palm Header Size %d'%(palmHeaderSize)
 
         #-----BEGIN: INSTANTIATE AND APPEND DATABASE RECORDS / RESOURCES------
@@ -352,13 +351,13 @@ class PalmDatabase:
         prev_offset = rawsize    # track the offset of the previous block, but we are going backwards to simplify the algorithm
 
 	# check to make sure the Palm database is big enough to at least contain the records it says it does
-        if palmHeaderSize + s * numrec > rawsize:
-            raise IOError, _("Error: database not big enough to have %d records")%(numrec)
+        if palmHeaderSize + s * numberOfRecords > rawsize:
+            raise IOError, _("Error: database not big enough to have %d records")%(numberOfRecords)
 
-#        print "Debug: Header size (%d), Number of records (%d)"%(s,numrec)
+#        print "Debug: Header size (%d), Number of records (%d)"%(s,numberOfRecords)
         # create records for each Palm record
         # have to use -1 as the final number, because range never reaches it, it always stops before it
-        for count in range(numrec-1,-1,-1):
+        for count in range(numberOfRecords-1,-1,-1):
 #            print "Debug: count (%d)"%(count)
             startingRecordOffset=count*s+palmHeaderSize
             # we have to offset by one because we have to skip the Palm header
@@ -409,25 +408,25 @@ class PalmDatabase:
         # If we have records, then the offset of the first record is the bounds of the sortinfo block because they are on the end
         # Otherwise, the bounds must be the end of the file
         sortinfo_size=0
-        if sortinfo_offset: # if there is no SortInfo block, the offset=0
-            if numrec > 0:
+        if sortInformationOffset: # if there is no SortInfo block, the offset=0
+            if numberOfRecords > 0:
                 # prev_offset is the beginning of the first record's data chunk
-                sortinfo_size=prev_offset-sortinfo_offsets
+                sortinfo_size=prev_offset-sortInformationOffsets
             else: # if there are no records, then the SortInfo block ends at the end of the database
-                sortinfo_size=rawsize-sortinfo_offset
+                sortinfo_size=rawsize-sortInformationOffset
 
         # Calculate the AppInfo block size
         # If we have a sort block, the offset to that is what bounds the AppInfo block
         # Otherwise, if we have records, then the offset of the first record is what bounds the AppInfo block
         # Finally if none of the previous things are true, then the boundary is the end of the file
         appinfo_size=0
-        if appinfo_offset: # if there is no AppInfo block, the offset=0
-            if sortinfo_offset > 0: # if there is a SortInfo block
-                appinfo_size=sortinfo_offset-appinfo_offset
-            elif numrec > 0:
-                appinfo_size=prev_offset-appinfo_offset
+        if applicationInformationOffset: # if there is no AppInfo block, the offset=0
+            if sortInformationOffset > 0: # if there is a SortInfo block
+                appinfo_size=sortInformationOffset-applicationInformationOffset
+            elif numberOfRecords > 0:
+                appinfo_size=prev_offset-applicationInformationOffset
             else:
-                appinfo_size=rawsize-appinfo_offset
+                appinfo_size=rawsize-applicationInformationOffset
 
         if appinfo_size < 0:
             raise IOError, _("Error: bad database header AppInfo Block size < 0 (%d)")%(appinfo_size)
@@ -436,12 +435,12 @@ class PalmDatabase:
             raise IOError, _("Error: bad database header SortInfo Block size < 0 (%d)")%(sortinfo_size)
 
         if appinfo_size: # if AppInfo block exists
-            self.appblock = raw[appinfo_offset:appinfo_offset+appinfo_size]
+            self.appblock = raw[applicationInformationOffset:applicationInformationOffset+appinfo_size]
             if len(self.appblock) != appinfo_size:
                 raise IOError, _("Error: failed to read appinfo block")
 
         if sortinfo_size: # if SortInfo block exists
-            self.sortblock = raw[sortinfo_offset:sortinfo_offset+sortinfo_size]
+            self.sortblock = raw[sortInformationOffset:sortInformationOffset+sortinfo_size]
             if len(self.sortblock) != sortinfo_size:
                 raise IOError, _("Error: failed to read sortinfo block")
 
@@ -470,26 +469,22 @@ class PalmDatabase:
 
         offset = palmHeaderSize + entries_len + 2  #position following the entries
         if self.appblock:
-            appinfo_offset = offset
+            applicationInformationOffset = offset
             offset = offset + len(self.appblock)
         else:
-            appinfo_offset = 0
+            applicationInformationOffset = 0
 
         if self.sortblock:
-            sortinfo_offset = offset
+            sortInformationOffset = offset
             offset = offset + len(self.sortblock)
         else:
-            sortinfo_offset = 0
+            sortInformationOffset = 0
 
         # make list containing offsets for record/resource data-chunk locations
         rec_offsets = []
         for x in self.records:
             rec_offsets.append(offset)
             offset = offset + len(x.getRaw())
-
-        self.palmDBInfo['appinfo_offset']=appinfo_offset
-        self.palmDBInfo['sortinfo_offset']=sortinfo_offset
-        self.palmDBInfo['numrec']=len(self.records)
 
         # begin to assemble the string to return (raw); start with database header
         raw = self.palmDBInfo.getRaw()
