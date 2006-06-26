@@ -38,17 +38,34 @@ __copyright__ = 'Copyright 2006 Rick Price <rick_price@users.sourceforge.net>'
 
 class BasePDBFilePlugin:
 	#+++ FIX THIS +++ This HAS to be redefined in child classes otherwise things won't work
-	def getPDBCreatorID():
+	def getPDBCreatorID(self):
 		return None
 
-	#+++ FIX THIS +++ this will be called before any of the other functions are called
-	def setVersion(version):
-		pass
-
-	def createCategoriesObject(self,raw):
+	def createCategoriesObject(self,PalmDatabaseObject,raw):
 		return Categories(raw)
 
-	def createPalmDatabaseRecord(self,raw):
+	def createApplicationInformationObject(self,PalmDatabaseObject,raw):
+		return Categories(raw)
+
+	def createSortInformationObject(self,PalmDatabaseObject,raw):
+		return Categories(raw)
+
+	def getPalmRecordHeaderSize(self,PalmDatabaseObject):
+	    if PalmDatabaseObject.self.attributes['flagResource']:
+            	return RESOURCE_ENTRY_SIZE
+            else: 
+           	return RECORD_ENTRY_SIZE
+
+	def createPalmDatabaseRecord(self,PalmDatabaseObject,raw):
+#	    if PalmDatabaseObject.self.attributes['flagResource']:
+#            s = RESOURCE_ENTRY_SIZE
+#            recordMaker = PalmDatabase.createResourceFromByteArray
+#            print "Debug: resource type"
+#        else: 
+#            s = RECORD_ENTRY_SIZE
+#            recordMaker = PalmDatabase.createRecordFromByteArray
+#            print "Debug: record type"
+
 		return None # +++ FIX THIS +++ obviously this needs to be fixed
 
 # you need to pass the AppBlock into this class in the constructor

@@ -37,6 +37,7 @@ __copyright__ = 'Copyright 2006 Rick Price <rick_price@users.sourceforge.net>'
 
 import struct
 import Util
+import PluginManager
 
 class PalmHeaderInfo:
 	# Header Struct
@@ -81,6 +82,9 @@ class PalmDatabase:
         self.appblock = ''
         self.sortblock = ''
         self.dirty = False
+
+    def _getPlugin(self):
+	return PluginManager.getPDBPlugin(self.attributes['creator'])
 
     def _headerInfoFromByteArray(self,raw):
         '''
@@ -311,14 +315,17 @@ class PalmDatabase:
 	(applicationInformationOffset,sortInformationOffset,numberOfRecords)=self._headerInfoFromByteArray(raw)
 
 	#+++ REMOVE THIS +++
-	return
+#	return
 	#+++ REMOVE THIS +++
 
         if headerOnly:
             return
 
+	# grab the plugin to create things
+	plugin=self._getPlugin()
+
         # assign some needed variables that were retrieved from the header
-        rsrc = self.palmDBInfo['flagResource'] # is this a resource database?
+ #       rsrc = self.palmDBInfo['flagResource'] # is this a resource database?
         rawsize = len(raw) # length of entire database
 
         # debugging
@@ -330,20 +337,7 @@ class PalmDatabase:
 
         #-----BEGIN: INSTANTIATE AND APPEND DATABASE RECORDS / RESOURCES------
 
-        if self.recordFactory == None:
-            if rsrc: # if this is a resource database
-                self.setDatabaseRecordFactory(defaultResourceFactory)
-            else: 
-                self.setDatabaseRecordFactory(defaultRecordFactory)
-
-        if rsrc: 
-            s = RESOURCE_ENTRY_SIZE
-            recordMaker = PalmDatabase.createResourceFromByteArray
-#            print "Debug: resource type"
-        else: 
-            s = RECORD_ENTRY_SIZE
-            recordMaker = PalmDatabase.createRecordFromByteArray
-#            print "Debug: record type"
+	s=plugin.getPalmRecordHeaderSize(self)
 
         first_offset = 0        # need this to find the sort/app info blocks
 
@@ -373,7 +367,8 @@ class PalmDatabase:
 
             # Create an instance of the record
             # recordMaker is either createRecordFromByteArray() or createResourceFromByteArray()
-            (offset, record) = recordMaker( self, hstr)
+            (offset, record) = plugin.createPalmDatabaseRecord(self,hstr)
+
 #            print "Debug: offset (%d) record (%s)"%(offset,record)
 
             # Check for problems
@@ -459,7 +454,7 @@ class PalmDatabase:
         '''
         
         palmHeaderSize = self.palmDBInfo.calcsize()
-        rsrc = self.palmDBInfo['flagResource']
+#        rsrc = self.palmDBInfo['flagResource']
 
         # first, we need to precalculate the offsets.
         if rsrc:
