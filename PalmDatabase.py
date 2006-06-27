@@ -84,10 +84,13 @@ class PalmDatabase:
         self.dirty = False
 
     def _getPlugin(self):
-	return PluginManager.getPDBPlugin(self.attributes['creator'])
+	return PluginManager.getPDBPlugin(self.attributes['creatorID'])
 
     def isResourceDatabase(self):
 	return self.attributes['flagResource']
+
+    def getCreatorID(self):
+	return self.attributes['creatorID']
 
     def _headerInfoFromByteArray(self,raw):
         '''
@@ -98,7 +101,7 @@ class PalmDatabase:
         (fileName, flags, version, \
 	createdTime, modifiedTime, backedUpTime, \
 	modificationNumber, applicationInformationOffset, sortInformationOffset, \
-        databaseType, creator, uid, \
+        databaseType, creatorID, uid, \
 	nextRecord, numberOfRecords) \
         = struct.unpack(HeaderInfo.PDBHeaderStructString, raw[:HeaderInfo.PDBHeaderStructSize])
 
@@ -108,7 +111,7 @@ class PalmDatabase:
 
 	self.attributes['fileName']=fileName.split('\0')[0]
 	self.attributes['databaseType']=databaseType
-	self.attributes['creator']=creator
+	self.attributes['creatorID']=creatorID
 	self.attributes['createdTime']=Util.crackPalmDate(createdTime)
 	self.attributes['modifiedTime']=Util.crackPalmDate(modifiedTime)
 	self.attributes['backedUpTime']=Util.crackPalmDate(backedUpTime)
@@ -157,7 +160,7 @@ class PalmDatabase:
             self.attributesappinfo_offset,
             self.attributessortinfo_offset,
             self.attributes['databaseType'],
-            self.attributes['creator'],
+            self.attributes['creatorID'],
             self.attributes['uid'],
             self.attributes['nextRecord'],
             self.__len__())
@@ -168,18 +171,17 @@ class PalmDatabase:
     def toXML(self):
         returnValue=''
 	
+	plugin=self._getPlugin()
+
 	PalmHeaderAttributes=Util.returnDictionaryAsXML(self.attributes)
-#	PalmHeaderAttributes+=Util.returnObjectAsXML(self.numRecords) # Actually we don't want/need to spit this out do we?
 	PalmHeaderAttributes=Util.returnAsXMLItem('PalmHeader',PalmHeaderAttributes,escape=False)
 
-	recordsXML=''
-	for record in self.records:
-		recordsXML+=record.toXML()
-	recordsXML=Util.returnAsXMLItem('PalmRecordList',recordsXML,escape=False)
-
 	# +++ FIX THIS +++ Missing App block and Sort Info block
-	returnValue+=Util.returnAsXMLItem('PalmDatabase',PalmHeaderAttributes+recordsXML,escape=False)
-
+	returnValue+=plugin.getXMLVersionHeader(self)
+	returnValue+=plugin.getXMLFileHeader(self)
+	returnValue+=PalmHeaderAttributes
+	returnValue+=plugin.getRecordsAsXML(self)
+	returnValue+=plugin.getXMLFileFooter(self)
 	return returnValue
 
     def getAppBlock(self): return self.appblock and self.appblock or None
@@ -289,7 +291,7 @@ class PalmDatabase:
 
         x.fromByteArray(data, True)
         info = x.getPalmDBInfo()
-        if info[ 'creator'] == 'Gtkr':
+        if info[ 'creatorID'] == 'Gtkr':
             ...
         '''
 

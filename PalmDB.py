@@ -166,7 +166,5 @@ class PDBFile(PalmDatabase.PalmDatabase):
 
 
 if __name__ == "__main__":
-	print 'running file'
 	ProgectDB=PDBFile('lbPG-tutorial.PDB')
 	print ProgectDB.toXML()
-	print 'finished'
