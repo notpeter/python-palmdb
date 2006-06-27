@@ -79,7 +79,7 @@ def returnObjectAsXML(itemName,item):
     if item == None:
 	return ''
 
-    if item.__class__.__name__ == 'int':
+    if (item.__class__.__name__ == 'int') or (item.__class__.__name__ == 'long'):
 	return returnAttributeAsXML(itemName,'integer',item)
     if item.__class__.__name__ == 'float':
 	return returnAttributeAsXML(itemName,'real',item)
