@@ -52,8 +52,8 @@ def getPDBPlugin(CreatorID):
 #--------- Register Standard Plugins that come with Library ---------
 #
 
-#import ProgectPDBPlugin
+import Plugins.ProgectPlugin
 #import StandardNotepadPDBPlugin
 
-#registerPDBPLugin(ProgectPDBPlugin.plugin)
-#registerPDBPLugin(StandardNotepadPDBPlugin.plugin)
+registerPDBPlugin(Plugins.ProgectPlugin.ProgectPlugin())
+#registerPDBPlugin(StandardNotepadPDBPlugin.plugin)
