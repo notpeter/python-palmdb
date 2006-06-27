@@ -67,6 +67,19 @@ class BasePDBFilePlugin:
             else: 
 		return DataRecord()
 
+	def getXMLVersionHeader(self,PalmDatabaseObject):
+		return '<?xml version="1.0" encoding="ISO-8859-1"?>'
+	def getXMLFileHeader(self,PalmDatabaseObject):
+		return '<palmDatabase type="%s">'%PalmDatabaseObject.getCreatorID()
+	def getXMLFileFooter(self,PalmDatabaseObject):
+		return '</palmDatabase>'
+	def getRecordsAsXML(self,PalmDatabaseObject):
+		recordsXML=''
+		for record in PalmDatabaseObject:
+			recordsXML+=record.toXML()
+		recordsXML=Util.returnAsXMLItem('PalmRecordList',recordsXML,escape=False)
+		return recordsXML
+	
 class BaseRecord:
     def __init__(self):
 	    self.attributes={}
