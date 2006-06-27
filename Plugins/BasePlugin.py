@@ -67,7 +67,22 @@ class BasePDBFilePlugin:
             else: 
 		return DataRecord()
 
-class DataRecord:
+class BaseRecord:
+    def __init__(self):
+	    self.attributes={}
+	    self.attributes['payload']=None
+
+    def fromByteArray(self,hstr,dstr):
+        self._crackRecordHeader(hstr)
+        self.attributes['payload']=dstr.encode('HEX')
+
+    def getRecordXMLName(self):
+	    return 'PalmRecord'
+    def toXML(self):
+	    attributesAsXML=Util.returnDictionaryAsXML(self.attributes)
+	    return Util.returnAsXMLItem(self.getRecordXMLName(),attributesAsXML,escape=False)
+	    
+class DataRecord(BaseRecord):
     '''
     This class encapsulates a Palm application record.
 
@@ -76,19 +91,20 @@ class DataRecord:
     setRaw() and getRaw() to set the raw data.
     '''
     def __init__(self):
-        self.attributes={}
-	self.attributes['id']=0
-	self.attributes['category']=0
-	self._crackAttributeBits(0)
-        self.raw=''
+	    BaseRecord.__init__(self)
+	    self.attributes['category']=0
+	    self.attributes['uid']=0
+	    self._crackAttributeBits(0)
 
+    def getRecordXMLName(self):
+	    return 'PalmDataRecord'
     def _crackRecordHeader(self,hstr):
         (offset, auid) = struct.unpack('>ll', hstr)
         attr = (auid & 0xff000000) >> 24
         uid = auid & 0x00ffffff
         attributes = attr & 0xf0
         category  = attr & 0x0f
-	self.attributes['id']=id
+	self.attributes['uid']=uid
 	self.attributes['category']=category
 	self._crackAttributeBits(attr)
 	
@@ -98,37 +114,22 @@ class DataRecord:
         self.attributes['busy']=bool(Util.getBits(attr,1))
         self.attributes['secret']=bool(Util.getBits(attr,0))
 	    
-    def fromByteArray(self,hstr,dstr):
-        self._crackRecordHeader(hstr)
-        self.raw=dstr
-
-    def toXML(self):
-	    return ''
-#    def __repr__(self):
-#        return "PRecord(attr=" + str(self.attr) + ",id=" + str(self.id) + ",category=" + str(self.category) + ",raw=" + repr(self.raw) + ")"
-
-
-class ResourceRecord:
+class ResourceRecord(BaseRecord):
     '''
     This class encapsulates a Palm resource record.
     '''
     def __init__(self):
-        self.attributes={}
-	self.attributes['id']=0
-	self.attributes['resourceType']='    '
-        self.raw=''
+	    BaseRecord.__init__(self)
+	    self.attributes['id']=0
+	    self.attributes['resourceType']='    '
 
     def _crackRecordHeader(self,hstr):
         (resourceType, id, offset) = struct.unpack('>4shl', hstr)
 	self.attributes['id']=id
 	self.attributes['resourceType']=type
 
-    def fromByteArray(self,hstr,dstr):
-        self._crackRecordHeader(hstr)
-	self.raw=dstr
-
-#    def __repr__(self):
-#        return "PResource(type='" + self.type + "',id=" + str(self.id) + ",raw=" + repr(self.raw) + ")"
+    def getRecordXMLName(self):
+	    return 'PalmResourceRecord'
 
 # you need to pass the AppBlock into this class in the constructor
 class Categories(dict):
@@ -197,7 +198,7 @@ class Categories(dict):
         '''
 	return struct.pack(self.__packString,*([self.renamedCategories]+self.categoryLabels+self.categoryUniqIDs+[self.lastUniqID]))
 
-    def getXML(self):
+    def toXML(self):
         returnValue=''
         for key in self.keys():
             returnValue+=returnAsXMLItem('category',returnObjectAsXML('CategoryID',key)+returnObjectAsXML('CategoryName',self[key]),escape=False)

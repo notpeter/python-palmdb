@@ -165,18 +165,20 @@ class PalmDatabase:
 
     # +++ FIX THIS +++ This has to be put into the default plugin so we can modify how this stuff is created
     # This may also need the whole XML header stuff, but then again, maybe it should be added somewhere else to make things more flexible
-    def getXML(self):
+    def toXML(self):
         returnValue=''
 	
 	PalmHeaderAttributes=Util.returnDictionaryAsXML(self.attributes)
 #	PalmHeaderAttributes+=Util.returnObjectAsXML(self.numRecords) # Actually we don't want/need to spit this out do we?
 	PalmHeaderAttributes=Util.returnAsXMLItem('PalmHeader',PalmHeaderAttributes,escape=False)
 
-	PalmRecords=Util.returnObjectAsXML('PalmRecords',[1,2,3])
-#	PalmRecords=Util.returnObjectAsXML('PalmRecords',self.records)
+	recordsXML=''
+	for record in self.records:
+		recordsXML+=record.toXML()
+	recordsXML=Util.returnAsXMLItem('PalmRecordList',recordsXML,escape=False)
 
 	# +++ FIX THIS +++ Missing App block and Sort Info block
-	returnValue+=Util.returnAsXMLItem('PalmDatabase',PalmHeaderAttributes+PalmRecords,escape=False)
+	returnValue+=Util.returnAsXMLItem('PalmDatabase',PalmHeaderAttributes+recordsXML,escape=False)
 
 	return returnValue
 
