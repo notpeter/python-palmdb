@@ -86,6 +86,9 @@ class PalmDatabase:
     def _getPlugin(self):
 	return PluginManager.getPDBPlugin(self.attributes['creator'])
 
+    def isResourceDatabase(self):
+	return self.attributes['flagResource']
+
     def _headerInfoFromByteArray(self,raw):
         '''
 	Initialize Palm Database Header Data
@@ -247,39 +250,18 @@ class PalmDatabase:
 
 
     # Load/Save API Begins
-    def _parseRecord(self, hstr):
+    def _parseRecordOffset(self, hstr):
         '''
         This function parses out a record entry from the corresponding segment
-        of binary data taken from the PDB file (hstr), and returns a tuple
-        containing the physical offset of the record data, and a record
-        object populated with the record-entry information.
+        of binary data taken from the PDB file (hstr), and returns the offset.
         '''
         
-        (offset, auid) = struct.unpack('>ll', hstr)
-        attr = (auid & 0xff000000) >> 24
-        uid = auid & 0x00ffffff
-        attributes = attr & 0xf0
-        category  = attr & 0x0f
+        if self.isResourceDatabase():
+            (resourceType, id, offset) = struct.unpack('>4shl', hstr)
+        else:
+            (offset, auid) = struct.unpack('>ll', hstr)
 
-        # debugging:
-        # print 'offset', offset, 'Attr', attr2string(attr), 'UID', uid
-
-        newRecordObject = self.recordFactory(attributes, uid, category)
-        return (offset, newRecordObject)
-        
-    def createResourceFromByteArray(self, hstr):
-        '''
-        This function parses out a resource entry from the corresponding segment
-        of binary data taken from the PDB file (hstr), and returns a tuple
-        containing the physical offset of the resource data, and a resource
-        object populated with the resource-entry information.
-        '''
-
-        (resourceType, id, offset) = struct.unpack('>4shl', hstr)
-        # if createResourceFromByteArray is called, it is assumed that
-        # self.recordFactory is actually assigned to a resource factory
-        newResourceObject = self.recordFactory(resourceType, id)
-        return (offset, newResourceObject) 
+	return offset;
         
     def fromByteArray(self, raw, headerOnly = False):
         '''
@@ -325,8 +307,10 @@ class PalmDatabase:
 	plugin=self._getPlugin()
 
         # assign some needed variables that were retrieved from the header
- #       rsrc = self.palmDBInfo['flagResource'] # is this a resource database?
         rawsize = len(raw) # length of entire database
+
+        palmHeaderSize = PalmHeaderInfo.PDBHeaderStructSize
+	palmRecordEntrySize=plugin.getPalmRecordEntrySize(self)
 
         # debugging
 #        print 'Debug: Scanning PDB of size', rawsize
@@ -337,39 +321,40 @@ class PalmDatabase:
 
         #-----BEGIN: INSTANTIATE AND APPEND DATABASE RECORDS / RESOURCES------
 
-	s=plugin.getPalmRecordHeaderSize(self)
-
         first_offset = 0        # need this to find the sort/app info blocks
 
         # next two maintain state for the loop
         prev_offset = rawsize    # track the offset of the previous block, but we are going backwards to simplify the algorithm
 
 	# check to make sure the Palm database is big enough to at least contain the records it says it does
-        if palmHeaderSize + s * numberOfRecords > rawsize:
+        if palmHeaderSize + palmRecordEntrySize * numberOfRecords > rawsize:
             raise IOError, _("Error: database not big enough to have %d records")%(numberOfRecords)
 
-#        print "Debug: Header size (%d), Number of records (%d)"%(s,numberOfRecords)
+#        print "Debug: Header size (%d), Number of records (%d)"%(palmRecordEntrySize,numberOfRecords)
         # create records for each Palm record
         # have to use -1 as the final number, because range never reaches it, it always stops before it
         for count in range(numberOfRecords-1,-1,-1):
 #            print "Debug: count (%d)"%(count)
-            startingRecordOffset=count*s+palmHeaderSize
+            startingRecordOffset=count*palmRecordEntrySize+palmHeaderSize
             # we have to offset by one because we have to skip the Palm header
-            endingRecordOffset = (count+1)*s + palmHeaderSize
+            endingRecordOffset = (count+1)*palmRecordEntrySize + palmHeaderSize
             
             # extract the raw data for the current record/resource entry
             hstr=raw[startingRecordOffset:endingRecordOffset]
 
 #            print "Debug: using range of %d to %d"%(startingRecordOffset,endingRecordOffset)
             # make sure we got the data we are looking for
-            if (not hstr) or (len(hstr) <> s):
-                raise IOError, _("Error: problem reading record entry, size was (%d), size should have been (%d)")%(len(hstr),s)
+            if (not hstr) or (len(hstr) <> palmRecordEntrySize):
+                raise IOError, _("Error: problem reading record entry, size was (%d), size should have been (%d)")%(len(hstr),palmRecordEntrySize)
+
+            # parse the record entry
+            offset=self._parseRecordOffset(hstr)
 
             # Create an instance of the record
             # recordMaker is either createRecordFromByteArray() or createResourceFromByteArray()
-            (offset, record) = plugin.createPalmDatabaseRecord(self,hstr)
-
-#            print "Debug: offset (%d) record (%s)"%(offset,record)
+	    record = plugin.createPalmDatabaseRecord(self)
+	    if not record:
+                raise ValueError, _("Error: did not receive a PalmRecord back from the createPalmDatabaseRecord call into the plugin.problem reading record")
 
             # Check for problems
             if record:
@@ -380,7 +365,7 @@ class PalmDatabase:
                         raise IOError, _("Error: Invalid offset (%d), greater than previous offset (records being processed in reverse order)")%(offset)
 
                 # populate the record with the chunk data that it points to
-                record.setRaw( raw[offset:prev_offset])
+                record.fromByteArray(hstr,raw[offset:prev_offset])
 
                 # Add to beginning of self.records list because we are going backwards
                 self.records.insert(0,record)
@@ -430,14 +415,22 @@ class PalmDatabase:
             raise IOError, _("Error: bad database header SortInfo Block size < 0 (%d)")%(sortinfo_size)
 
         if appinfo_size: # if AppInfo block exists
-            self.appblock = raw[applicationInformationOffset:applicationInformationOffset+appinfo_size]
-            if len(self.appblock) != appinfo_size:
+            applicationInfoBlock = raw[applicationInformationOffset:applicationInformationOffset+appinfo_size]
+            if len(applicationInfoBlock) != appinfo_size:
                 raise IOError, _("Error: failed to read appinfo block")
 
+            self.applicationInformationObject=plugin.createApplicationInformationObject(self)
+	    if self.applicationInformationObject:
+		self.applicationInformationObject.fromByteArray(applicationInfoBlock)
+
         if sortinfo_size: # if SortInfo block exists
-            self.sortblock = raw[sortInformationOffset:sortInformationOffset+sortinfo_size]
-            if len(self.sortblock) != sortinfo_size:
+            sortInfoBlock = raw[sortInformationOffset:sortInformationOffset+sortinfo_size]
+            if len(sortInfoBlock) != sortinfo_size:
                 raise IOError, _("Error: failed to read sortinfo block")
+
+            self.sortBlockObject=plugin.createSortBlockObject(self)
+	    if self.sortBlockObject:
+		self.sortBlockObject.fromByteArray(applicationInfoBlock)
 
     def toByteArray(self):
         '''
@@ -453,11 +446,10 @@ class PalmDatabase:
         f.close()       
         '''
         
-        palmHeaderSize = self.palmDBInfo.calcsize()
-#        rsrc = self.palmDBInfo['flagResource']
+        palmHeaderSize = PalmHeaderInfo.PDBHeaderStructSize
 
         # first, we need to precalculate the offsets.
-        if rsrc:
+        if self.isResourceDatabase():
             entries_len = RESOURCE_ENTRY_SIZE * len(self.records)
         else: 
             entries_len = RECORD_ENTRY_SIZE * len(self.records)
@@ -488,7 +480,7 @@ class PalmDatabase:
         record_data = [] # holds record/resource data-chunks
         # populate the lists...
         for x, offset in map(None, self.records, rec_offsets):
-            if rsrc:
+            if self.isResourceDatabase():
                 record_data.append(x.getRaw())
                 entries.append(struct.pack('>4shl', x.type, x.id, offset))
             else:

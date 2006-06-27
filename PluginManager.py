@@ -34,6 +34,7 @@ __copyright__ = 'Copyright 2006 Rick Price <rick_price@users.sourceforge.net>'
 
 import Plugins.BasePlugin
 
+basePlugin=Plugins.BasePlugin.BasePDBFilePlugin()
 # +++ READ THIS +++ Plugins need to implement the interface in Plugins.BasePlugin.BasePDBFilePlugin
 PDBPlugins={}
 def registerPDBPlugin(PDBFilePluginClass):
@@ -44,10 +45,8 @@ def registerPDBPlugin(PDBFilePluginClass):
 	PDBPlugins[type]=PDBFilePluginClass
 
 def getPDBPlugin(CreatorID):
-	PDBPlugins.get(CreatorID,Plugins.BasePlugin.BasePDBFilePlugin)
-
-#+++ FIX THIS +++ implement
-# if we cannot find an appropriate plugin, default to one that can handle any type
+        # if we cannot find an appropriate plugin, default to one that can handle any type
+	return PDBPlugins.get(CreatorID,basePlugin)
 
 #
 #--------- Register Standard Plugins that come with Library ---------
