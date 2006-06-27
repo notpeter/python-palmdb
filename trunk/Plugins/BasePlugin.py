@@ -36,6 +36,7 @@ __version__ = '$Id: PalmDB.py,v 1.11 2005/12/13 03:12:12 rprice Exp $'
 __copyright__ = 'Copyright 2006 Rick Price <rick_price@users.sourceforge.net>'
 
 import struct
+import Util
 
 RESOURCE_ENTRY_SIZE = 10  # size of a resource entry
 RECORD_ENTRY_SIZE = 8 # size of a record entry
@@ -74,114 +75,60 @@ class DataRecord:
     *may not be changed* once the object is created. You need to call
     setRaw() and getRaw() to set the raw data.
     '''
-    def __init__(self, attr=0, id=0, category=0):
-        self.id = id
-        self.attr = attr
-        self.category = category
+    def __init__(self):
+        self.attributes={}
+	self.attributes['id']=0
+	self.attributes['category']=0
+	self._crackAttributeBits(0)
         self.raw=''
 
-    def fromByteArray(self,hstr,dstr):
+    def _crackRecordHeader(self,hstr):
         (offset, auid) = struct.unpack('>ll', hstr)
         attr = (auid & 0xff000000) >> 24
-        self.uid = auid & 0x00ffffff
-        self.attributes = attr & 0xf0
-        self.category  = attr & 0x0f
-
+        uid = auid & 0x00ffffff
+        attributes = attr & 0xf0
+        category  = attr & 0x0f
+	self.attributes['id']=id
+	self.attributes['category']=category
+	self._crackAttributeBits(attr)
+	
+    def _crackAttributeBits(self,attr):
+        self.attributes['deleted']=bool(Util.getBits(attr,3))
+        self.attributes['dirty']=bool(Util.getBits(attr,2))
+        self.attributes['busy']=bool(Util.getBits(attr,1))
+        self.attributes['secret']=bool(Util.getBits(attr,0))
+	    
+    def fromByteArray(self,hstr,dstr):
+        self._crackRecordHeader(hstr)
         self.raw=dstr
 
-    def __repr__(self):
-        return "PRecord(attr=" + str(self.attr) + ",id=" + str(self.id) + ",category=" + str(self.category) + ",raw=" + repr(self.raw) + ")"
+    def toXML(self):
+	    return ''
+#    def __repr__(self):
+#        return "PRecord(attr=" + str(self.attr) + ",id=" + str(self.id) + ",category=" + str(self.category) + ",raw=" + repr(self.raw) + ")"
 
-    # removing __cmp__() and __hash__() allows one to do things like
-    # database.remove(recordObj) and have the first occurance of that object
-    # removed -- otherwise only the id variable is considered, which is
-    # not of much use in the case where all id's are the same.  If it is
-    # desired to remove by id, a custom function should be made to do this.
-
-    def setRaw(self,raw):
-        '''
-        Set raw data to marshall class.
-        '''
-        self.raw = raw
-
-    def getRaw(self):
-        '''
-        Get raw data to marshal class
-        '''
-        return self.raw
-
-    def getRecordAttributesAsXML(self,categories):
-        returnValue =self.getCategoryAsXML(categories)
-        returnValue+=self.getIDAsXML()
-        returnValue+=self.getAttrBitsAsXML()
-        return returnValue
-
-    def getCategoryAsXML(self,categories):
-        return returnObjectAsXML('PalmCategory',categories[self.category])
-
-    def getIDAsXML(self):
-        return returnObjectAsXML('PalmID',self.id)
-
-    def getAttrBitsAsXML(self):
-        '''
-        Get record attributes as XML records
-        '''
-        returnValue=''
-        deleted=bool(getBits(self.attr,3))
-        dirty=bool(getBits(self.attr,2))
-        busy=bool(getBits(self.attr,1))
-        secret=bool(getBits(self.attr,0))
-        
-        if deleted:
-            returnValue+=returnObjectAsXML('deleted',deleted)
-        if dirty:
-            returnValue+=returnObjectAsXML('dirty',dirty)
-        if busy:
-            returnValue+=returnObjectAsXML('busy',busy)
-        if secret:
-            returnValue+=returnObjectAsXML('secret',secret)
-
-        if len(returnValue):
-            returnValue=returnAsXMLItem('palmRecordAttributes',returnValue,escape=False)
-        return returnValue
 
 class ResourceRecord:
     '''
     This class encapsulates a Palm resource record.
     '''
-    def __init__(self, type='    ', id=0):
-        self.id = id
-        self.type = type
+    def __init__(self):
+        self.attributes={}
+	self.attributes['id']=0
+	self.attributes['resourceType']='    '
         self.raw=''
 
+    def _crackRecordHeader(self,hstr):
+        (resourceType, id, offset) = struct.unpack('>4shl', hstr)
+	self.attributes['id']=id
+	self.attributes['resourceType']=type
+
     def fromByteArray(self,hstr,dstr):
-        (self.resourceType, self.id, offset) = struct.unpack('>4shl', hstr)
+        self._crackRecordHeader(hstr)
 	self.raw=dstr
 
-    def __repr__(self):
-        return "PResource(type='" + self.type + "',id=" + str(self.id) + ",raw=" + repr(self.raw) + ")"
-
-# see in PRecord object for why this is commented out
-##    def __cmp__(self, obj):
-##        if type(obj) == type(()):
-##            return cmp( (self.type, self.id), obj)
-##        else:
-##            return cmp( (self.type, self.id), (obj.type, obj.id) )
-##
-##    def __hash__(self):
-##        return hash((self.type, self.id))
-
-    def setRaw(self,raw):
-        '''
-        Set raw data to marshall class.
-        '''
-        self.raw = raw
-
-    def getRaw(self):
-        '''
-        Get raw data to marshal class
-        '''
-        return self.raw
+#    def __repr__(self):
+#        return "PResource(type='" + self.type + "',id=" + str(self.id) + ",raw=" + repr(self.raw) + ")"
 
 # you need to pass the AppBlock into this class in the constructor
 class Categories(dict):
