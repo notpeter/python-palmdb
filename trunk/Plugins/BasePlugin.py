@@ -35,38 +35,153 @@ __version__ = '$Id: PalmDB.py,v 1.11 2005/12/13 03:12:12 rprice Exp $'
 
 __copyright__ = 'Copyright 2006 Rick Price <rick_price@users.sourceforge.net>'
 
+import struct
+
+RESOURCE_ENTRY_SIZE = 10  # size of a resource entry
+RECORD_ENTRY_SIZE = 8 # size of a record entry
 
 class BasePDBFilePlugin:
 	#+++ FIX THIS +++ This HAS to be redefined in child classes otherwise things won't work
 	def getPDBCreatorID(self):
 		return None
 
-	def createCategoriesObject(self,PalmDatabaseObject,raw):
+	def createCategoriesObject(self,PalmDatabaseObject):
 		return Categories(raw)
 
-	def createApplicationInformationObject(self,PalmDatabaseObject,raw):
-		return Categories(raw)
+	def createApplicationInformationObject(self,PalmDatabaseObject):
+		return None
 
-	def createSortInformationObject(self,PalmDatabaseObject,raw):
-		return Categories(raw)
+	def createSortBlockObject(self,PalmDatabaseObject,raw):
+		return None
 
-	def getPalmRecordHeaderSize(self,PalmDatabaseObject):
-	    if PalmDatabaseObject.self.attributes['flagResource']:
+	def getPalmRecordEntrySize(self,PalmDatabaseObject):
+	    if PalmDatabaseObject.isResourceDatabase():
             	return RESOURCE_ENTRY_SIZE
             else: 
            	return RECORD_ENTRY_SIZE
 
-	def createPalmDatabaseRecord(self,PalmDatabaseObject,raw):
-#	    if PalmDatabaseObject.self.attributes['flagResource']:
-#            s = RESOURCE_ENTRY_SIZE
-#            recordMaker = PalmDatabase.createResourceFromByteArray
-#            print "Debug: resource type"
-#        else: 
-#            s = RECORD_ENTRY_SIZE
-#            recordMaker = PalmDatabase.createRecordFromByteArray
-#            print "Debug: record type"
+	def createPalmDatabaseRecord(self,PalmDatabaseObject):
+	    if PalmDatabaseObject.isResourceDatabase():
+                return ResourceRecord()
+            else: 
+		return DataRecord()
 
-		return None # +++ FIX THIS +++ obviously this needs to be fixed
+class DataRecord:
+    '''
+    This class encapsulates a Palm application record.
+
+    Comparison and hashing are done by ID; thus, the id value 
+    *may not be changed* once the object is created. You need to call
+    setRaw() and getRaw() to set the raw data.
+    '''
+    def __init__(self, attr=0, id=0, category=0):
+        self.id = id
+        self.attr = attr
+        self.category = category
+        self.raw=''
+
+    def fromByteArray(self,hstr,dstr):
+        (offset, auid) = struct.unpack('>ll', hstr)
+        attr = (auid & 0xff000000) >> 24
+        self.uid = auid & 0x00ffffff
+        self.attributes = attr & 0xf0
+        self.category  = attr & 0x0f
+
+        self.raw=dstr
+
+    def __repr__(self):
+        return "PRecord(attr=" + str(self.attr) + ",id=" + str(self.id) + ",category=" + str(self.category) + ",raw=" + repr(self.raw) + ")"
+
+    # removing __cmp__() and __hash__() allows one to do things like
+    # database.remove(recordObj) and have the first occurance of that object
+    # removed -- otherwise only the id variable is considered, which is
+    # not of much use in the case where all id's are the same.  If it is
+    # desired to remove by id, a custom function should be made to do this.
+
+    def setRaw(self,raw):
+        '''
+        Set raw data to marshall class.
+        '''
+        self.raw = raw
+
+    def getRaw(self):
+        '''
+        Get raw data to marshal class
+        '''
+        return self.raw
+
+    def getRecordAttributesAsXML(self,categories):
+        returnValue =self.getCategoryAsXML(categories)
+        returnValue+=self.getIDAsXML()
+        returnValue+=self.getAttrBitsAsXML()
+        return returnValue
+
+    def getCategoryAsXML(self,categories):
+        return returnObjectAsXML('PalmCategory',categories[self.category])
+
+    def getIDAsXML(self):
+        return returnObjectAsXML('PalmID',self.id)
+
+    def getAttrBitsAsXML(self):
+        '''
+        Get record attributes as XML records
+        '''
+        returnValue=''
+        deleted=bool(getBits(self.attr,3))
+        dirty=bool(getBits(self.attr,2))
+        busy=bool(getBits(self.attr,1))
+        secret=bool(getBits(self.attr,0))
+        
+        if deleted:
+            returnValue+=returnObjectAsXML('deleted',deleted)
+        if dirty:
+            returnValue+=returnObjectAsXML('dirty',dirty)
+        if busy:
+            returnValue+=returnObjectAsXML('busy',busy)
+        if secret:
+            returnValue+=returnObjectAsXML('secret',secret)
+
+        if len(returnValue):
+            returnValue=returnAsXMLItem('palmRecordAttributes',returnValue,escape=False)
+        return returnValue
+
+class ResourceRecord:
+    '''
+    This class encapsulates a Palm resource record.
+    '''
+    def __init__(self, type='    ', id=0):
+        self.id = id
+        self.type = type
+        self.raw=''
+
+    def fromByteArray(self,hstr,dstr):
+        (self.resourceType, self.id, offset) = struct.unpack('>4shl', hstr)
+	self.raw=dstr
+
+    def __repr__(self):
+        return "PResource(type='" + self.type + "',id=" + str(self.id) + ",raw=" + repr(self.raw) + ")"
+
+# see in PRecord object for why this is commented out
+##    def __cmp__(self, obj):
+##        if type(obj) == type(()):
+##            return cmp( (self.type, self.id), obj)
+##        else:
+##            return cmp( (self.type, self.id), (obj.type, obj.id) )
+##
+##    def __hash__(self):
+##        return hash((self.type, self.id))
+
+    def setRaw(self,raw):
+        '''
+        Set raw data to marshall class.
+        '''
+        self.raw = raw
+
+    def getRaw(self):
+        '''
+        Get raw data to marshal class
+        '''
+        return self.raw
 
 # you need to pass the AppBlock into this class in the constructor
 class Categories(dict):
@@ -147,85 +262,6 @@ class Categories(dict):
         '''
         return struct.calcsize(self.__packString)
 
-    def getTestData(self):
-        '''
-        Return some data suitable for testing.
-        '''
-        a =  map(lambda x : 'Test String' + str(x) ,range(16))
-        b = range(16)
-        return struct.pack(self.__packString,*([0]+a+b+[15]))
-
-
-class PRecord:
-    '''
-    This class encapsulates a Palm application record.
-
-    Comparison and hashing are done by ID; thus, the id value 
-    *may not be changed* once the object is created. You need to call
-    setRaw() and getRaw() to set the raw data.
-    '''
-    def __init__(self, attr=0, id=0, category=0):
-        self.id = id
-        self.attr = attr
-        self.category = category
-        self.raw=''
-
-    def __repr__(self):
-        return "PRecord(attr=" + str(self.attr) + ",id=" + str(self.id) + ",category=" + str(self.category) + ",raw=" + repr(self.raw) + ")"
-
-    # removing __cmp__() and __hash__() allows one to do things like
-    # database.remove(recordObj) and have the first occurance of that object
-    # removed -- otherwise only the id variable is considered, which is
-    # not of much use in the case where all id's are the same.  If it is
-    # desired to remove by id, a custom function should be made to do this.
-
-    def setRaw(self,raw):
-        '''
-        Set raw data to marshall class.
-        '''
-        self.raw = raw
-
-    def getRaw(self):
-        '''
-        Get raw data to marshal class
-        '''
-        return self.raw
-
-    def getRecordAttributesAsXML(self,categories):
-        returnValue =self.getCategoryAsXML(categories)
-        returnValue+=self.getIDAsXML()
-        returnValue+=self.getAttrBitsAsXML()
-        return returnValue
-
-    def getCategoryAsXML(self,categories):
-        return returnObjectAsXML('PalmCategory',categories[self.category])
-
-    def getIDAsXML(self):
-        return returnObjectAsXML('PalmID',self.id)
-
-    def getAttrBitsAsXML(self):
-        '''
-        Get record attributes as XML records
-        '''
-        returnValue=''
-        deleted=bool(getBits(self.attr,3))
-        dirty=bool(getBits(self.attr,2))
-        busy=bool(getBits(self.attr,1))
-        secret=bool(getBits(self.attr,0))
-        
-        if deleted:
-            returnValue+=returnObjectAsXML('deleted',deleted)
-        if dirty:
-            returnValue+=returnObjectAsXML('dirty',dirty)
-        if busy:
-            returnValue+=returnObjectAsXML('busy',busy)
-        if secret:
-            returnValue+=returnObjectAsXML('secret',secret)
-
-        if len(returnValue):
-            returnValue=returnAsXMLItem('palmRecordAttributes',returnValue,escape=False)
-        return returnValue
-
 def filterForResourcesByTypeID(records,type=None,id=None):
     '''
     This function lets you filter a list of resources by type and/or id.
@@ -234,48 +270,3 @@ def filterForResourcesByTypeID(records,type=None,id=None):
     return a list of resources that match the criteria.
     '''
     return filter(lambda x : (type == None or x.type == type) and (id == None or x.id == id), records)
-
-def defaultResourceFactory(type,id):
-    '''
-    Default factory function for creating resources.
-
-    This function is the default factory used by PalmDatabase to create new resource
-    records. Type is the 4 letter resource type, id is the resource id.  The PalmDatabase
-    code will call setRaw() on this object to set the raw data, and getRaw() to retrieve the
-    raw data.
-    '''
-    return PResource(type,id)
-
-class PResource:
-    '''
-    This class encapsulates a Palm resource record.
-    '''
-    def __init__(self, type='    ', id=0):
-        self.id = id
-        self.type = type
-        self.raw=''
-
-    def __repr__(self):
-        return "PResource(type='" + self.type + "',id=" + str(self.id) + ",raw=" + repr(self.raw) + ")"
-
-# see in PRecord object for why this is commented out
-##    def __cmp__(self, obj):
-##        if type(obj) == type(()):
-##            return cmp( (self.type, self.id), obj)
-##        else:
-##            return cmp( (self.type, self.id), (obj.type, obj.id) )
-##
-##    def __hash__(self):
-##        return hash((self.type, self.id))
-
-    def setRaw(self,raw):
-        '''
-        Set raw data to marshall class.
-        '''
-        self.raw = raw
-
-    def getRaw(self):
-        '''
-        Get raw data to marshal class
-        '''
-        return self.raw
