@@ -123,7 +123,7 @@ class ProgectRecord(BasePlugin.DataRecord):
 
     Comparison and hashing are done by ID; thus, the id value 
     *may not be changed* once the object is created. You need to call
-    setRaw() and getRaw() to set the raw data.
+    fromByteArray() and getRaw() to set the raw data.
     '''
     def __init__(self):
         BasePlugin.DataRecord.__init__(self)
@@ -145,7 +145,7 @@ class ProgectRecord(BasePlugin.DataRecord):
     def toXML(self):
         attributesAsXML=Util.returnDictionaryAsXML(self.attributes)
         for extraBlock in self.extraBlockRecordList:
-            attributesAsXML+=extraBlock.getXML()
+            attributesAsXML+=extraBlock.toXML()
         return Util.returnAsXMLItem(self.getRecordXMLName(),attributesAsXML,escape=False)
 
     def fromByteArray(self,hstr,dstr):
@@ -185,24 +185,24 @@ class ProgectRecord(BasePlugin.DataRecord):
         self.attributes['_nextFormat']=bool(Util.getBits( taskFormatType, 0 ))
 	    
         if self.attributes['_hasXB']:
-            self.setRawTaskXBRecords(dstr[PRI.TaskAttrTypeStructSize:])
+            self.fromByteArrayTaskXBRecords(dstr[PRI.TaskAttrTypeStructSize:])
             # XBSize will always be two more than the size variable, to account for the variable
             self.XBSize+=2
-            self.setRawTaskStandardFields(dstr[PRI.TaskAttrTypeStructSize+self.XBSize:])
+            self.fromByteArrayTaskStandardFields(dstr[PRI.TaskAttrTypeStructSize+self.XBSize:])
         else:
-            self.setRawTaskStandardFields(dstr[PRI.TaskAttrTypeStructSize:])
+            self.fromByteArrayTaskStandardFields(dstr[PRI.TaskAttrTypeStructSize:])
     
-    def setRawTaskXBRecords( self, dstr ):
+    def fromByteArrayTaskXBRecords( self, dstr ):
         (self.XBSize,)=struct.unpack(PRI.XBFieldsStructString,dstr[:PRI.XBFieldsStructSize])
 
         xbRecordFactory=ExtraBlockRecordFactory()
         xbRaw=dstr[PRI.XBFieldsStructSize:PRI.XBFieldsStructSize+self.XBSize]
         while len(xbRaw):
-            (xbRecord,xbRecordSize)=xbRecordFactory.setRaw(xbRaw)
+            (xbRecord,xbRecordSize)=xbRecordFactory.fromByteArray(xbRaw)
             self.extraBlockRecordList.append(xbRecord)
             xbRaw=xbRaw[xbRecordSize:]
 
-    def setRawTaskStandardFields( self, dstr ):
+    def fromByteArrayTaskStandardFields( self, dstr ):
         # we don't currently handle links
         if self.attributes['hasLink']:
             self.attributes['description']='Links Not Supported'
@@ -229,52 +229,52 @@ class ProgectRecord(BasePlugin.DataRecord):
 
 
 class ExtraBlockNULL(object):
-    def setRaw( self, raw ):
+    def fromByteArray( self, raw ):
 	self.raw=raw
     def __repr__( self ):
        return 'ExtraBlockNULL(raw="%s")'%self.raw
-    def getXML(self):
+    def toXML(self):
         return ''
 
 class ExtraBlockLinkToDo(object):
-    def setRaw( self, raw ):
+    def fromByteArray( self, raw ):
 	self.raw=raw
     def __repr__( self ):
        return 'ExtraBlockLinkToDo(raw="%s")'%self.raw
-    def getXML(self):
+    def toXML(self):
         return Util.returnObjectAsXML('linkToDo',self.raw)
 
 class ExtraBlockLinkLinkMaster(object):
-    def setRaw( self, raw ):
+    def fromByteArray( self, raw ):
 	self.raw=raw
     def __repr__( self ):
        return 'ExtraBlockLinkLinkMaster(raw="%s")'%self.raw
-    def getXML(self):
+    def toXML(self):
         return Util.returnObjectAsXML('linkLinkMaster',self.raw)
 
 class ExtraBlockIcon(object):
-    def setRaw( self, raw ):
+    def fromByteArray( self, raw ):
         (self.icon,)=struct.unpack(">H", raw)
     def __repr__( self ):
        return 'ExtraBlockIcon(icon=%d)'%self.icon
-    def getXML(self):
+    def toXML(self):
         return Util.returnObjectAsXML('icon',self.icon)
 
 class ExtraBlockNumeric(object):
-    def setRaw( self, raw ):
+    def fromByteArray( self, raw ):
         (self.limit,self.actual)=struct.unpack(">HH",raw)
     def __repr__( self ):
        return 'ExtraBlockNumeric(limit=%d,actual=%d)'%(self.limit,self.actual)
-    def getXML(self):
+    def toXML(self):
        returnValue=Util.returnRationalAsXML('completed',self.actual,self.limit)
        return returnValue
 
 class ExtraBlockUnknown(object):
-    def setRaw( self, raw ):
+    def fromByteArray( self, raw ):
 	self.raw=raw
     def __repr__( self ):
        return 'ExtraBlockUnknown(raw="%s")'%self.raw
-    def getXML(self):
+    def toXML(self):
         return Util.returnObjectAsXML('extraBlockUnknown',self.raw)
 
 
@@ -291,7 +291,7 @@ class ExtraBlockRecordFactory( object ):
         self.Extra_Icon=50
         self.Extra_Numeric=51 # for numeric type
 
-    def setRaw( self, raw ):
+    def fromByteArray( self, raw ):
         '''
         Set raw data to marshall class.
         '''
@@ -314,5 +314,5 @@ class ExtraBlockRecordFactory( object ):
         else:
             newRecord=ExtraBlockUnknown()
 
-        newRecord.setRaw(body)
+        newRecord.fromByteArray(body)
 	return (newRecord,self.__packSize+size)

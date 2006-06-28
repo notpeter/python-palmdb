@@ -1,6 +1,4 @@
 #
-#  $Id: PalmDB.py,v 1.11 2005/12/13 03:12:12 rprice Exp $
-#
 # Copyright 2006 Rick price <rick_price@users.sourceforge.net>
 # This Python library is used to read/write Palm PDB files
 #
@@ -32,8 +30,6 @@
     it easier to use and more versatile.
 """
 
-__version__ = '$Id: PalmDB.py,v 1.11 2005/12/13 03:12:12 rprice Exp $'
-
 __copyright__ = 'Copyright 2006 Rick Price <rick_price@users.sourceforge.net>'
 
 import PalmDatabase
@@ -47,6 +43,15 @@ def filterForRecordsByCategory(records,category=None):
     all records are returned.
     '''
     return filter(lambda x : (category == None or x.category == category), records)
+
+def filterForResourcesByTypeID(records,type=None,id=None):
+    '''
+    This function lets you filter a list of resources by type and/or id.
+
+    When passed a list of resources, and the appropriate filter it will
+    return a list of resources that match the criteria.
+    '''
+    return filter(lambda x : (type == None or x.type == type) and (id == None or x.id == id), records)
 
 def filterForModifiedRecords(records):
     '''
