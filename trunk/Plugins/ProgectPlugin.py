@@ -51,9 +51,42 @@ class ProgectPlugin(BasePlugin.BasePDBFilePlugin):
 
 	def getRecordsAsXML(self,PalmDatabaseObject):
 		recordsXML=''
-		for record in PalmDatabaseObject:
+		# Iterate over records and create XML, kind of a pain because the data is stored as a list
+		# but is really a hierarchy, so we have to do ugly stuff.
+
+		# first record is some garbage record, I can't remember what it is for
+		# but real records are it's child so lastLevel starts at 1
+		lastLevel=1
+		lastHasNext=1
+		thisLevel=1
+		openLevel=0
+		recordNumber=1
+		for record in PalmDatabaseObject[1:]:
+			if not lastHasNext:
+				for i in range(lastLevel-record.attributes['_level']-1,-1,-1):
+					recordsXML+='</children>'
+					recordsXML+='</%s>'%record.getRecordXMLName()
+					openLevel-=1
+
+			recordsXML+='<%s type="%s" version="1.0">'%(record.getRecordXMLName(),record.attributes['_itemType'])
+#			recordsXML+=record.toXML(categories)
 			recordsXML+=record.toXML()
-		recordsXML=Util.returnAsXMLItem('PalmRecordList',recordsXML,escape=False)
+			if record.attributes['_hasChild']:
+				recordsXML+='<children>'
+				openLevel+=1
+			else:
+				recordsXML+='</%s>'%record.getRecordXMLName()
+
+			lastLevel=record.attributes['_level']
+			lastHasNext=record.attributes['_hasNext']
+			thisLevel=record.attributes['_level']
+			recordNumber+=1
+
+		if not lastHasNext:
+			for i in range(thisLevel-1):
+				recordsXML+='</children>'
+				recordsXML+='</%s>'%record.getRecordXMLName()
+				openLevel-=1
 		return recordsXML
 	
 def crackProgectDate(variable):
@@ -146,14 +179,12 @@ class ProgectRecord(BasePlugin.DataRecord):
         attributesAsXML=Util.returnDictionaryAsXML(self.attributes)
         for extraBlock in self.extraBlockRecordList:
             attributesAsXML+=extraBlock.toXML()
-        return Util.returnAsXMLItem(self.getRecordXMLName(),attributesAsXML,escape=False)
+	return attributesAsXML
 
     def fromByteArray(self,hstr,dstr):
         self._crackRecordHeader(hstr)
 
         if len(dstr) < PRI.TaskAttrTypeStructSize:
-            # +++ FIX THIS +++ This should throw an error, not return
-            return
             raise IOError, "Error: raw data passed in is too small; required (%d), available (%d)"%(PRI.TaskAttrTypeStructSize,len(dstr))
 
         
@@ -178,7 +209,7 @@ class ProgectRecord(BasePlugin.DataRecord):
         self.attributes['hasLink']=bool(Util.getBits( taskFormatType, 9 ))
 
         itemType=Util.getBits( taskFormatType, 8, 5 )
-        self.attributes['itemType']=PRI.typeTextNames[itemType]
+        self.attributes['_itemType']=PRI.typeTextNames[itemType]
         self.attributes['_hasXB']=bool(Util.getBits( taskFormatType, 3 ))
         self.attributes['_newTask']=bool(Util.getBits( taskFormatType, 2 ))
         self.attributes['_newFormat']=bool(Util.getBits( taskFormatType, 1 ))
@@ -217,9 +248,9 @@ class ProgectRecord(BasePlugin.DataRecord):
         else:
             self.attributes['priority']=Util.simpleRational(priority,5)
 
-        if self.attributes['itemType'] == 'ACTION_TYPE':
+        if self.attributes['_itemType'] == 'ACTION_TYPE':
             self.attributes['completed']=bool(completed)
-        if self.attributes['itemType'] == 'PROGRESS_TYPE':
+        if self.attributes['_itemType'] == 'PROGRESS_TYPE':
             self.attributes['completed']=Util.simpleRational(completed,10)
 
         text=dstr[PRI.TaskStandardFieldStructSize:]
