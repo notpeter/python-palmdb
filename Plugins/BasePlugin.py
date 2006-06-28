@@ -45,12 +45,12 @@ class BasePDBFilePlugin:
 		return None
 
 	def createCategoriesObject(self,PalmDatabaseObject):
-		return Categories(raw)
+		return CategoriesObject()
 
 	def createApplicationInformationObject(self,PalmDatabaseObject):
 		return None
 
-	def createSortBlockObject(self,PalmDatabaseObject,raw):
+	def createSortBlockObject(self,PalmDatabaseObject):
 		return None
 
 	def getPalmRecordEntrySize(self,PalmDatabaseObject):
@@ -99,7 +99,7 @@ class DataRecord(BaseRecord):
 
     Comparison and hashing are done by ID; thus, the id value 
     *may not be changed* once the object is created. You need to call
-    setRaw() and getRaw() to set the raw data.
+    fromByteArray() and getRaw() to set the raw data.
     '''
     def __init__(self):
 	    BaseRecord.__init__(self)
@@ -143,7 +143,7 @@ class ResourceRecord(BaseRecord):
 	    return 'PalmResourceRecord'
 
 # you need to pass the AppBlock into this class in the constructor
-class Categories(dict):
+class CategoriesObject(dict):
     '''
     This class encapsulates Palm Categories.
 
@@ -167,9 +167,9 @@ class Categories(dict):
 
         self.__packString = '!H'+('16s'*16)+('B'*16)+'B'+'x'
         if raw <> None:
-            self.setRaw(raw)
+            self.fromByteArray(raw)
 
-    def setRaw(self,raw):
+    def fromByteArray(self,raw):
         '''
         Set raw data to marshall class.
 
@@ -212,8 +212,8 @@ class Categories(dict):
     def toXML(self):
         returnValue=''
         for key in self.keys():
-            returnValue+=returnAsXMLItem('category',returnObjectAsXML('CategoryID',key)+returnObjectAsXML('CategoryName',self[key]),escape=False)
-        return returnAsXMLItem('palmCategories',returnValue,escape=False)
+            returnValue+=Util.returnAsXMLItem('category',Util.returnObjectAsXML('CategoryID',key)+Util.returnObjectAsXML('CategoryName',self[key]),escape=False)
+        return Util.returnAsXMLItem('palmCategories',returnValue,escape=False)
 
     def calcsize(self):
         '''
@@ -221,11 +221,3 @@ class Categories(dict):
         '''
         return struct.calcsize(self.__packString)
 
-def filterForResourcesByTypeID(records,type=None,id=None):
-    '''
-    This function lets you filter a list of resources by type and/or id.
-
-    When passed a list of resources, and the appropriate filter it will
-    return a list of resources that match the criteria.
-    '''
-    return filter(lambda x : (type == None or x.type == type) and (id == None or x.id == id), records)

@@ -79,9 +79,10 @@ class PalmDatabase:
         self.attributes.clear()
 
         self.records = []
-        self.appblock = ''
-        self.sortblock = ''
         self.dirty = False
+	self.categoriesObject=None
+	self.applicationInformationObject=None
+	self.sortBlockObject=None
 
     def _getPlugin(self):
 	return PluginManager.getPDBPlugin(self.attributes['creatorID'])
@@ -176,10 +177,15 @@ class PalmDatabase:
 	PalmHeaderAttributes=Util.returnDictionaryAsXML(self.attributes)
 	PalmHeaderAttributes=Util.returnAsXMLItem('PalmHeader',PalmHeaderAttributes,escape=False)
 
-	# +++ FIX THIS +++ Missing App block and Sort Info block
 	returnValue+=plugin.getXMLVersionHeader(self)
 	returnValue+=plugin.getXMLFileHeader(self)
 	returnValue+=PalmHeaderAttributes
+	if self.categoriesObject:
+		returnValue+=self.categoriesObject.toXML()
+	if self.applicationInformationObject:
+		returnValue+=self.applicationInformationObject.toXML()
+	if self.sortBlockObject:
+		returnValue+=self.sortBlockObject.toXML()
 	returnValue+=plugin.getRecordsAsXML(self)
 	returnValue+=plugin.getXMLFileFooter(self)
 	return returnValue
@@ -193,14 +199,6 @@ class PalmDatabase:
     def setSortBlock(self, raw):
         self.dirty = True
         self.appblock = raw
-
-    # +++ CHECK THIS +++ Should this even exist if we support the sequence/map API?
-    def getRecords(self):
-        return self.records
-    def setRecords(self,records):
-        self.records = records
-        self.dirty = True
-    # +++ CHECK THIS +++ Should this even exist if we support the sequence/map API?
 
     # sequence/map API Begins
     def __len__(self): return len(self.records)
@@ -423,6 +421,10 @@ class PalmDatabase:
             if len(applicationInfoBlock) != appinfo_size:
                 raise IOError, _("Error: failed to read appinfo block")
 
+	    self.categoriesObject=plugin.createCategoriesObject(self)
+	    if self.categoriesObject <> None:
+		    self.categoriesObject.fromByteArray(applicationInfoBlock)
+		
             self.applicationInformationObject=plugin.createApplicationInformationObject(self)
 	    if self.applicationInformationObject:
 		self.applicationInformationObject.fromByteArray(applicationInfoBlock)
