@@ -359,7 +359,7 @@ class PalmDatabase:
                 raise ValueError, _("Error: did not receive a PalmRecord back from the createPalmDatabaseRecord call into the plugin.problem reading record")
 
             # Check for problems
-            if record:
+            try:
                 if offset > rawsize:
                     raise IOError, _("Error: Invalid offset (%d), off end of database")%(offset)
 
@@ -371,7 +371,9 @@ class PalmDatabase:
 
                 # Add to beginning of self.records list because we are going backwards
                 self.records.insert(0,record)
-                prev_offset = offset 
+                prev_offset = offset
+	    except:
+	        None
         #-------END: INSTANTIATE AND APPEND DATABASE RECORDS / RESOURCES-------
 
 
