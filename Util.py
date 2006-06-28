@@ -37,6 +37,14 @@ import datetime
 
 XMLsuppressFalseOrBlank=False
 
+class simpleRational:
+    '''
+    Just a simple way to represent rational numbers to print them out as XML.
+    '''
+    def __init__(self,numerator,denominator):
+        self.numerator=numerator
+        self.denominator=denominator
+        
 def getBits(variable,MSBBitIndex,bitCount=1):
     """
     This function is for.... Does ....?
@@ -83,6 +91,8 @@ def returnObjectAsXML(itemName,item):
 	return returnAttributeAsXML(itemName,'integer',item)
     if item.__class__.__name__ == 'float':
 	return returnAttributeAsXML(itemName,'real',item)
+    if item.__class__.__name__ == 'simpleRational':
+	return returnRationalAsXML(itemName,item.numerator,item.denominator)
     if item.__class__.__name__ == 'str':
 	return returnAttributeAsXML(itemName,'string',item)
     if item.__class__.__name__ == 'bool':
