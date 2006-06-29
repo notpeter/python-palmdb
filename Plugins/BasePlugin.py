@@ -87,6 +87,9 @@ class BaseRecord:
         self._crackRecordHeader(hstr)
         self.attributes['payload']=dstr.encode('HEX')
 
+    def toByteArray(self):
+	    return '+++ THIS IS BROKEN +++'
+    
     def getRecordXMLName(self):
 	    return 'PalmRecord'
     def toXML(self):
@@ -165,9 +168,13 @@ class CategoriesObject(dict):
         x.SetRaw(applicationInfoBlock[:x.calcsize())
         '''
 
+	self.categoryBlockSize=275
         self.__packString = '!H'+('16s'*16)+('B'*16)+'B'+'x'
         if raw <> None:
             self.fromByteArray(raw)
+
+    def __len__(self):
+	    return self.categoryBlockSize
 
     def fromByteArray(self,raw):
         '''
@@ -187,7 +194,6 @@ class CategoriesObject(dict):
 	self.categoryLabels=map(lambda x : x.split('\0')[0],self.categoryLabels)
 	self.categoryUniqIDs=list(struct.unpack('B'*16,raw[258:274]))
 	self.lastUniqID=struct.unpack('B',raw[274])[0]
-	self.categoryBlockSize=275
 	
 	# build category list
 	categories=zip(range(16),self.categoryLabels)
@@ -225,10 +231,16 @@ class CategoriesObject(dict):
 class applicationInformationObject:
 	def __init__(self):
 		self.attributes={}
-		self.attributes['payload']=None
+		self.attributes['payload']=''
+	def __len__(self):
+	    return len(self.attributes.get('payload','').decode('HEX'))
+
 	def fromByteArray(self,dstr):
 		self.attributes['payload']=dstr.encode('HEX')
 
+	def toByteArray(self,dstr):
+		return self.attributes.get('payload','').decode('HEX')
+	
 	def toXML(self):
 		attributesAsXML=Util.returnDictionaryAsXML(self.attributes)
 		return Util.returnAsXMLItem('applicationBlock',attributesAsXML,escape=False)
@@ -236,10 +248,16 @@ class applicationInformationObject:
 class sortBlockObject:
 	def __init__(self):
 		self.attributes={}
-		self.attributes['payload']=None
+		self.attributes['payload']=''
+	def __len__(self):
+	    return len(self.attributes.get('payload','').decode('HEX'))
+
 	def fromByteArray(self,dstr):
 		self.attributes['payload']=dstr.encode('HEX')
 
+	def toByteArray(self,dstr):
+		return self.attributes.get('payload','').decode('HEX')
+	
 	def toXML(self):
 		attributesAsXML=Util.returnDictionaryAsXML(self.attributes)
 		return Util.returnAsXMLItem('sortBlock',attributesAsXML,escape=False)

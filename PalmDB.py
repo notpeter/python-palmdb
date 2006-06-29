@@ -172,4 +172,6 @@ class PDBFile(PalmDatabase.PalmDatabase):
 
 if __name__ == "__main__":
 	ProgectDB=PDBFile('lbPG-tutorial.PDB')
-	print ProgectDB.toXML()
+#	print ProgectDB.toXML()
+        x=ProgectDB.toByteArray()
+        
