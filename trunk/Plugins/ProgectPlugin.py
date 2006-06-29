@@ -40,12 +40,6 @@ class ProgectPlugin(BasePlugin.BasePDBFilePlugin):
 	def getPDBCreatorID(self):
 		return 'lbPG'
 
-	def createApplicationInformationObject(self,PalmDatabaseObject):
-		return None
-
-	def createSortBlockObject(self,PalmDatabaseObject,raw):
-		return None
-
 	def createPalmDatabaseRecord(self,PalmDatabaseObject):
             return ProgectRecord()
 

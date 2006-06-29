@@ -167,8 +167,6 @@ class PalmDatabase:
             self.__len__())
         return raw
 
-    # +++ FIX THIS +++ This has to be put into the default plugin so we can modify how this stuff is created
-    # This may also need the whole XML header stuff, but then again, maybe it should be added somewhere else to make things more flexible
     def toXML(self):
         returnValue=''
 	
@@ -298,10 +296,6 @@ class PalmDatabase:
 
 	(applicationInformationOffset,sortInformationOffset,numberOfRecords)=self._headerInfoFromByteArray(raw)
 
-	#+++ REMOVE THIS +++
-#	return
-	#+++ REMOVE THIS +++
-
         if headerOnly:
             return
 
@@ -426,6 +420,7 @@ class PalmDatabase:
 	    self.categoriesObject=plugin.createCategoriesObject(self)
 	    if self.categoriesObject <> None:
 		    self.categoriesObject.fromByteArray(applicationInfoBlock)
+		    applicationInfoBlock=applicationInfoBlock[self.categoriesObject.categoryBlockSize:]
 		
             self.applicationInformationObject=plugin.createApplicationInformationObject(self)
 	    if self.applicationInformationObject:
