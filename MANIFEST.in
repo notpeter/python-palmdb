@@ -1,1 +1,4 @@
 include *.txt
+include *.py
+include UnitTests/UtilTest.py
+include UnitTests/__init__.py
