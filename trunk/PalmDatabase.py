@@ -167,7 +167,8 @@ class PalmDatabase:
             self.attributes['creatorID'],
             self.attributes['uid'],
             self.attributes['nextRecord'],
-            len(self)) # get our record count
+            len(self) # get our record count
+			  )
         return raw
 
     def toXML(self):
@@ -414,7 +415,7 @@ class PalmDatabase:
 	    self.categoriesObject=plugin.createCategoriesObject(self)
 	    if self.categoriesObject <> None:
 		    self.categoriesObject.fromByteArray(applicationInfoBlock)
-		    applicationInfoBlock=applicationInfoBlock[len(self.categoriesObject):]
+		    applicationInfoBlock=applicationInfoBlock[self.categoriesObject.objectBinarySize():]
 		
             self.applicationInformationObject=plugin.createApplicationInformationObject(self)
 	    if self.applicationInformationObject:
@@ -471,7 +472,7 @@ class PalmDatabase:
         rec_offsets = []
         for x in self.records:
             rec_offsets.append(offset)
-            offset = offset + len(x.toByteArray())
+            offset = offset + len(x.toByteArray(0))
 
         # begin to assemble the string to return (raw); start with database header
         raw=self._headerInfoToByteArray()
@@ -479,14 +480,10 @@ class PalmDatabase:
         entries = [] # a list which holds all of the record/resource entries
         record_data = [] # holds record/resource data-chunks
         # populate the lists...
-        for x, offset in map(None, self.records, rec_offsets):
-            if self.isResourceDatabase():
-                record_data.append(x.toByteArray())
-                entries.append(struct.pack('>4shl', x.type, x.id, offset))
-            else:
-                record_data.append(x.toByteArray())
-                a = ((x.attr | x.category) << 24) | x.id
-                entries.append(struct.pack('>ll', offset, a))
+        for record, offset in map(None, self.records, rec_offsets):
+	    (entryData,recordData)=record.toByteArray(offset)
+	    entries.append(entryData)
+	    record_data.append(recordData)
 
         # add the record/resource entries onto the data to be returned
         for x in entries: 
@@ -495,8 +492,12 @@ class PalmDatabase:
         raw = raw + '\0\0' # padding?  dunno, it's always there
 
         # add the AppInfo and/or SortInfo blocks
-        if self.appblock: raw = raw + self.appblock
-        if self.sortblock: raw = raw + self.sortblock
+        if self.categoriesObject:
+		raw += self.categoriesObject.toByteArray()
+        if self.applicationInformationObject:
+		raw += self.applicationInformationObject.toByteArray()
+        if self.sortBlockObject:
+		raw += self.sortBlockObject.toByteArray()
 
         # finally, add the record/resource data chunks
         for x in record_data: 
