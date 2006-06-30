@@ -59,10 +59,28 @@ def getBits(variable,MSBBitIndex,bitCount=1):
     return result
 
 def setBits(variable,value,MSBBitIndex,bitCount=1):
-	# MSBBitIndex is zero based
+    # MSBBitIndex is zero based
+    """
+    This function is for.... Does ....?
+    """
+    # MSBBitIndex is zero based
+    shift=MSBBitIndex-bitCount+1
+    bitsToMask=pow(2,bitCount)-1
 
-	# +++ FIX THIS +++ this needs to be implemented
-	pass
+    # remove any extraneous data from value before we shift mask
+    value=value&bitsToMask
+
+    # shift mask into place
+    mask=bitsToMask<<shift
+
+    # Remove current bit values
+    result=variable & ~mask
+
+    # replace them with new values
+    value=value<<shift
+    value=value&bitsToMask
+    result=result|value
+    return result
 
 PILOT_TIME_DELTA = 2082844800L
 def crackPalmDate(variable):
@@ -72,7 +90,7 @@ def crackPalmDate(variable):
             return datetime.datetime.fromtimestamp(variable-PILOT_TIME_DELTA)
 
 def packPalmDate(variable):
-        return time.mktime(variable.timetuple())+PILOT_TIME_DELTA
+        return int(time.mktime(variable.timetuple())+PILOT_TIME_DELTA)
 
 #
 # XML Helper Functions

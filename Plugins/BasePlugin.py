@@ -81,15 +81,22 @@ class BasePDBFilePlugin:
 class BaseRecord:
     def __init__(self):
 	    self.attributes={}
-	    self.attributes['payload']=None
+	    self.attributes['payload']=''
 
     def fromByteArray(self,hstr,dstr):
-        self._crackRecordHeader(hstr)
-        self.attributes['payload']=dstr.encode('HEX')
+	    self._crackRecordHeader(hstr)
+	    self._crackPayload(dstr)
+    def toByteArray(self,offset):
+	    return (self._packRecordHeader(offset),self._packPayload())
 
-    def toByteArray(self):
-	    return '+++ THIS IS BROKEN +++'
-    
+    def _crackRecordHeader(self,hstr):
+	    # +++ READ THIS +++ This has to be implemented in a child class
+	    raise NotImplementedError
+    def _crackPayload(self,dstr):
+	    self.attributes['payload']=dstr.encode('HEX')
+    def _packPayload(self):
+	    return self.attributes['payload'].decode('HEX')
+
     def getRecordXMLName(self):
 	    return 'PalmRecord'
     def toXML(self):
@@ -112,21 +119,39 @@ class DataRecord(BaseRecord):
 
     def getRecordXMLName(self):
 	    return 'PalmDataRecord'
+
     def _crackRecordHeader(self,hstr):
-        (offset, auid) = struct.unpack('>ll', hstr)
-        attr = (auid & 0xff000000) >> 24
-        uid = auid & 0x00ffffff
-        attributes = attr & 0xf0
-        category  = attr & 0x0f
+        (offset, bits) = struct.unpack('>ll', hstr)
+	
+        attributes=Util.getBits(bits,31,4)
+	category=Util.getBits(bits,27,4)
+	uid=Util.getBits(bits,23,24)
+	
 	self.attributes['uid']=uid
 	self.attributes['category']=category
-	self._crackAttributeBits(attr)
+	self._crackAttributeBits(attributes)
+
+    def _packRecordHeader(self,offset):
+	uid=self.attributes['uid']
+	category=self.attributes['category']
+	attributes=self._packAttributeBits()
+
+	bits=Util.setBits(0,attributes,31,4)
+	bits=Util.setBits(bits,category,27,4)
+	bits=Util.setBits(bits,uid,23,24)
+        return struct.pack('>ll',offset,bits)
 	
     def _crackAttributeBits(self,attr):
         self.attributes['deleted']=bool(Util.getBits(attr,3))
         self.attributes['dirty']=bool(Util.getBits(attr,2))
         self.attributes['busy']=bool(Util.getBits(attr,1))
         self.attributes['secret']=bool(Util.getBits(attr,0))
+    def _packAttributeBits(self):
+        returnValue=Util.setBits(0,self.attributes['deleted'],3)
+        returnValue=Util.setBits(returnValue,self.attributes['dirty'],2)
+        returnValue=Util.setBits(returnValue,self.attributes['busy'],1)
+        returnValue=Util.setBits(returnValue,self.attributes['secret'],0)
+	return returnValue
 	    
 class ResourceRecord(BaseRecord):
     '''
@@ -141,6 +166,8 @@ class ResourceRecord(BaseRecord):
         (resourceType, id, offset) = struct.unpack('>4shl', hstr)
 	self.attributes['id']=id
 	self.attributes['resourceType']=type
+    def _packRecordHeader(self,offset):
+        return struct.pack('>4shl', self.attributes['resourceType'],self.attributes['id'],offset)
 
     def getRecordXMLName(self):
 	    return 'PalmResourceRecord'
@@ -158,7 +185,7 @@ class CategoriesObject(dict):
     is if you want to extract category data from the AppInfo block (provided
     that it contains category data...)
     '''
-    def __init__(self,raw=None):
+    def __init__(self):
         '''
         To initialize the class with the categories from a database, pass it 
         calcsize() bytes from the beginning of the application info block.
@@ -167,14 +194,11 @@ class CategoriesObject(dict):
         x = PalmDB.Categories()
         x.SetRaw(applicationInfoBlock[:x.calcsize())
         '''
-
-	self.categoryBlockSize=275
         self.__packString = '!H'+('16s'*16)+('B'*16)+'B'+'x'
-        if raw <> None:
-            self.fromByteArray(raw)
-
-    def __len__(self):
-	    return self.categoryBlockSize
+	self._reverseLookup={}
+    def objectBinarySize(self):
+	    # Return the packed structure size of the Palm category information.
+	    return struct.calcsize(self.__packString)
 
     def fromByteArray(self,raw):
         '''
@@ -206,7 +230,7 @@ class CategoriesObject(dict):
 	self.clear()
 	self.update(tempDict)
 
-    def getRaw(self):
+    def toByteArray(self):
         '''
         Get raw data to marshal class
 
@@ -220,13 +244,17 @@ class CategoriesObject(dict):
         returnValue=''
         for key in self.keys():
             returnValue+=Util.returnAsXMLItem('category',Util.returnObjectAsXML('CategoryID',key)+Util.returnObjectAsXML('CategoryName',self[key]),escape=False)
-        return Util.returnAsXMLItem('palmCategories',returnValue,escape=False)
+	return Util.returnAsXMLItem('palmCategories',returnValue,escape=False)
 
-    def calcsize(self):
-        '''
-        Return the packed structure size of the Palm category information.
-        '''
-        return struct.calcsize(self.__packString)
+    def __setitem__(self,key,value):
+	    dict.__setitem__(key,value)
+	    self.reverseLookup[value]=key
+    def __delitem__(self,key):
+	    # delete reverse lookup
+	    del(self.reverseLookup[self[key]])
+	    dict.__delitem__(key)
+    def reverseLookup(self,value):
+	    return self.reverseLookup[value]
 
 class applicationInformationObject:
 	def __init__(self):
