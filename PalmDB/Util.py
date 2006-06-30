@@ -51,6 +51,12 @@ def getBits(variable,MSBBitIndex,bitCount=1):
     This function is for.... Does ....?
     """
     # MSBBitIndex is zero based
+
+    assert(MSBBitIndex < 32)
+    assert(MSBBitIndex >= 0)
+    assert(MSBBitIndex >= bitCount-1)
+    assert(bitCount <> 0)
+    
     shift=MSBBitIndex-bitCount+1
     bitsToMask=pow(2,bitCount)-1
     mask=bitsToMask<<shift
@@ -63,6 +69,12 @@ def setBits(variable,value,MSBBitIndex,bitCount=1):
     """
     This function is for.... Does ....?
     """
+
+    assert(MSBBitIndex < 32)
+    assert(MSBBitIndex >= 0)
+    assert(MSBBitIndex >= bitCount-1)
+    assert(bitCount <> 0)
+
     # MSBBitIndex is zero based
     shift=MSBBitIndex-bitCount+1
     bitsToMask=pow(2,bitCount)-1
