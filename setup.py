@@ -2,7 +2,7 @@ from distutils.core import setup
 import glob
 import os
 
-PalmDBVersion = '1.5.1'
+PalmDBVersion = '1.6.1'
 
 # find files that 
 def findExampleFiles(directoryToSearch,extensionList,prefixDirectory):
@@ -44,12 +44,12 @@ it easier to use and more versatile.
       maintainer="Rick Price",
       maintainer_email="rick_price@users.sourceforge.net",
       url="https://sourceforge.net/projects/pythonpalmdb/",
-      py_modules=["PalmDB"],
+      packages=['PalmDB','PalmDB.Plugins'],
       data_files=dataFilesExamples,
       license="Python Software Foundation License",
       classifiers = [
           'Development Status :: 4 - Beta',
-          'License :: OSI Approved :: Python Software Foundation License',
+          'License :: OSI Approved :: GNU Library or Lesser General Public License (LGPL)',
           'Intended Audience :: Developers',
           'Programming Language :: Python',
           'Topic :: Database',

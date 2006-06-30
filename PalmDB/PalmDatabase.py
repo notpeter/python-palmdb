@@ -36,8 +36,14 @@ __version__ = '$Id: PalmDB.py,v 1.11 2005/12/13 03:12:12 rprice Exp $'
 __copyright__ = 'Copyright 2006 Rick Price <rick_price@users.sourceforge.net>'
 
 import struct
-import Util
 import PluginManager
+
+from PalmDB.Util import crackPalmDate
+from PalmDB.Util import packPalmDate
+from PalmDB.Util import getBits
+from PalmDB.Util import setBits
+from PalmDB.Util import returnDictionaryAsXML
+from PalmDB.Util import returnAsXMLItem
 
 class PalmHeaderInfo:
 	# Header Struct
@@ -113,22 +119,22 @@ class PalmDatabase:
 	self.attributes['fileName']=fileName.split('\0')[0]
 	self.attributes['databaseType']=databaseType
 	self.attributes['creatorID']=creatorID
-	self.attributes['createdTime']=Util.crackPalmDate(createdTime)
-	self.attributes['modifiedTime']=Util.crackPalmDate(modifiedTime)
-	self.attributes['backedUpTime']=Util.crackPalmDate(backedUpTime)
+	self.attributes['createdTime']=crackPalmDate(createdTime)
+	self.attributes['modifiedTime']=crackPalmDate(modifiedTime)
+	self.attributes['backedUpTime']=crackPalmDate(backedUpTime)
 	self.attributes['modificationNumber']=modificationNumber
 	self.attributes['version']=version
 	self.attributes['uid']=uid
 	self.attributes['nextRecord']=nextRecord
 
-	self.attributes['flagReset']=bool(Util.getBits(flags,PalmHeaderInfo.flagResetPosition))
-	self.attributes['flagResource']=bool(Util.getBits(flags,PalmHeaderInfo.flagResourcePosition))
-	self.attributes['flagNewer']=bool(Util.getBits(flags,PalmHeaderInfo.flagNewerPosition))
-	self.attributes['flagExcludeFromSync']=bool(Util.getBits(flags,PalmHeaderInfo.flagExcludeFromSyncPosition))
-	self.attributes['flagAppInfoDirty']=bool(Util.getBits(flags,PalmHeaderInfo.flagAppInfoDirtyPosition))
-	self.attributes['flagReadOnly']=bool(Util.getBits(flags,PalmHeaderInfo.flagReadOnlyPosition))
-	self.attributes['flagBackup']=bool(Util.getBits(flags,PalmHeaderInfo.flagBackupPosition))
-	self.attributes['flagOpen']=bool(Util.getBits(flags,PalmHeaderInfo.flagOpenPosition))
+	self.attributes['flagReset']=bool(getBits(flags,PalmHeaderInfo.flagResetPosition))
+	self.attributes['flagResource']=bool(getBits(flags,PalmHeaderInfo.flagResourcePosition))
+	self.attributes['flagNewer']=bool(getBits(flags,PalmHeaderInfo.flagNewerPosition))
+	self.attributes['flagExcludeFromSync']=bool(getBits(flags,PalmHeaderInfo.flagExcludeFromSyncPosition))
+	self.attributes['flagAppInfoDirty']=bool(getBits(flags,PalmHeaderInfo.flagAppInfoDirtyPosition))
+	self.attributes['flagReadOnly']=bool(getBits(flags,PalmHeaderInfo.flagReadOnlyPosition))
+	self.attributes['flagBackup']=bool(getBits(flags,PalmHeaderInfo.flagBackupPosition))
+	self.attributes['flagOpen']=bool(getBits(flags,PalmHeaderInfo.flagOpenPosition))
 
 	return (applicationInformationOffset,sortInformationOffset,numberOfRecords)
 
@@ -141,22 +147,22 @@ class PalmDatabase:
         Palm database file. The string returned will be calcsize() bytes long.
         '''
 	flag=0
-	flag=Util.setBits(flag,self.attributes['flagReset'],PalmHeaderInfo.flagResetPosition)
-	flag=Util.setBits(flag,self.attributes['flagResource'],PalmHeaderInfo.flagResourcePosition)
-	flag=Util.setBits(flag,self.attributes['flagNewer'],PalmHeaderInfo.flagNewerPosition)
-	flag=Util.setBits(flag,self.attributes['flagExcludeFromSync'],PalmHeaderInfo.flagExcludeFromSyncPosition)
-	flag=Util.setBits(flag,self.attributes['flagAppInfoDirty'],PalmHeaderInfo.flagAppInfoDirtyPosition)
-	flag=Util.setBits(flag,self.attributes['flagReadOnly'],PalmHeaderInfo.flagReadOnlyPosition)
-	flag=Util.setBits(flag,self.attributes['flagBackup'],PalmHeaderInfo.flagBackupPosition)
-	flag=Util.setBits(flag,self.attributes['flagOpen'],PalmHeaderInfo.flagOpenPosition)
+	flag=setBits(flag,self.attributes['flagReset'],PalmHeaderInfo.flagResetPosition)
+	flag=setBits(flag,self.attributes['flagResource'],PalmHeaderInfo.flagResourcePosition)
+	flag=setBits(flag,self.attributes['flagNewer'],PalmHeaderInfo.flagNewerPosition)
+	flag=setBits(flag,self.attributes['flagExcludeFromSync'],PalmHeaderInfo.flagExcludeFromSyncPosition)
+	flag=setBits(flag,self.attributes['flagAppInfoDirty'],PalmHeaderInfo.flagAppInfoDirtyPosition)
+	flag=setBits(flag,self.attributes['flagReadOnly'],PalmHeaderInfo.flagReadOnlyPosition)
+	flag=setBits(flag,self.attributes['flagBackup'],PalmHeaderInfo.flagBackupPosition)
+	flag=setBits(flag,self.attributes['flagOpen'],PalmHeaderInfo.flagOpenPosition)
 
         raw = struct.pack(HeaderInfo.PDBHeaderStructString,
             self.attributes['fileName'],
             flag,
             self.attributes['version'],
-            Util.packPalmDate(self.attributes['createdTime']),
-            Util.packPalmDate(self.attributes['modifiedTime']),
-            Util.packPalmDate(self.attributes['backedUpTime']),
+            packPalmDate(self.attributes['createdTime']),
+            packPalmDate(self.attributes['modifiedTime']),
+            packPalmDate(self.attributes['backedUpTime']),
             self.attributes['modificationNumber'],
 # +++ FIX THIS +++
 	    0,0,
@@ -176,8 +182,8 @@ class PalmDatabase:
 	
 	plugin=self._getPlugin()
 
-	PalmHeaderAttributes=Util.returnDictionaryAsXML(self.attributes)
-	PalmHeaderAttributes=Util.returnAsXMLItem('PalmHeader',PalmHeaderAttributes,escape=False)
+	PalmHeaderAttributes=returnDictionaryAsXML(self.attributes)
+	PalmHeaderAttributes=returnAsXMLItem('PalmHeader',PalmHeaderAttributes,escape=False)
 
 	returnValue+=plugin.getXMLVersionHeader(self)
 	returnValue+=plugin.getXMLFileHeader(self)

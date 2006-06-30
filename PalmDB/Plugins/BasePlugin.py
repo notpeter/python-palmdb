@@ -34,7 +34,11 @@
 __copyright__ = 'Copyright 2006 Rick Price <rick_price@users.sourceforge.net>'
 
 import struct
-import Util
+from PalmDB.Util import getBits
+from PalmDB.Util import setBits
+from PalmDB.Util import returnDictionaryAsXML
+from PalmDB.Util import returnAsXMLItem
+from PalmDB.Util import returnObjectAsXML
 
 RESOURCE_ENTRY_SIZE = 10  # size of a resource entry
 RECORD_ENTRY_SIZE = 8 # size of a record entry
@@ -75,7 +79,7 @@ class BasePDBFilePlugin:
 		recordsXML=''
 		for record in PalmDatabaseObject:
 			recordsXML+=record.toXML()
-		recordsXML=Util.returnAsXMLItem('PalmRecordList',recordsXML,escape=False)
+		recordsXML=returnAsXMLItem('PalmRecordList',recordsXML,escape=False)
 		return recordsXML
 	
 class BaseRecord:
@@ -100,8 +104,8 @@ class BaseRecord:
     def getRecordXMLName(self):
 	    return 'PalmRecord'
     def toXML(self):
-	    attributesAsXML=Util.returnDictionaryAsXML(self.attributes)
-	    return Util.returnAsXMLItem(self.getRecordXMLName(),attributesAsXML,escape=False)
+	    attributesAsXML=returnDictionaryAsXML(self.attributes)
+	    return returnAsXMLItem(self.getRecordXMLName(),attributesAsXML,escape=False)
 	    
 class DataRecord(BaseRecord):
     '''
@@ -123,9 +127,9 @@ class DataRecord(BaseRecord):
     def _crackRecordHeader(self,hstr):
         (offset, bits) = struct.unpack('>ll', hstr)
 	
-        attributes=Util.getBits(bits,31,4)
-	category=Util.getBits(bits,27,4)
-	uid=Util.getBits(bits,23,24)
+        attributes=getBits(bits,31,4)
+	category=getBits(bits,27,4)
+	uid=getBits(bits,23,24)
 	
 	self.attributes['uid']=uid
 	self.attributes['category']=category
@@ -136,21 +140,21 @@ class DataRecord(BaseRecord):
 	category=self.attributes['category']
 	attributes=self._packAttributeBits()
 
-	bits=Util.setBits(0,attributes,31,4)
-	bits=Util.setBits(bits,category,27,4)
-	bits=Util.setBits(bits,uid,23,24)
+	bits=setBits(0,attributes,31,4)
+	bits=setBits(bits,category,27,4)
+	bits=setBits(bits,uid,23,24)
         return struct.pack('>ll',offset,bits)
 	
     def _crackAttributeBits(self,attr):
-        self.attributes['deleted']=bool(Util.getBits(attr,3))
-        self.attributes['dirty']=bool(Util.getBits(attr,2))
-        self.attributes['busy']=bool(Util.getBits(attr,1))
-        self.attributes['secret']=bool(Util.getBits(attr,0))
+        self.attributes['deleted']=bool(getBits(attr,3))
+        self.attributes['dirty']=bool(getBits(attr,2))
+        self.attributes['busy']=bool(getBits(attr,1))
+        self.attributes['secret']=bool(getBits(attr,0))
     def _packAttributeBits(self):
-        returnValue=Util.setBits(0,self.attributes['deleted'],3)
-        returnValue=Util.setBits(returnValue,self.attributes['dirty'],2)
-        returnValue=Util.setBits(returnValue,self.attributes['busy'],1)
-        returnValue=Util.setBits(returnValue,self.attributes['secret'],0)
+        returnValue=setBits(0,self.attributes['deleted'],3)
+        returnValue=setBits(returnValue,self.attributes['dirty'],2)
+        returnValue=setBits(returnValue,self.attributes['busy'],1)
+        returnValue=setBits(returnValue,self.attributes['secret'],0)
 	return returnValue
 	    
 class ResourceRecord(BaseRecord):
@@ -243,8 +247,8 @@ class CategoriesObject(dict):
     def toXML(self):
         returnValue=''
         for key in self.keys():
-            returnValue+=Util.returnAsXMLItem('category',Util.returnObjectAsXML('CategoryID',key)+Util.returnObjectAsXML('CategoryName',self[key]),escape=False)
-	return Util.returnAsXMLItem('palmCategories',returnValue,escape=False)
+            returnValue+=returnAsXMLItem('category',returnObjectAsXML('CategoryID',key)+returnObjectAsXML('CategoryName',self[key]),escape=False)
+	return returnAsXMLItem('palmCategories',returnValue,escape=False)
 
     def __setitem__(self,key,value):
 	    dict.__setitem__(key,value)
@@ -270,8 +274,8 @@ class applicationInformationObject:
 		return self.attributes.get('payload','').decode('HEX')
 	
 	def toXML(self):
-		attributesAsXML=Util.returnDictionaryAsXML(self.attributes)
-		return Util.returnAsXMLItem('applicationBlock',attributesAsXML,escape=False)
+		attributesAsXML=returnDictionaryAsXML(self.attributes)
+		return returnAsXMLItem('applicationBlock',attributesAsXML,escape=False)
 
 class sortBlockObject:
 	def __init__(self):
@@ -287,6 +291,6 @@ class sortBlockObject:
 		return self.attributes.get('payload','').decode('HEX')
 	
 	def toXML(self):
-		attributesAsXML=Util.returnDictionaryAsXML(self.attributes)
-		return Util.returnAsXMLItem('sortBlock',attributesAsXML,escape=False)
+		attributesAsXML=returnDictionaryAsXML(self.attributes)
+		return returnAsXMLItem('sortBlock',attributesAsXML,escape=False)
 

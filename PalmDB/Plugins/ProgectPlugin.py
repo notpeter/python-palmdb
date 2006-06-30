@@ -33,10 +33,15 @@ __copyright__ = 'Copyright 2006 Rick Price <rick_price@users.sourceforge.net>'
 
 import struct
 import datetime
-import Util
-import BasePlugin
+import PalmDB.Plugins.BasePlugin
 
-class ProgectPlugin(BasePlugin.BasePDBFilePlugin):
+from PalmDB.Util import getBits
+from PalmDB.Util import setBits
+from PalmDB.Util import returnDictionaryAsXML
+from PalmDB.Util import returnObjectAsXML
+from PalmDB.Util import simpleRational
+
+class ProgectPlugin(PalmDB.Plugins.BasePlugin.BasePDBFilePlugin):
 	def getPDBCreatorID(self):
 		return 'lbPG'
 
@@ -89,19 +94,19 @@ def crackProgectDate(variable):
     	#     year  7 bits (0-128)
     	#     month 4 bits (0-16)
     	#     day   5 bits (0-32)
-	year = Util.getBits(variable,15,7)
+	year = getBits(variable,15,7)
 	if year <> 0:
 		year += 1904
 	else:
 		return None
 
-	return datetime.date(year,Util.getBits(variable,8,4),Util.getBits(variable,4,5))
+	return datetime.date(year,getBits(variable,8,4),getBits(variable,4,5))
 
 def packProgectDate(year,date):
 	returnValue=0
-	returnValue=Util.setBits(date.year-1904,returnValue,15,7)
-	returnValue=Util.setBits(date.month,returnValue,8,4)
-	returnValue=Util.setBits(date.day,returnValue,4,5)
+	returnValue=setBits(date.year-1904,returnValue,15,7)
+	returnValue=setBits(date.month,returnValue,8,4)
+	returnValue=setBits(date.day,returnValue,4,5)
 	return returnValue
 
 # Progect Record Information
@@ -144,7 +149,7 @@ class PRI:
         INVALID_TYPE:'INVALID_TYPE',
         }
     
-class ProgectRecord(BasePlugin.DataRecord):
+class ProgectRecord(PalmDB.Plugins.BasePlugin.DataRecord):
     '''
     This class encapsulates a Palm application record.
 
@@ -153,7 +158,7 @@ class ProgectRecord(BasePlugin.DataRecord):
     fromByteArray() and getRaw() to set the raw data.
     '''
     def __init__(self):
-        BasePlugin.DataRecord.__init__(self)
+        PalmDB.Plugins.BasePlugin.DataRecord.__init__(self)
 
         self.attributes['_level']=0
         self.attributes['_hasNext']=False
@@ -170,7 +175,7 @@ class ProgectRecord(BasePlugin.DataRecord):
 	    return 'ProgectDataRecord'
 
     def toXML(self):
-        attributesAsXML=Util.returnDictionaryAsXML(self.attributes)
+        attributesAsXML=returnDictionaryAsXML(self.attributes)
         for extraBlock in self.extraBlockRecordList:
             attributesAsXML+=extraBlock.toXML()
 	return attributesAsXML
@@ -186,28 +191,28 @@ class ProgectRecord(BasePlugin.DataRecord):
             struct.unpack(PRI.TaskAttrTypeStructString,dstr[:PRI.TaskAttrTypeStructSize])
 
         # setup AttrType bits, level was handled above
-        self.attributes['_level']=Util.getBits( taskAttrType, 15, 8 )
-        self.attributes['_hasNext']=bool(Util.getBits( taskAttrType, 7 ))
-        self.attributes['_hasChild']=bool(Util.getBits( taskAttrType, 6 ))
-        self.attributes['opened']=bool(Util.getBits( taskAttrType, 5 ))
-        self.attributes['_hasPrev']=bool(Util.getBits( taskAttrType, 4 ))
+        self.attributes['_level']=getBits( taskAttrType, 15, 8 )
+        self.attributes['_hasNext']=bool(getBits( taskAttrType, 7 ))
+        self.attributes['_hasChild']=bool(getBits( taskAttrType, 6 ))
+        self.attributes['opened']=bool(getBits( taskAttrType, 5 ))
+        self.attributes['_hasPrev']=bool(getBits( taskAttrType, 4 ))
     
 
         # TaskFormatType values
-        self.attributes['_hasStartDate']=bool(Util.getBits( taskFormatType, 15 ))
-    	self.attributes['_hasPred']=bool(Util.getBits( taskFormatType, 14 ))
-        self.attributes['_hasDuration']=bool(Util.getBits( taskFormatType, 13 ))
-        self.attributes['_hasDueDate']=bool(Util.getBits( taskFormatType, 12 ))
-        self.attributes['hasToDo']=bool(Util.getBits( taskFormatType, 11 ))
-        self.attributes['_hasNote']=bool(Util.getBits( taskFormatType, 10 ))
-        self.attributes['hasLink']=bool(Util.getBits( taskFormatType, 9 ))
+        self.attributes['_hasStartDate']=bool(getBits( taskFormatType, 15 ))
+    	self.attributes['_hasPred']=bool(getBits( taskFormatType, 14 ))
+        self.attributes['_hasDuration']=bool(getBits( taskFormatType, 13 ))
+        self.attributes['_hasDueDate']=bool(getBits( taskFormatType, 12 ))
+        self.attributes['hasToDo']=bool(getBits( taskFormatType, 11 ))
+        self.attributes['_hasNote']=bool(getBits( taskFormatType, 10 ))
+        self.attributes['hasLink']=bool(getBits( taskFormatType, 9 ))
 
-        itemType=Util.getBits( taskFormatType, 8, 5 )
+        itemType=getBits( taskFormatType, 8, 5 )
         self.attributes['_itemType']=PRI.typeTextNames[itemType]
-        self.attributes['_hasXB']=bool(Util.getBits( taskFormatType, 3 ))
-        self.attributes['_newTask']=bool(Util.getBits( taskFormatType, 2 ))
-        self.attributes['_newFormat']=bool(Util.getBits( taskFormatType, 1 ))
-        self.attributes['_nextFormat']=bool(Util.getBits( taskFormatType, 0 ))
+        self.attributes['_hasXB']=bool(getBits( taskFormatType, 3 ))
+        self.attributes['_newTask']=bool(getBits( taskFormatType, 2 ))
+        self.attributes['_newFormat']=bool(getBits( taskFormatType, 1 ))
+        self.attributes['_nextFormat']=bool(getBits( taskFormatType, 0 ))
 	    
         if self.attributes['_hasXB']:
             self.fromByteArrayTaskXBRecords(dstr[PRI.TaskAttrTypeStructSize:])
@@ -240,12 +245,12 @@ class ProgectRecord(BasePlugin.DataRecord):
         if (priority == 0) or (priority == 6):
             self.attributes['priority']='None'
         else:
-            self.attributes['priority']=Util.simpleRational(priority,5)
+            self.attributes['priority']=simpleRational(priority,5)
 
         if self.attributes['_itemType'] == 'ACTION_TYPE':
             self.attributes['completed']=bool(completed)
         if self.attributes['_itemType'] == 'PROGRESS_TYPE':
-            self.attributes['completed']=Util.simpleRational(completed,10)
+            self.attributes['completed']=simpleRational(completed,10)
 
         text=dstr[PRI.TaskStandardFieldStructSize:]
         self.attributes['description']=text.split('\0')[0]
@@ -267,7 +272,7 @@ class ExtraBlockLinkToDo(object):
     def __repr__( self ):
        return 'ExtraBlockLinkToDo(raw="%s")'%self.raw
     def toXML(self):
-        return Util.returnObjectAsXML('linkToDo',self.raw)
+        return returnObjectAsXML('linkToDo',self.raw)
 
 class ExtraBlockLinkLinkMaster(object):
     def fromByteArray( self, raw ):
@@ -275,7 +280,7 @@ class ExtraBlockLinkLinkMaster(object):
     def __repr__( self ):
        return 'ExtraBlockLinkLinkMaster(raw="%s")'%self.raw
     def toXML(self):
-        return Util.returnObjectAsXML('linkLinkMaster',self.raw)
+        return returnObjectAsXML('linkLinkMaster',self.raw)
 
 class ExtraBlockIcon(object):
     def fromByteArray( self, raw ):
@@ -283,7 +288,7 @@ class ExtraBlockIcon(object):
     def __repr__( self ):
        return 'ExtraBlockIcon(icon=%d)'%self.icon
     def toXML(self):
-        return Util.returnObjectAsXML('icon',self.icon)
+        return returnObjectAsXML('icon',self.icon)
 
 class ExtraBlockNumeric(object):
     def fromByteArray( self, raw ):
@@ -291,7 +296,7 @@ class ExtraBlockNumeric(object):
     def __repr__( self ):
        return 'ExtraBlockNumeric(limit=%d,actual=%d)'%(self.limit,self.actual)
     def toXML(self):
-       returnValue=Util.returnRationalAsXML('completed',self.actual,self.limit)
+       returnValue=returnObjectAsXML('completed',simpleRational(self.actual,self.limit))
        return returnValue
 
 class ExtraBlockUnknown(object):
@@ -300,7 +305,7 @@ class ExtraBlockUnknown(object):
     def __repr__( self ):
        return 'ExtraBlockUnknown(raw="%s")'%self.raw
     def toXML(self):
-        return Util.returnObjectAsXML('extraBlockUnknown',self.raw)
+        return returnObjectAsXML('extraBlockUnknown',self.raw)
 
 
 class ExtraBlockRecordFactory( object ):
