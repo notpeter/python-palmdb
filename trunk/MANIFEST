@@ -1,5 +1,10 @@
 LICENSE.txt
-PalmDB.py
 README.txt
 setup.py
-.svn\README.txt
+PalmDB/PalmDB.py
+PalmDB/PalmDatabase.py
+PalmDB/PluginManager.py
+PalmDB/Util.py
+PalmDB/Plugins/BasePlugin.py
+PalmDB/Plugins/ProgectPlugin.py
+PalmDB/Plugins/__init__.py
