@@ -22,9 +22,10 @@ def createFileList(dataFilesVariable):
     return result;
 
 dataFilesExamples=findExampleFiles('examples',['.py','.PRC','.PDB',],os.path.join('share','PalmDB'))
+dataFilesExamples.extend(findExampleFiles('UnitTests',['.py','.PRC','.PDB',],''))
 
 # Setup list of strings to put in MANIFEST.in
-includeFileList=['*.txt']
+includeFileList=['*.txt','*.py']
 includeFileList.extend(createFileList(dataFilesExamples))
 includeFileList=['include ' + fileSpec for fileSpec in includeFileList]
 
