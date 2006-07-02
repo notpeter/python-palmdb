@@ -1,49 +1,63 @@
 import unittest
+import struct
 from PalmDB.Util import *
 
+def plah(toPrint):
+	return struct.pack('>l',toPrint).encode('HEX')
+	
 class UtilSetBitsTestCase(unittest.TestCase):
-	def testSingleBitsBitToLow(self):
-		'''Set Single Bit Tests - Bit too low'''
-		originalValue=0
+ 	def testSingleBitsBitToLow(self):
+ 		'''Set Single Bit Tests - Bit too low'''
+ 		originalValue=0
+ 		bitsToSet=0
+ 		MSBBitIndex=-1
+ 		self.assertRaises(AssertionError,setBits,originalValue,bitsToSet,MSBBitIndex)
+ 	def testSingleBitsOn(self):
+ 		'''Set Single Bit Tests'''
+ 		comparisonMask=1
+ 		startValue=0
+ 		bitsToSet=1
+ 		for MSBBitIndex in range(32):
+ 			testValue=setBits(startValue,bitsToSet,MSBBitIndex)
+ 			assert (testValue == comparisonMask << MSBBitIndex)
+	def testSingleBitsOff(self):
+		'''Reset Single Bit Tests'''
+                bitCount=1
+		startValue=-1 # all bits set
+                originalMask=pow(2,bitCount)-1
 		bitsToSet=0
-		MSBBitIndex=-1
-		self.assertRaises(AssertionError,setBits,originalValue,bitsToSet,MSBBitIndex)
-	def testSingleBitsOn(self):
-		'''Set Single Bit Tests'''
-		comparisonMask=1
-		startValue=0
-		bitsToSet=1
 		for MSBBitIndex in range(32):
+			comparisonMask=originalMask<<MSBBitIndex
 			testValue=setBits(startValue,bitsToSet,MSBBitIndex)
-			assert (testValue == comparisonMask << MSBBitIndex)
+			assert (testValue == startValue&~comparisonMask)
 	def testSingleBitsBitToHigh(self):
 		'''Set Single Bit Tests - Bit too high'''
 		originalValue=0
 		bitsToSet=0
 		MSBBitIndex=33
 		self.assertRaises(AssertionError,setBits,originalValue,bitsToSet,MSBBitIndex)
-	def testSetBitsAskForNoBits(self):
-		'''Set Bit Tests - No bits requested'''
-		originalValue=0
-		MSBBitIndex=1
-		bitsToSet=0
-		bitCount=0
-		self.assertRaises(AssertionError,setBits,originalValue,bitsToSet,MSBBitIndex,bitCount)
+ 	def testSetBitsAskForNoBits(self):
+ 		'''Set Bit Tests - No bits requested'''
+ 		originalValue=0
+ 		MSBBitIndex=1
+ 		bitsToSet=0
+ 		bitCount=0
+ 		self.assertRaises(AssertionError,setBits,originalValue,bitsToSet,MSBBitIndex,bitCount)
 
-	def testSetBitsAskForTooManyBits(self):
-		'''Set Bit Tests - Too many bits'''
-		originalValue=0
-		bitsToSet=0
-		for MSBBitIndex in range(32):
-			bitCount=MSBBitIndex+2
-			self.assertRaises(AssertionError,setBits,originalValue,bitsToSet,MSBBitIndex,bitCount)
-	def testSetBitsAskForJustEnoughBits(self):
-		'''Set Bit Tests - Just enough bits'''
-		originalValue=0
-		bitsToSet=0
-		for MSBBitIndex in range(32):
-			bitCount=MSBBitIndex+1
-			setBits(originalValue,bitsToSet,MSBBitIndex,bitCount)
+ 	def testSetBitsAskForTooManyBits(self):
+ 		'''Set Bit Tests - Too many bits'''
+ 		originalValue=0
+ 		bitsToSet=0
+ 		for MSBBitIndex in range(32):
+ 			bitCount=MSBBitIndex+2
+ 			self.assertRaises(AssertionError,setBits,originalValue,bitsToSet,MSBBitIndex,bitCount)
+ 	def testSetBitsAskForJustEnoughBits(self):
+ 		'''Set Bit Tests - Just enough bits'''
+ 		originalValue=0
+ 		bitsToSet=0
+ 		for MSBBitIndex in range(32):
+ 			bitCount=MSBBitIndex+1
+ 			setBits(originalValue,bitsToSet,MSBBitIndex,bitCount)
 
 
 class UtilGetBitsTestCase(unittest.TestCase):
