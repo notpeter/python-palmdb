@@ -36,6 +36,10 @@ __copyright__ = 'Copyright 2006 Rick Price <rick_price@users.sourceforge.net>'
 import time
 import datetime
 
+import struct
+def plah(toPrint):
+	return 'UTL'+struct.pack('>l',long(toPrint)).encode('HEX')
+
 XMLsuppressFalseOrBlank=False
 
 class simpleRational:
@@ -81,7 +85,6 @@ def setBits(variable,value,MSBBitIndex,bitCount=1):
 
     # remove any extraneous data from value before we shift mask
     value=value&bitsToMask
-
     # shift mask into place
     mask=bitsToMask<<shift
 
@@ -89,8 +92,8 @@ def setBits(variable,value,MSBBitIndex,bitCount=1):
     result=variable & ~mask
 
     # replace them with new values
-    value=value<<shift
     value=value&bitsToMask
+    value=value<<shift
     result=result|value
     return result
 
