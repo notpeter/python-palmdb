@@ -21,6 +21,16 @@ class UtilSetBitsTestCase(unittest.TestCase):
  		for MSBBitIndex in range(32):
  			testValue=setBits(startValue,bitsToSet,MSBBitIndex)
  			self.assertEqual(testValue,comparisonMask << MSBBitIndex)
+ 	def testMultipleBitsOn(self):
+ 		'''Set Multiple Bit Tests'''
+		for bitCount in range(1,32):
+			comparisonMask=pow(2,bitCount)-1
+			bitsToSet=-1 # Check masking of unwanted bits
+			startValue=0
+			for MSBBitIndex in range(bitCount-1,32):
+				shift=MSBBitIndex-bitCount+1
+				testValue=setBits(startValue,bitsToSet,MSBBitIndex,bitCount)
+				self.assertEqual(testValue,comparisonMask << shift)
 	def testSingleBitsOff(self):
 		'''Reset Single Bit Tests'''
                 bitCount=1
@@ -31,6 +41,16 @@ class UtilSetBitsTestCase(unittest.TestCase):
 			comparisonMask=originalMask<<MSBBitIndex
 			testValue=setBits(startValue,bitsToSet,MSBBitIndex)
 			self.assertEqual(testValue,startValue&~comparisonMask)
+	def testMultipleBitsOff(self):
+		'''Reset Multiple Bit Tests'''
+		for bitCount in range(1,32):
+			comparisonMask=pow(2,bitCount)-1
+			bitsToSet=0 # Check masking of unwanted bits
+			startValue=-1
+			for MSBBitIndex in range(bitCount-1,32):
+				shift=MSBBitIndex-bitCount+1
+				testValue=setBits(startValue,bitsToSet,MSBBitIndex,bitCount)
+				self.assertEqual(testValue,~(comparisonMask << shift))
 	def testSingleBitsBitToHigh(self):
 		'''Set Single Bit Tests - Bit too high'''
 		originalValue=0
@@ -73,6 +93,14 @@ class UtilGetBitsTestCase(unittest.TestCase):
 		for MSBBitIndex in range(32):
 			returnValue=getBits(comparisonMask<<MSBBitIndex,MSBBitIndex)
 			self.assertEqual(returnValue,1)
+ 	def testMultipleBits(self):
+ 		'''Get Multiple Bit Tests'''
+		for bitCount in range(1,32):
+			comparisonMask=pow(2,bitCount)-1
+			for MSBBitIndex in range(bitCount-1,32):
+				shift=MSBBitIndex-bitCount+1
+				testValue=getBits(comparisonMask<<shift,MSBBitIndex,bitCount)
+				self.assertEqual(testValue,comparisonMask)
 	def testSingleBitsBitToHigh(self):
 		'''Get Single Bit Tests - Bit too high'''
 		originalValue=0
