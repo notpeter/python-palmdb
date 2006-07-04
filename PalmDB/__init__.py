@@ -85,7 +85,7 @@ class PDBFile(PalmDatabase.PalmDatabase):
     Arguments are as follows:
 
     fileName:       name of file to be read/written
-    
+
     recordFactory:  a function which is called to return record objects during
                     loading of file.  Optional; usually not necessary to specify.
 
@@ -97,7 +97,7 @@ class PDBFile(PalmDatabase.PalmDatabase):
                     any changes to the database to be written back to the most
                     recently specified file (specified for reading or writing).
     """
-    
+
     def __init__(self, fileName=None, read=True, writeBack=False):
         PalmDatabase.PalmDatabase.__init__(self)
         self.fileName = fileName
@@ -117,11 +117,11 @@ class PDBFile(PalmDatabase.PalmDatabase):
         Open fileName and load the Palm database file contents.  If no filename
         provided, then attempt to load the file specified in the self.fileName
         class varaiable.
-        
+
         Any existing records of this object are cleared prior to loading the
         new info.
         '''
-        
+
         if not fileName:
             if not self.fileName:
                 raise UserWarning, "No filename specified from which to load data"
@@ -138,16 +138,16 @@ class PDBFile(PalmDatabase.PalmDatabase):
         benefit to using this function.  Use save() instead.
         """
         if self.writeBack: self.save()
-    
+
     def save(self, fileName=None, saveCopyOnly=False):
         '''
         Save the Palm database to the specified file, or if no file is specified,
         attept to save it to the file from which the current database was loaded.
-        
+
         By default, when a filename is specified, it becomes the new default
         filename (the one written to when just a save() is called without
         arguments).
-        
+
         If saveCopyOnly is True, then only a *copy* of the current database is
         saved to the specified file, but the default filename (self.fileName)
         is not changed.
@@ -162,16 +162,16 @@ class PDBFile(PalmDatabase.PalmDatabase):
             else: #  if a filename is given, write to it with no regard for its "dirtyness"
                 if not saveCopyOnly:
                     self.fileName = fileName # set new filename class variable
-        	    f = open(fileName, 'wb')
-	            f.write(self.toByteArray())
+                    f = open(fileName, 'wb')
+                    f.write(self.toByteArray())
                     f.close()
-	            self.dirty = False # now 'clean' since it's been saved
+                    self.dirty = False # now 'clean' since it's been saved
                 else:
                     raise UserWarning, "Cannot save: no fileName available"
 
 
 if __name__ == "__main__":
-	ProgectDB=PDBFile('lbPG-tutorial.PDB')
-#	print ProgectDB.toXML()
+        ProgectDB=PDBFile('lbPG-tutorial.PDB')
+        print ProgectDB.toXML()
         x=ProgectDB.toByteArray()
-        
+

@@ -1,6 +1,8 @@
 import unittest
 
 import struct
+import datetime
+
 from PalmDB.Util import *
 
 def plah(toPrint):
@@ -127,6 +129,27 @@ class UtilGetBitsTestCase(unittest.TestCase):
 			bitCount=MSBBitIndex+1
 			getBits(originalValue,MSBBitIndex,bitCount)
 
+
+class UtilPalmDateTestCase(unittest.TestCase):
+	def testCrackPalmDateNoDate(self):
+		'''crackPalmDate with a zero passed in'''
+		self.assertEqual(crackPalmDate(0),None)
+	def testCrackPalmDateWithBaselineDate(self):
+		'''crackPalmDate with baseline date passed in'''
+		self.assertEqual(crackPalmDate(PILOT_TIME_DELTA),datetime.datetime(1969, 12, 31, 19, 0))
+	def testPackPalmDateNoDate(self):
+		'''packPalmDate with None passed in'''
+		self.assertEqual(packPalmDate(None),0)
+	def testPackPalmDateWithBaselineDate(self):
+		'''packPalmDate with baseline date passed in'''
+		self.assertEqual(packPalmDate(datetime.datetime(1969, 12, 31, 19, 0)),PILOT_TIME_DELTA)
+	def testPalmDateRoundTrip(self):
+		'''Palm date round trip conversions'''
+		for seconds in range(1,pow(2,30),10000):
+			self.assertEqual(packPalmDate(crackPalmDate(seconds)),seconds)
+
+		
+		
 if __name__ == "__main__":
 	unittest.main()
 

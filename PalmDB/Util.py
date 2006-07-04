@@ -1,6 +1,4 @@
 #
-#  $Id: PalmDB.py,v 1.11 2005/12/13 03:12:12 rprice Exp $
-#
 # Copyright 2006 Rick price <rick_price@users.sourceforge.net>
 # This Python library is used to read/write Palm PDB files
 #
@@ -29,16 +27,15 @@
     XML utilities to make creating XML easier.
 """
 
-__version__ = '$Id: PalmDB.py,v 1.11 2005/12/13 03:12:12 rprice Exp $'
-
 __copyright__ = 'Copyright 2006 Rick Price <rick_price@users.sourceforge.net>'
 
 import time
 import datetime
 
 import struct
-def plah(toPrint):
-	return 'UTL'+struct.pack('>l',long(toPrint)).encode('HEX')
+
+# def plah(toPrint):
+# 	return 'UTL'+struct.pack('>l',long(toPrint)).encode('HEX')
 
 XMLsuppressFalseOrBlank=False
 
@@ -105,7 +102,10 @@ def crackPalmDate(variable):
             return datetime.datetime.fromtimestamp(variable-PILOT_TIME_DELTA)
 
 def packPalmDate(variable):
-        return int(time.mktime(variable.timetuple())+PILOT_TIME_DELTA)
+	if variable == None:
+		return 0
+	else:
+		return int(time.mktime(variable.timetuple())+PILOT_TIME_DELTA)
 
 #
 # XML Helper Functions
@@ -184,49 +184,3 @@ def returnSequenceAsXML(sequence):
 	for value in sequence.__iter__():
 		returnValue+=returnObjectAsXML('item',value)
 	return returnValue
-
-# Class to encapsulate PDB file plugin
-class PDBFilePlugin:
-	#+++ FIX THIS +++ This HAS to be redefined in child classes otherwise things won't work
-	def getPDBCreatorID():
-		return None
-
-	#+++ FIX THIS +++ this will be called before any of the other functions are called
-	def setVersion(version):
-		pass
-
-	def createCategoriesObject(self,raw):
-		return Categories(raw)
-
-        def palmDatabaseInfoObject(self,raw):
-		return PalmDatabaseInfo(raw)
-
-	def getDatabaseRecordFactory(self):
-		return None # +++ FIX THIS +++ obviously this needs to be fixed
-
-PDBPlugins={}
-def registerPDBPlugin(PDBFilePluginClass):
-	type=PDBFilePluginClass.getPDBCreatorID()
-	if type == None:
-		#+++ FIX THIS +++ need to throw a "what are you trying to do exception"
-		pass
-	PDBPlugins[type]=PDBFilePluginClass
-
-def getPDBPlugin(CreatorID):
-#+++ FIX THIS +++ implement
-# if we cannot find an appropriate plugin, default to one that can handle any type
-	pass
-
-#
-#--------- Register Standard Plugins that come with Library ---------
-#
-
-#import ProgectPDBPlugin
-#import StandardNotepadPDBPlugin
-
-#registerPDBPLugin(ProgectPDBPlugin.plugin)
-#registerPDBPLugin(StandardNotepadPDBPlugin.plugin)
-
-#
-#--------- Register Standard Plugins that come with Library ---------
-#
