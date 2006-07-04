@@ -1,6 +1,4 @@
 #
-#  $Id: PalmDB.py,v 1.11 2005/12/13 03:12:12 rprice Exp $
-#
 # Copyright 2006 Rick price <rick_price@users.sourceforge.net>
 # This Python library is used to read/write Palm PDB files
 #
@@ -28,21 +26,21 @@
 
 """
 
-__version__ = '$Id: PalmDB.py,v 1.11 2005/12/13 03:12:12 rprice Exp $'
-
 __copyright__ = 'Copyright 2006 Rick Price <rick_price@users.sourceforge.net>'
 
 import Plugins.BasePlugin
 
 basePlugin=Plugins.BasePlugin.BasePDBFilePlugin()
+
 # +++ READ THIS +++ Plugins need to implement the interface in Plugins.BasePlugin.BasePDBFilePlugin
 PDBPlugins={}
 def registerPDBPlugin(PDBFilePluginClass):
 	type=PDBFilePluginClass.getPDBCreatorID()
-	if type == None:
-		#+++ FIX THIS +++ need to throw a "what are you trying to do exception"
-		pass
 	PDBPlugins[type]=PDBFilePluginClass
+
+def deRegisterPDBPlugin(PDBFilePluginClass):
+	type=PDBFilePluginClass.getPDBCreatorID()
+	del(PDBPlugins[type])
 
 def getPDBPlugin(CreatorID):
         # if we cannot find an appropriate plugin, default to one that can handle any type
