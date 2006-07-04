@@ -10,6 +10,7 @@
 import unittest
 
 from UtilTest import *
+from PluginManagerTest import *
 
 class ModuleTestCase(unittest.TestCase):
 	def setUp(self):
