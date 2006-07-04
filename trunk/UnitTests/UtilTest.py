@@ -1,4 +1,5 @@
 import unittest
+
 import struct
 from PalmDB.Util import *
 
@@ -19,7 +20,7 @@ class UtilSetBitsTestCase(unittest.TestCase):
  		bitsToSet=1
  		for MSBBitIndex in range(32):
  			testValue=setBits(startValue,bitsToSet,MSBBitIndex)
- 			assert (testValue == comparisonMask << MSBBitIndex)
+ 			self.assertEqual(testValue,comparisonMask << MSBBitIndex)
 	def testSingleBitsOff(self):
 		'''Reset Single Bit Tests'''
                 bitCount=1
@@ -29,7 +30,7 @@ class UtilSetBitsTestCase(unittest.TestCase):
 		for MSBBitIndex in range(32):
 			comparisonMask=originalMask<<MSBBitIndex
 			testValue=setBits(startValue,bitsToSet,MSBBitIndex)
-			assert (testValue == startValue&~comparisonMask)
+			self.assertEqual(testValue,startValue&~comparisonMask)
 	def testSingleBitsBitToHigh(self):
 		'''Set Single Bit Tests - Bit too high'''
 		originalValue=0
@@ -52,7 +53,7 @@ class UtilSetBitsTestCase(unittest.TestCase):
  			bitCount=MSBBitIndex+2
  			self.assertRaises(AssertionError,setBits,originalValue,bitsToSet,MSBBitIndex,bitCount)
  	def testSetBitsAskForJustEnoughBits(self):
- 		'''Set Bit Tests - Just enough bits'''
+ 		'''Set Bit Tests - Just enough bits; should exception if problem'''
  		originalValue=0
  		bitsToSet=0
  		for MSBBitIndex in range(32):
@@ -71,7 +72,7 @@ class UtilGetBitsTestCase(unittest.TestCase):
 		comparisonMask=1
 		for MSBBitIndex in range(32):
 			returnValue=getBits(comparisonMask<<MSBBitIndex,MSBBitIndex)
-			assert (returnValue == 1)
+			self.assertEqual(returnValue,1)
 	def testSingleBitsBitToHigh(self):
 		'''Get Single Bit Tests - Bit too high'''
 		originalValue=0
@@ -92,7 +93,7 @@ class UtilGetBitsTestCase(unittest.TestCase):
 			bitCount=MSBBitIndex+2
 			self.assertRaises(AssertionError,getBits,originalValue,MSBBitIndex,bitCount)
 	def testGetBitsAskForJustEnoughBits(self):
-		'''Get Bit Tests - Just enough bits requested'''
+		'''Get Bit Tests - Just enough bits requested; should assert if problem'''
 		originalValue=0
 		for MSBBitIndex in range(32):
 			bitCount=MSBBitIndex+1
