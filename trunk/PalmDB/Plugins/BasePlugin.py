@@ -258,6 +258,11 @@ class CategoriesObject(dict):
             returnValue+=returnAsXMLItem('category',returnObjectAsXML('CategoryID',key)+returnObjectAsXML('CategoryName',self[key]),escape=False)
 	return returnAsXMLItem('palmCategories',returnValue,escape=False)
 
+    def fromDOMNode(self,DOMNode):
+	    self.clear()
+	    categoriesDict=dictionaryFromXMLDOMNode(DOMNode)
+	    self.update(headerDict)
+	
     def __setitem__(self,key,value):
 	    dict.__setitem__(key,value)
 	    self.reverseLookup[value]=key
@@ -331,13 +336,12 @@ class GeneralPalmDBXMLReaderObject(GenericXMLReaderObject):
 	def parse_START_ELEMENT_palmHeader(self,events,node,palmDatabaseObject):
 		events.expandNode(node)
 		palmDatabaseObject._palmHeaderFromDOMNode(node)
-		# create palmHeader from XML node object
-		raise NotImplementedError
 	def parse_START_ELEMENT_palmCategories(self,events,node,palmDatabaseObject):
-		plugin=palmDatabaseObject._getPlugin()
-		
 		events.expandNode(node)
-		raise NotImplementedError
+		plugin=palmDatabaseObject._getPlugin()
+		categoriesObject=plugin.createCategoriesObject(palmDatabaseObject)
+		categoriesObject.fromDOMNode(node)
+		palmDatabaseObject.categoriesObject=categoriesObject
 	def parse_START_ELEMENT_applicationBlock(self,events,node,palmDatabaseObject):
 		events.expandNode(node)
 		raise NotImplementedError
