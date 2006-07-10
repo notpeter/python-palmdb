@@ -131,8 +131,6 @@ def returnObjectAsXML(itemName,item):
 	return returnAttributeAsXML(itemName,'string',item)
     if item.__class__.__name__ == 'bool':
 	return returnAttributeAsXML(itemName,'boolean',item)
-    if item.__class__.__name__ == 'bool':
-	return returnAttributeAsXML(itemName,'boolean',item)
     if item.__class__.__name__ == 'dict':
 	return returnAttributeAsXML(itemName,'dictionary',returnDictionaryAsXML(item),escape=False)
     if item.__class__.__name__ == 'list':
@@ -184,3 +182,39 @@ def returnSequenceAsXML(sequence):
 	for value in sequence.__iter__():
 		returnValue+=returnObjectAsXML('item',value)
 	return returnValue
+
+
+def dictionaryFromXMLDOMNode(XMLDOMNode):
+    # if no children; no point in trying
+    assert(XMLDOMNode.hasChildNodes())
+
+    returnValue={}
+    for item in XMLDOMNode.childNodes:
+        if item.nodeName == 'attribute':
+            itemName=item.attributes['name'].value
+            for itemChild in item.childNodes:
+                itemData=itemFromXMLDOMNode(itemChild)
+                returnValue[itemName]=itemData
+    return returnValue
+
+def itemFromXMLDOMNode(XMLDOMNode):
+    if XMLDOMNode.nodeName == 'integer':
+        return int(XMLDOMNode.attributes['value'].value)
+    if XMLDOMNode.nodeName == 'real':
+        return float(XMLDOMNode.attributes['value'].value)
+    if XMLDOMNode.nodeName == 'rational':
+        return simpleRational(int(XMLDOMNode.attributes['numerator'].value),int(XMLDOMNode.attributes['denominator'].value))
+    if XMLDOMNode.nodeName == 'string':
+        return XMLDOMNode.attributes['value'].value
+    if XMLDOMNode.nodeName == 'boolean':
+        return bool(XMLDOMNode.attributes['value'].value)
+    if XMLDOMNode.nodeName == 'date':
+        year=int(XMLDOMNode.attributes['year'].value)
+        month=int(XMLDOMNode.attributes['month'].value)
+        day=int(XMLDOMNode.attributes['day'].value)
+        hour=int(XMLDOMNode.attributes['hour'].value)
+        minutes=int(XMLDOMNode.attributes['minutes'].value)
+        seconds=int(XMLDOMNode.attributes['seconds'].value)
+        return datetime.datetime(year,month,day,hour,minutes,seconds)
+    # +++ FIX THIS +++ Some types missing here
+    return None

@@ -44,6 +44,7 @@ from PalmDB.Util import getBits
 from PalmDB.Util import setBits
 from PalmDB.Util import returnDictionaryAsXML
 from PalmDB.Util import returnAsXMLItem
+from PalmDB.Util import dictionaryFromXMLDOMNode
 
 class PalmHeaderInfo:
 	# Header Struct
@@ -203,7 +204,10 @@ class PalmDatabase:
 	    XMLReaderObject.fromXML(fileStream,self)
 
     def _palmHeaderFromDOMNode(self,DOMNode):
+	    print '+++ Processing Palm Header +++'
 	    print DOMNode;
+	    headerDict=dictionaryFromXMLDOMNode(DOMNode)
+	    print 'header dict',headerDict
 	
     def getAppBlock(self): return self.appblock and self.appblock or None
     def setAppBlock(self, raw):
