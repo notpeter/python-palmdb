@@ -305,7 +305,7 @@ class sortBlockObject:
 class BaseXMLReaderObject:
 	def __init__(self):
 		pass
-	def fromXML(self,fileStream,PalmDatabaseObject):
+	def fromXML(self,fileStream,palmDatabaseObject):
 		# IE call functions with names like 'parse_START_ELEMENT' and 'parse_END_ELEMENT'; the names are defined in
 		# xml.dom.pulldom at the top of the source file.
 		events = pulldom.parse(fileStream)
@@ -323,27 +323,30 @@ class GenericXMLReaderObject(BaseXMLReaderObject):
 		self._callParseMethod(events,node,palmDatabaseObject,'START_ELEMENT')
 		
 class GeneralPalmDBXMLReaderObject(GenericXMLReaderObject):
-	def parse_START_DOCUMENT(events,node,palmDatabaseObject):
+	def parse_START_DOCUMENT(self,events,node,palmDatabaseObject):
 		palmDatabaseObject.clear()
-	def parse_START_ELEMENT_palmDatabase(events,node,palmDatabaseObject):
+	def parse_START_ELEMENT_palmDatabase(self,events,node,palmDatabaseObject):
 		# Set creatorID from header
 		palmDatabaseObject.attributes['creatorID']=node.attributes['type'].value
-	def parse_START_ELEMENT_palmHeader(events,node,palmDatabaseObject):
+	def parse_START_ELEMENT_palmHeader(self,events,node,palmDatabaseObject):
 		events.expandNode(node)
+		palmDatabaseObject._palmHeaderFromDOMNode(node)
 		# create palmHeader from XML node object
 		raise NotImplementedError
-	def parse_START_ELEMENT_palmCategories(events,node,palmDatabaseObject):
+	def parse_START_ELEMENT_palmCategories(self,events,node,palmDatabaseObject):
+		plugin=palmDatabaseObject._getPlugin()
+		
 		events.expandNode(node)
 		raise NotImplementedError
-	def parse_START_ELEMENT_applicationBlock(events,node,palmDatabaseObject):
+	def parse_START_ELEMENT_applicationBlock(self,events,node,palmDatabaseObject):
 		events.expandNode(node)
 		raise NotImplementedError
-	def parse_START_ELEMENT_sortBlock(events,node,palmDatabaseObject):
+	def parse_START_ELEMENT_sortBlock(self,events,node,palmDatabaseObject):
 		events.expandNode(node)
 		raise NotImplementedError
-	def parse_START_ELEMENT_palmDataRecord(events,node,palmDatabaseObject):
+	def parse_START_ELEMENT_palmDataRecord(self,events,node,palmDatabaseObject):
 		events.expandNode(node)
 		raise NotImplementedError
-	def parse_START_ELEMENT_palmResourceRecord(events,node,palmDatabaseObject):
+	def parse_START_ELEMENT_palmResourceRecord(self,events,node,palmDatabaseObject):
 		events.expandNode(node)
 		raise NotImplementedError
