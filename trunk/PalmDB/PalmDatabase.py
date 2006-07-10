@@ -78,9 +78,9 @@ class PalmDatabase:
 	self.attributes={}
 	self.reset()
 
-    def reset(self):
+    def clear(self):
         '''
-        Reset all class data to the defaults.
+        Resets all class data to the defaults.
         '''
         self.attributes.clear()
 

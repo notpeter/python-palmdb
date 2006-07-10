@@ -34,6 +34,8 @@
 __copyright__ = 'Copyright 2006 Rick Price <rick_price@users.sourceforge.net>'
 
 import struct
+from xml.dom import pulldom
+
 from PalmDB.Util import getBits
 from PalmDB.Util import setBits
 from PalmDB.Util import returnDictionaryAsXML
@@ -44,9 +46,10 @@ RESOURCE_ENTRY_SIZE = 10  # size of a resource entry
 RECORD_ENTRY_SIZE = 8 # size of a record entry
 
 class BasePDBFilePlugin:
-	#+++ FIX THIS +++ This HAS to be redefined in child classes otherwise things won't work
 	def getPDBCreatorID(self):
-		return None
+	        #+++ READ THIS +++ This HAS to be redefined in child classes otherwise things won't work
+		raise NotImplementedError
+		return 'CrID'
 
 	def createCategoriesObject(self,PalmDatabaseObject):
 		return CategoriesObject()
@@ -81,6 +84,9 @@ class BasePDBFilePlugin:
 			recordsXML+=record.toXML()
 		recordsXML=returnAsXMLItem('PalmRecordList',recordsXML,escape=False)
 		return recordsXML
+	def getXMLReaderObject(self,PalmDatabaseObject):
+		return GeneralPalmDBXMLReaderObject()
+		
 	
 class BaseRecord:
     def __init__(self):
@@ -102,6 +108,8 @@ class BaseRecord:
 	    return self.attributes['payload'].decode('HEX')
 
     def getRecordXMLName(self):
+	    # +++ READ THIS +++ This has to be implemented in a child class
+	    raise NotImplementedError
 	    return 'PalmRecord'
     def toXML(self):
 	    attributesAsXML=returnDictionaryAsXML(self.attributes)
@@ -122,7 +130,7 @@ class DataRecord(BaseRecord):
 	    self._crackAttributeBits(0)
 
     def getRecordXMLName(self):
-	    return 'PalmDataRecord'
+	    return 'palmDataRecord'
 
     def _crackRecordHeader(self,hstr):
         (offset, bits) = struct.unpack('>ll', hstr)
@@ -174,7 +182,7 @@ class ResourceRecord(BaseRecord):
         return struct.pack('>4shl', self.attributes['resourceType'],self.attributes['id'],offset)
 
     def getRecordXMLName(self):
-	    return 'PalmResourceRecord'
+	    return 'palmResourceRecord'
 
 # you need to pass the AppBlock into this class in the constructor
 class CategoriesObject(dict):
@@ -294,3 +302,48 @@ class sortBlockObject:
 		attributesAsXML=returnDictionaryAsXML(self.attributes)
 		return returnAsXMLItem('sortBlock',attributesAsXML,escape=False)
 
+class BaseXMLReaderObject:
+	def __init__(self):
+		pass
+	def fromXML(self,fileStream,PalmDatabaseObject):
+		# IE call functions with names like 'parse_START_ELEMENT' and 'parse_END_ELEMENT'; the names are defined in
+		# xml.dom.pulldom at the top of the source file.
+		events = pulldom.parse(fileStream)
+		for (event, node) in events:
+			parseMethod=getattr(self, "parse_%s"%event,None)
+			if parseMethod:
+				parseMethod(events,node,palmDatabaseObject)
+
+class GenericXMLReaderObject(BaseXMLReaderObject):
+	def _callParseMethod(self,events,node,palmDatabaseObject,type):
+		parseMethod=getattr(self, "parse_%s_%s"%(type,node.nodeName),None)
+		if parseMethod:
+			parseMethod(events,node,palmDatabaseObject)
+	def parse_START_ELEMENT(self,events,node,palmDatabaseObject):
+		self._callParseMethod(events,node,palmDatabaseObject,'START_ELEMENT')
+		
+class GeneralPalmDBXMLReaderObject(GenericXMLReaderObject):
+	def parse_START_DOCUMENT(events,node,palmDatabaseObject):
+		palmDatabaseObject.clear()
+	def parse_START_ELEMENT_palmDatabase(events,node,palmDatabaseObject):
+		# Set creatorID from header
+		palmDatabaseObject.attributes['creatorID']=node.attributes['type'].value
+	def parse_START_ELEMENT_palmHeader(events,node,palmDatabaseObject):
+		events.expandNode(node)
+		# create palmHeader from XML node object
+		raise NotImplementedError
+	def parse_START_ELEMENT_palmCategories(events,node,palmDatabaseObject):
+		events.expandNode(node)
+		raise NotImplementedError
+	def parse_START_ELEMENT_applicationBlock(events,node,palmDatabaseObject):
+		events.expandNode(node)
+		raise NotImplementedError
+	def parse_START_ELEMENT_sortBlock(events,node,palmDatabaseObject):
+		events.expandNode(node)
+		raise NotImplementedError
+	def parse_START_ELEMENT_palmDataRecord(events,node,palmDatabaseObject):
+		events.expandNode(node)
+		raise NotImplementedError
+	def parse_START_ELEMENT_palmResourceRecord(events,node,palmDatabaseObject):
+		events.expandNode(node)
+		raise NotImplementedError
