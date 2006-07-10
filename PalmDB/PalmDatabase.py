@@ -204,11 +204,8 @@ class PalmDatabase:
 	    XMLReaderObject.fromXML(fileStream,self)
 
     def _palmHeaderFromDOMNode(self,DOMNode):
-	    print '+++ Processing Palm Header +++'
-	    print DOMNode;
 	    headerDict=dictionaryFromXMLDOMNode(DOMNode)
-	    print 'header dict',headerDict
-	
+	    self.attributes.update(headerDict)
     def getAppBlock(self): return self.appblock and self.appblock or None
     def setAppBlock(self, raw):
         self.dirty = True
