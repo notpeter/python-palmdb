@@ -76,7 +76,7 @@ class PalmDatabase:
     '''
     def __init__(self):
 	self.attributes={}
-	self.reset()
+	self.clear()
 
     def clear(self):
         '''
@@ -197,7 +197,14 @@ class PalmDatabase:
 	returnValue+=plugin.getRecordsAsXML(self)
 	returnValue+=plugin.getXMLFileFooter(self)
 	return returnValue
+    def fromXML(self,fileStream):
+	    plugin=self._getPlugin()
+	    XMLReaderObject=plugin.getXMLReaderObject(self)
+	    XMLReaderObject.fromXML(fileStream,self)
 
+    def _palmHeaderFromDOMNode(self,DOMNode):
+	    print DOMNode;
+	
     def getAppBlock(self): return self.appblock and self.appblock or None
     def setAppBlock(self, raw):
         self.dirty = True
@@ -224,7 +231,7 @@ class PalmDatabase:
         newDatabase = copy.deepcopy(self)
         newDatabase.records = newRecordList
 	# +++ FIX THIS +++
-        newDatabase.palmDBInfo._updateNumberOfRecords(newDatabase)
+#        newDatabase.palmDBInfo._updateNumberOfRecords(newDatabase)
         return newDatabase
     
     def __getitem__(self, index):
@@ -235,24 +242,29 @@ class PalmDatabase:
     def __delitem__(self, index):
         del(self.records[index])
         self.dirty = True
-        self.palmDBInfo._updateNumberOfRecords(self)
+# +++ FIX THIS +++
+#        self.palmDBInfo._updateNumberOfRecords(self)
     def clear(self):
         self.records = []
         self.dirty = True
-        self.palmDBInfo._updateNumberOfRecords(self)
+# +++ FIX THIS +++
+#        self.palmDBInfo._updateNumberOfRecords(self)
     def append(self,record):
         self.records.append(record)
         self.dirty = True
-        self.palmDBInfo._updateNumberOfRecords(self)
+# +++ FIX THIS +++
+#        self.palmDBInfo._updateNumberOfRecords(self)
     def insert(self,index,record):
         self.records.insert(index,record)
         self.dirty = True
-        self.palmDBInfo._updateNumberOfRecords(self)
+# +++ FIX THIS +++
+#        self.palmDBInfo._updateNumberOfRecords(self)
     def remove(self,record):
         "Remove the first record with the specified ID"
         self.records.remove(record)
         self.dirty = True
-        self.palmDBInfo._updateNumberOfRecords(self)
+# +++ FIX THIS +++
+#        self.palmDBInfo._updateNumberOfRecords(self)
     def index(self,record):
         return self.records.index(record)
     def __contains__(self,record):
@@ -303,7 +315,7 @@ class PalmDatabase:
         '''
 
         # clear all existing records
-        self.reset()
+        self.clear()
 
 	(applicationInformationOffset,sortInformationOffset,numberOfRecords)=self._headerInfoFromByteArray(raw)
 
