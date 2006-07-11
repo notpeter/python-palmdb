@@ -374,4 +374,4 @@ class GeneralPalmDBXMLReaderObject(GenericXMLReaderObject):
 		plugin=palmDatabaseObject._getPlugin()
 		palmRecord=plugin.createPalmDatabaseRecord(palmDatabaseObject)
 		palmRecord.fromDOMNode(node)
-		palmDatabaseObject.add(palmRecord)
+		palmDatabaseObject.append(palmRecord)

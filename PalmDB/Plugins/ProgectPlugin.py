@@ -87,7 +87,24 @@ class ProgectPlugin(PalmDB.Plugins.BasePlugin.BasePDBFilePlugin):
 				recordsXML+='</%s>'%record.getRecordXMLName()
 				openLevel-=1
 		return recordsXML
+	def getXMLReaderObject(self,PalmDatabaseObject):
+		return ProgectPalmDBXMLReaderObject()
 	
+class ProgectPalmDBXMLReaderObject(PalmDB.Plugins.BasePlugin.GeneralPalmDBXMLReaderObject):
+	def parse_START_ELEMENT_ProgectDataRecord(self,events,node,palmDatabaseObject):
+#		events.expandNode(node)
+		print 'got here1'
+		plugin=palmDatabaseObject._getPlugin()
+		palmRecord=plugin.createPalmDatabaseRecord(palmDatabaseObject)
+		palmRecord.fromDOMNode(node)
+		palmDatabaseObject.append(palmRecord)
+		print 'got here'
+	def parse_START_ELEMENT_children(self,events,node,palmDatabaseObject):
+		print 'start children'
+		pass
+	def parse_END_ELEMENT_children(self,events,node,palmDatabaseObject):
+		print 'end children'
+		pass
 def crackProgectDate(variable):
 	# Date due field:
     	# This field seems to be layed out like this:
@@ -179,6 +196,12 @@ class ProgectRecord(PalmDB.Plugins.BasePlugin.DataRecord):
         for extraBlock in self.extraBlockRecordList:
             attributesAsXML+=extraBlock.toXML()
 	return attributesAsXML
+    def fromDOMNode(self,DOMNode):
+	    PalmDB.Plugins.BasePlugin.DataRecord.fromDOMNode(self,DOMNode)
+	    # now grab the attribute for the type and put it away
+	    type=DOMNode.attributes['type'].value
+	    print 'type is',type
+	    self.attributes['_itemType']=type
 
     def fromByteArray(self,hstr,dstr):
         self._crackRecordHeader(hstr)
