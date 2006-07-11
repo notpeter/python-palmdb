@@ -41,6 +41,7 @@ from PalmDB.Util import setBits
 from PalmDB.Util import returnDictionaryAsXML
 from PalmDB.Util import returnAsXMLItem
 from PalmDB.Util import returnObjectAsXML
+from PalmDB.Util import dictionaryFromXMLDOMNode
 
 RESOURCE_ENTRY_SIZE = 10  # size of a resource entry
 RECORD_ENTRY_SIZE = 8 # size of a record entry
@@ -224,18 +225,18 @@ class CategoriesObject(dict):
         x.SetRaw(applicationInfoBlock)
         '''
 
-	self.renamedCategories=struct.unpack('!H',raw[0:2])[0]
-	self.categoryLabels=list(struct.unpack('16s'*16,raw[2:258]))
+	renamedCategories=struct.unpack('!H',raw[0:2])[0]
+	categoryLabels=list(struct.unpack('16s'*16,raw[2:258]))
 	# Strip off the trailing zeroes
-	self.categoryLabels=map(lambda x : x.split('\0')[0],self.categoryLabels)
-	self.categoryUniqIDs=list(struct.unpack('B'*16,raw[258:274]))
-	self.lastUniqID=struct.unpack('B',raw[274])[0]
-	
-	# build category list
-	categories=zip(range(16),self.categoryLabels)
+	categoryLabels=map(lambda x : x.split('\0')[0],categoryLabels)
+	categoryUniqIDs=list(struct.unpack('B'*16,raw[258:274]))
+	lastUniqID=struct.unpack('B',raw[274])[0]
+	# build category list, use name as key, number as value
+	categories=zip(categoryLabels,categoryUniqIDs)
 
 	# get rid of categories that are empty, because empty strings are false
-	categories=filter(lambda x : x[1],categories)
+	categories=filter(lambda x : x[0],categories)
+
 	tempDict=dict(categories)
 
 	# update ourselves with the new categories
@@ -250,28 +251,40 @@ class CategoriesObject(dict):
         You need to copy the bytes returned by this function to the beginning of the 
         application info block. The string returned will be calcsize() bytes long.
         '''
+	# +++ FIX THIS +++, this is just plain old broken
+	renamedCategories=0
+	(categoryLabels,categoryUniqIDs)=zip(*self.items())
+	lastUniqID=reduce(max,categoryUniqIDs)
+
+	# have to add in dummy data now
+	dummyCount=16-len(categoryLabels)
+	categorylabels.extend(['']*dummyCount)
+	categoryUniqIDs.extend(range(lastUniqID+1,lastUniqID+dummyCount))
+	lastUniqID=lastUniqID+dummyCount-1
+	# this is completely untested, and should be assumed to be broken
+	raise NotImplementedError
 	return struct.pack(self.__packString,*([self.renamedCategories]+self.categoryLabels+self.categoryUniqIDs+[self.lastUniqID]))
 
     def toXML(self):
-        returnValue=''
-        for key in self.keys():
-            returnValue+=returnAsXMLItem('category',returnObjectAsXML('CategoryID',key)+returnObjectAsXML('CategoryName',self[key]),escape=False)
-	return returnAsXMLItem('palmCategories',returnValue,escape=False)
+	return returnAsXMLItem('palmCategories',returnDictionaryAsXML(self),escape=False)
 
     def fromDOMNode(self,DOMNode):
 	    self.clear()
 	    categoriesDict=dictionaryFromXMLDOMNode(DOMNode)
-	    self.update(headerDict)
-	
+	    self.update(categoriesDict)
     def __setitem__(self,key,value):
 	    dict.__setitem__(key,value)
-	    self.reverseLookup[value]=key
+	    self._reverseLookup[value]=key
     def __delitem__(self,key):
 	    # delete reverse lookup
-	    del(self.reverseLookup[self[key]])
+	    del(self._reverseLookup[self[key]])
 	    dict.__delitem__(key)
+    def update(self,dictionary):
+	    dict.update(self,dictionary)
+	    for (key,value) in self.iteritems():
+		    self._reverseLookup[value]=key
     def reverseLookup(self,value):
-	    return self.reverseLookup[value]
+	    return self._reverseLookup[value]
 
 class applicationInformationObject:
 	def __init__(self):

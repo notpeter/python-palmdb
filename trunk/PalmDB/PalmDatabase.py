@@ -83,13 +83,14 @@ class PalmDatabase:
         '''
         Resets all class data to the defaults.
         '''
-        self.attributes.clear()
+	self.attributes.clear()
 
-        self.records = []
-        self.dirty = False
+	self.records = []
+	self.dirty = False
 	self.categoriesObject=None
 	self.applicationInformationObject=None
 	self.sortBlockObject=None
+        self.dirty = True
 
     def _getPlugin(self):
 	return PluginManager.getPDBPlugin(self.attributes['creatorID'])
@@ -206,6 +207,7 @@ class PalmDatabase:
     def _palmHeaderFromDOMNode(self,DOMNode):
 	    headerDict=dictionaryFromXMLDOMNode(DOMNode)
 	    self.attributes.update(headerDict)
+	    print '+++ REMOVE THIS +++ headerdict',headerDict
     def getAppBlock(self): return self.appblock and self.appblock or None
     def setAppBlock(self, raw):
         self.dirty = True
@@ -242,11 +244,6 @@ class PalmDatabase:
         self.dirty = True
     def __delitem__(self, index):
         del(self.records[index])
-        self.dirty = True
-# +++ FIX THIS +++
-#        self.palmDBInfo._updateNumberOfRecords(self)
-    def clear(self):
-        self.records = []
         self.dirty = True
 # +++ FIX THIS +++
 #        self.palmDBInfo._updateNumberOfRecords(self)
