@@ -38,7 +38,9 @@ import PalmDB.Plugins.BasePlugin
 from PalmDB.Util import getBits
 from PalmDB.Util import setBits
 from PalmDB.Util import returnDictionaryAsXML
+from PalmDB.Util import dictionaryFromXMLDOMNode
 from PalmDB.Util import returnObjectAsXML
+from PalmDB.Util import returnAsXMLItem
 from PalmDB.Util import simpleRational
 
 class ProgectPlugin(PalmDB.Plugins.BasePlugin.BasePDBFilePlugin):
@@ -67,7 +69,7 @@ class ProgectPlugin(PalmDB.Plugins.BasePlugin.BasePDBFilePlugin):
 					recordsXML+='</%s>'%record.getRecordXMLName()
 					openLevel-=1
 
-			recordsXML+='<%s type="%s" version="1.0">'%(record.getRecordXMLName(),record.attributes['_itemType'])
+			recordsXML+='<%s>'%(record.getRecordXMLName())
 #			recordsXML+=record.toXML(categories)
 			recordsXML+=record.toXML()
 			if record.attributes['_hasChild']:
@@ -93,12 +95,15 @@ class ProgectPlugin(PalmDB.Plugins.BasePlugin.BasePDBFilePlugin):
 class ProgectPalmDBXMLReaderObject(PalmDB.Plugins.BasePlugin.GeneralPalmDBXMLReaderObject):
 	def parse_START_ELEMENT_ProgectDataRecord(self,events,node,palmDatabaseObject):
 #		events.expandNode(node)
-		print 'got here1'
 		plugin=palmDatabaseObject._getPlugin()
-		palmRecord=plugin.createPalmDatabaseRecord(palmDatabaseObject)
-		palmRecord.fromDOMNode(node)
-		palmDatabaseObject.append(palmRecord)
+		self.palmRecord=plugin.createPalmDatabaseRecord(palmDatabaseObject)
+		self.palmRecord.fromDOMNode(node)
+		palmDatabaseObject.append(self.palmRecord)
 		print 'got here'
+	def parse_START_ELEMENT_recordAttributes(self,events,node,palmDatabaseObject):
+		print 'record attributes'
+		events.expandNode(node)
+		self.palmRecord.recordAttributesFromDOMNode(node)
 	def parse_START_ELEMENT_children(self,events,node,palmDatabaseObject):
 		print 'start children'
 		pass
@@ -195,14 +200,14 @@ class ProgectRecord(PalmDB.Plugins.BasePlugin.DataRecord):
         attributesAsXML=returnDictionaryAsXML(self.attributes)
         for extraBlock in self.extraBlockRecordList:
             attributesAsXML+=extraBlock.toXML()
-	return attributesAsXML
+	return returnAsXMLItem('recordAttributes',attributesAsXML,escape=False)
+    def recordAttributesFromDOMNode(self,DOMNode):
+	    self.attributes.clear()
+	    attributesDict=dictionaryFromXMLDOMNode(DOMNode)
+	    self.attributes.update(attributesDict)
     def fromDOMNode(self,DOMNode):
-	    PalmDB.Plugins.BasePlugin.DataRecord.fromDOMNode(self,DOMNode)
-	    # now grab the attribute for the type and put it away
-	    type=DOMNode.attributes['type'].value
-	    print 'type is',type
-	    self.attributes['_itemType']=type
-
+	    pass
+    
     def fromByteArray(self,hstr,dstr):
         self._crackRecordHeader(hstr)
 
@@ -231,7 +236,7 @@ class ProgectRecord(PalmDB.Plugins.BasePlugin.DataRecord):
         self.attributes['hasLink']=bool(getBits( taskFormatType, 9 ))
 
         itemType=getBits( taskFormatType, 8, 5 )
-        self.attributes['_itemType']=PRI.typeTextNames[itemType]
+        self.attributes['itemType']=PRI.typeTextNames[itemType]
         self.attributes['_hasXB']=bool(getBits( taskFormatType, 3 ))
         self.attributes['_newTask']=bool(getBits( taskFormatType, 2 ))
         self.attributes['_newFormat']=bool(getBits( taskFormatType, 1 ))
@@ -270,9 +275,9 @@ class ProgectRecord(PalmDB.Plugins.BasePlugin.DataRecord):
         else:
             self.attributes['priority']=simpleRational(priority,5)
 
-        if self.attributes['_itemType'] == 'ACTION_TYPE':
+        if self.attributes['itemType'] == 'ACTION_TYPE':
             self.attributes['completed']=bool(completed)
-        if self.attributes['_itemType'] == 'PROGRESS_TYPE':
+        if self.attributes['itemType'] == 'PROGRESS_TYPE':
             self.attributes['completed']=simpleRational(completed,10)
 
         text=dstr[PRI.TaskStandardFieldStructSize:]
