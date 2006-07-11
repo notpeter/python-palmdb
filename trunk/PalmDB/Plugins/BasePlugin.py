@@ -115,7 +115,9 @@ class BaseRecord:
     def toXML(self):
 	    attributesAsXML=returnDictionaryAsXML(self.attributes)
 	    return returnAsXMLItem(self.getRecordXMLName(),attributesAsXML,escape=False)
-	    
+    def fromDOMNode(self,DOMNode):
+	    self.attributes=dictionaryFromXMLDOMNode(DOMNode)
+
 class DataRecord(BaseRecord):
     '''
     This class encapsulates a Palm application record.
@@ -363,7 +365,13 @@ class GeneralPalmDBXMLReaderObject(GenericXMLReaderObject):
 		raise NotImplementedError
 	def parse_START_ELEMENT_palmDataRecord(self,events,node,palmDatabaseObject):
 		events.expandNode(node)
-		raise NotImplementedError
+		plugin=palmDatabaseObject._getPlugin()
+		palmRecord=plugin.createPalmDatabaseRecord(palmDatabaseObject)
+		palmRecord.fromDOMNode(node)
+		palmDatabaseObject.append(palmRecord)
 	def parse_START_ELEMENT_palmResourceRecord(self,events,node,palmDatabaseObject):
 		events.expandNode(node)
-		raise NotImplementedError
+		plugin=palmDatabaseObject._getPlugin()
+		palmRecord=plugin.createPalmDatabaseRecord(palmDatabaseObject)
+		palmRecord.fromDOMNode(node)
+		palmDatabaseObject.add(palmRecord)

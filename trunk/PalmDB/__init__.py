@@ -179,5 +179,7 @@ if __name__ == "__main__":
         OutputFile.close()
         XMLFile2=open('test2.xml')
         ProgectDB.fromXML(XMLFile2)
+        OutputFile=open('test3.xml','w')
+        OutputFile.write(ProgectDB.toXML())
 #        x=ProgectDB.toByteArray()
         
