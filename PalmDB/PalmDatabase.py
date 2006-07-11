@@ -185,7 +185,7 @@ class PalmDatabase:
 	plugin=self._getPlugin()
 
 	PalmHeaderAttributes=returnDictionaryAsXML(self.attributes)
-	PalmHeaderAttributes=returnAsXMLItem('PalmHeader',PalmHeaderAttributes,escape=False)
+	PalmHeaderAttributes=returnAsXMLItem('palmHeader',PalmHeaderAttributes,escape=False)
 
 	returnValue+=plugin.getXMLVersionHeader(self)
 	returnValue+=plugin.getXMLFileHeader(self)
@@ -207,8 +207,8 @@ class PalmDatabase:
     def _palmHeaderFromDOMNode(self,DOMNode):
 	    headerDict=dictionaryFromXMLDOMNode(DOMNode)
 	    self.attributes.update(headerDict)
-	    print '+++ REMOVE THIS +++ headerdict',headerDict
-    def getAppBlock(self): return self.appblock and self.appblock or None
+    def getAppBlock(self):
+	    return self.appblock and self.appblock or None
     def setAppBlock(self, raw):
         self.dirty = True
         self.appblock = raw
