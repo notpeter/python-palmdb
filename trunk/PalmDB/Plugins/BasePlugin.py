@@ -323,8 +323,6 @@ class sortBlockObject:
 		return returnAsXMLItem('sortBlock',attributesAsXML,escape=False)
 
 class BaseXMLReaderObject:
-	def __init__(self):
-		pass
 	def fromXML(self,fileStream,palmDatabaseObject):
 		# IE call functions with names like 'parse_START_ELEMENT' and 'parse_END_ELEMENT'; the names are defined in
 		# xml.dom.pulldom at the top of the source file.
@@ -341,6 +339,8 @@ class GenericXMLReaderObject(BaseXMLReaderObject):
 			parseMethod(events,node,palmDatabaseObject)
 	def parse_START_ELEMENT(self,events,node,palmDatabaseObject):
 		self._callParseMethod(events,node,palmDatabaseObject,'START_ELEMENT')
+	def parse_END_ELEMENT(self,events,node,palmDatabaseObject):
+		self._callParseMethod(events,node,palmDatabaseObject,'END_ELEMENT')
 		
 class GeneralPalmDBXMLReaderObject(GenericXMLReaderObject):
 	def parse_START_DOCUMENT(self,events,node,palmDatabaseObject):

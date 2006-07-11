@@ -70,7 +70,6 @@ class ProgectPlugin(PalmDB.Plugins.BasePlugin.BasePDBFilePlugin):
 					openLevel-=1
 
 			recordsXML+='<%s>'%(record.getRecordXMLName())
-#			recordsXML+=record.toXML(categories)
 			recordsXML+=record.toXML()
 			if record.attributes['_hasChild']:
 				recordsXML+='<children>'
@@ -93,23 +92,47 @@ class ProgectPlugin(PalmDB.Plugins.BasePlugin.BasePDBFilePlugin):
 		return ProgectPalmDBXMLReaderObject()
 	
 class ProgectPalmDBXMLReaderObject(PalmDB.Plugins.BasePlugin.GeneralPalmDBXMLReaderObject):
+	def __init__(self):
+		self.previousPalmRecords={}
+		self.currentPalmRecord=None
+		self.currentHierarchyLevel=0
 	def parse_START_ELEMENT_ProgectDataRecord(self,events,node,palmDatabaseObject):
-#		events.expandNode(node)
+		# Set _hasNext
+		try:
+			self.previousPalmRecords[self.currentHierarchyLevel].attributes['_hasNext']=True
+		except KeyError:
+			pass
+
 		plugin=palmDatabaseObject._getPlugin()
-		self.palmRecord=plugin.createPalmDatabaseRecord(palmDatabaseObject)
-		self.palmRecord.fromDOMNode(node)
-		palmDatabaseObject.append(self.palmRecord)
-		print 'got here'
+		self.currentPalmRecord=plugin.createPalmDatabaseRecord(palmDatabaseObject)
+		self.currentPalmRecord.fromDOMNode(node)
+
+		self.currentPalmRecord.attributes['_level']=self.currentHierarchyLevel
+		self.previousPalmRecords[self.currentHierarchyLevel]=self.currentPalmRecord
+
+		# Set _hasPrev
+		if self.previousPalmRecords.get(self.currentHierarchyLevel,None):
+			self.currentPalmRecord.attributes['_hasPrevious']=True
+		
+		palmDatabaseObject.append(self.currentPalmRecord)
+
 	def parse_START_ELEMENT_recordAttributes(self,events,node,palmDatabaseObject):
-		print 'record attributes'
 		events.expandNode(node)
-		self.palmRecord.recordAttributesFromDOMNode(node)
+		self.currentPalmRecord.recordAttributesFromDOMNode(node)
+
 	def parse_START_ELEMENT_children(self,events,node,palmDatabaseObject):
-		print 'start children'
-		pass
+		self.previousPalmRecords[self.currentHierarchyLevel].attributes['_hasChild']=True
+
+		self.currentHierarchyLevel+=1
+		# since we are starting a level, there cannot be a previous item at our level
+		try:
+			del(self.previousPalmRecords[self.currentHierarchyLevel])
+		except KeyError:
+			pass
+		
 	def parse_END_ELEMENT_children(self,events,node,palmDatabaseObject):
-		print 'end children'
-		pass
+		self.currentHierarchyLevel-=1
+
 def crackProgectDate(variable):
 	# Date due field:
     	# This field seems to be layed out like this:
@@ -162,13 +185,13 @@ class PRI:
     INVALID_TYPE=6
 
     typeTextNames={
-        PROGRESS_TYPE:'PROGRESS_TYPE',
-        NUMERIC_TYPE:'NUMERIC_PROGRESS_TYPE',
-        ACTION_TYPE:'ACTION_TYPE',
-        INFORMATIVE_TYPE:'INFORMATION_TYPE',
-        EXTENDED_TYPE:'EXTENDED_TYPE',
-        LINK_TYPE:'LINK_TYPE',
-        INVALID_TYPE:'INVALID_TYPE',
+        PROGRESS_TYPE:u'PROGRESS_TYPE',
+        NUMERIC_TYPE:u'NUMERIC_PROGRESS_TYPE',
+        ACTION_TYPE:u'ACTION_TYPE',
+        INFORMATIVE_TYPE:u'INFORMATION_TYPE',
+        EXTENDED_TYPE:u'EXTENDED_TYPE',
+        LINK_TYPE:u'LINK_TYPE',
+        INVALID_TYPE:u'INVALID_TYPE',
         }
     
 class ProgectRecord(PalmDB.Plugins.BasePlugin.DataRecord):
@@ -182,6 +205,10 @@ class ProgectRecord(PalmDB.Plugins.BasePlugin.DataRecord):
     def __init__(self):
         PalmDB.Plugins.BasePlugin.DataRecord.__init__(self)
 
+	self.clear()
+        
+    def clear(self):
+        self.attributes.clear()
         self.attributes['_level']=0
         self.attributes['_hasNext']=False
     	self.attributes['_hasChild']=False
@@ -192,7 +219,7 @@ class ProgectRecord(PalmDB.Plugins.BasePlugin.DataRecord):
         self.attributes['note']=''
 
         self.extraBlockRecordList=[]
-        
+	    
     def getRecordXMLName(self):
 	    return 'ProgectDataRecord'
 
@@ -202,7 +229,8 @@ class ProgectRecord(PalmDB.Plugins.BasePlugin.DataRecord):
             attributesAsXML+=extraBlock.toXML()
 	return returnAsXMLItem('recordAttributes',attributesAsXML,escape=False)
     def recordAttributesFromDOMNode(self,DOMNode):
-	    self.attributes.clear()
+	    # self.clear() can't use clear because of the order that things are called
+	    # should not matter anyway, we creat a new object for each row
 	    attributesDict=dictionaryFromXMLDOMNode(DOMNode)
 	    self.attributes.update(attributesDict)
     def fromDOMNode(self,DOMNode):

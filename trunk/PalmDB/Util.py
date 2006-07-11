@@ -127,7 +127,7 @@ def returnObjectAsXML(itemName,item):
 	return returnAttributeAsXML(itemName,'real',item)
     if item.__class__.__name__ == 'simpleRational':
 	return returnRationalAsXML(itemName,item.numerator,item.denominator)
-    if item.__class__.__name__ == 'str':
+    if item.__class__.__name__ == 'str' or item.__class__.__name__ == 'unicode':
 	return returnAttributeAsXML(itemName,'string',item)
     if item.__class__.__name__ == 'bool':
 	return returnAttributeAsXML(itemName,'boolean',item)
@@ -207,7 +207,10 @@ def itemFromXMLDOMNode(XMLDOMNode):
     if XMLDOMNode.nodeName == 'string':
         return XMLDOMNode.attributes['value'].value
     if XMLDOMNode.nodeName == 'boolean':
-        return bool(XMLDOMNode.attributes['value'].value)
+        if XMLDOMNode.attributes['value'].value == 'True':
+            return True
+        else:
+            return False
     if XMLDOMNode.nodeName == 'date':
         year=int(XMLDOMNode.attributes['year'].value)
         month=int(XMLDOMNode.attributes['month'].value)
