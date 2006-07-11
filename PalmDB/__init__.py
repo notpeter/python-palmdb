@@ -173,7 +173,11 @@ class PDBFile(PalmDatabase.PalmDatabase):
 if __name__ == "__main__":
         ProgectDB=PDBFile('lbPG-tutorial.PDB')
         XMLFile=open('test.xml')
-        ProgectDB.fromXML(XMLFile)
 #        print ProgectDB.toXML()
+        OutputFile=open('test2.xml','w')
+        OutputFile.write(ProgectDB.toXML())
+        OutputFile.close()
+        XMLFile2=open('test2.xml')
+        ProgectDB.fromXML(XMLFile2)
 #        x=ProgectDB.toByteArray()
         
