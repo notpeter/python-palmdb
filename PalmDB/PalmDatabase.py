@@ -155,12 +155,8 @@ class PalmDatabase:
 	flag=setBits(flag,self.attributes['flagBackup'],PalmHeaderInfo.flagBackupPosition)
 	flag=setBits(flag,self.attributes['flagOpen'],PalmHeaderInfo.flagOpenPosition)
 
-	print 'header info',self.attributes
-	print 'this is having problems because we need to convert the unicode strings to regular strings before'
-	print 'we try to write them out, we want to convert them to the palm charset would be my guess'
         raw = struct.pack(HeaderInfo.PDBHeaderStructString,
-# 	    'test',
-           self.attributes['fileName'].convert('ascii'),
+            self.attributes['fileName'].encode('palmos'),
             flag,
             self.attributes['version'],
             packPalmDate(self.attributes['createdTime']),
@@ -169,15 +165,12 @@ class PalmDatabase:
             self.attributes['modificationNumber'],
 	    applicationInformationOffset,
 	    sortInformationOffset,
-	    'test',
-#	    'test',
-            self.attributes['databaseType'],
-#            self.attributes['creatorID'],
+            self.attributes['databaseType'].encode('palmos'),
+            self.attributes['creatorID'].encode('palmos'),
             self.attributes['uid'],
             self.attributes['nextRecord'],
             len(self) # get our record count
 			  )
-	print 'before return header info',self.attributes
         return raw
 
     def toXML(self):
