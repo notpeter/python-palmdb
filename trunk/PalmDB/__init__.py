@@ -172,9 +172,21 @@ class PDBFile(PalmDatabase.PalmDatabase):
 
 if __name__ == "__main__":
         ProgectDB=PDBFile('lbPG-tutorial.PDB')
-        OutputFile=open('lbPG-tutorial2.PDB','w')
-        OutputFile.write(ProgectDB.toByteArray())
+
+        OutputFile=open('lbPG-tutorial.xml','wb')
+        OutputFile.write(ProgectDB.toXML())
         OutputFile.close()
+
+        ProgectDB2=PDBFile('lbPG-tutorial2.PDB',writeBack=True,read=False)
+
+        InputFile=open('lbPG-tutorial.xml','rb')
+        ProgectDB2.fromXML(InputFile)
+        InputFile.close()
+
+        print 'before save'
+        ProgectDB2.save()
+        print 'after save'
+        
 #        XMLFile=open('test.xml')
 #        print ProgectDB.toXML()
 #         OutputFile=open('test2.xml','w')
