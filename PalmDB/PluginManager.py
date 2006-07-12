@@ -53,5 +53,7 @@ def getPDBPlugin(CreatorID):
 import Plugins.ProgectPlugin
 #import StandardNotepadPDBPlugin
 
-registerPDBPlugin(Plugins.ProgectPlugin.ProgectPlugin())
+#+++ UNCOMMENT THIS +++
+#registerPDBPlugin(Plugins.ProgectPlugin.ProgectPlugin())
+#+++ UNCOMMENT THIS +++
 #registerPDBPlugin(StandardNotepadPDBPlugin.plugin)

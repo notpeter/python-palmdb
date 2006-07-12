@@ -154,7 +154,7 @@ class DataRecord(BaseRecord):
 	bits=setBits(0,attributes,31,4)
 	bits=setBits(bits,category,27,4)
 	bits=setBits(bits,uid,23,24)
-        return struct.pack('>ll',offset,bits)
+        return struct.pack('>LL',offset,bits)
 	
     def _crackAttributeBits(self,attr):
         self.attributes['deleted']=bool(getBits(attr,3))
@@ -257,15 +257,19 @@ class CategoriesObject(dict):
 	renamedCategories=0
 	(categoryLabels,categoryUniqIDs)=zip(*self.items())
 	lastUniqID=reduce(max,categoryUniqIDs)
+	categoryLabels=list(categoryLabels)
+	categoryUniqIDs=list(categoryUniqIDs)
 
 	# have to add in dummy data now
 	dummyCount=16-len(categoryLabels)
-	categorylabels.extend(['']*dummyCount)
-	categoryUniqIDs.extend(range(lastUniqID+1,lastUniqID+dummyCount))
+	categoryLabels.extend(['']*dummyCount)
+	categoryUniqIDs.extend(range(lastUniqID+1,lastUniqID+dummyCount+1))
 	lastUniqID=lastUniqID+dummyCount-1
+	# +++ CHECK THIS +++
 	# this is completely untested, and should be assumed to be broken
-	raise NotImplementedError
-	return struct.pack(self.__packString,*([self.renamedCategories]+self.categoryLabels+self.categoryUniqIDs+[self.lastUniqID]))
+#	raise NotImplementedError
+	# +++ CHECK THIS +++
+	return struct.pack(self.__packString,*([renamedCategories]+categoryLabels+categoryUniqIDs+[lastUniqID]))
 
     def toXML(self):
 	return returnAsXMLItem('palmCategories',returnDictionaryAsXML(self),escape=False)

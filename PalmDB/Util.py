@@ -35,7 +35,7 @@ import datetime
 import struct
 
 # def plah(toPrint):
-# 	return 'UTL'+struct.pack('>l',long(toPrint)).encode('HEX')
+# 	return 'UTL'+struct.pack('>L',long(toPrint)).encode('HEX')
 
 XMLsuppressFalseOrBlank=False
 
