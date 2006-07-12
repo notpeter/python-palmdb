@@ -137,7 +137,7 @@ class PalmDatabase:
 
 	return (applicationInformationOffset,sortInformationOffset,numberOfRecords)
 
-    def _headerInfoToByteArray(self):
+    def _headerInfoToByteArray(self,applicationInformationOffset,sortInformationOffset):
         '''
         Get raw data to marshall class.
 
@@ -163,11 +163,8 @@ class PalmDatabase:
             packPalmDate(self.attributes['modifiedTime']),
             packPalmDate(self.attributes['backedUpTime']),
             self.attributes['modificationNumber'],
-# +++ FIX THIS +++
-	    0,0,
-#            self.attributesappinfo_offset,
-#            self.attributessortinfo_offset,
-# +++ FIX THIS +++
+	    applicationInformationOffset,
+	    sortInformationOffset,
             self.attributes['databaseType'],
             self.attributes['creatorID'],
             self.attributes['uid'],
@@ -470,10 +467,13 @@ class PalmDatabase:
         offset = palmHeaderSize + entries_len + 2  #position following the entries
 
 	if self.attributes.has_key('_applicationInformationObject') or self.attributes.has_key('_categoriesObject'):
+	    print 'has app block'
             applicationInformationOffset = offset
 	    if self.attributes.has_key('_categoriesObject'):
+		    print 'has category block'
 		    offset += len(self.attributes['_categoriesObject'])
 	    if self.attributes.has_key('_applicationInformationObject'):
+		    print 'has appinfo block'
 		    offset += len(self.attributes['_applicationInformationObject'])
         else:
             applicationInformationOffset = 0
@@ -491,7 +491,7 @@ class PalmDatabase:
             offset = offset + len(x.toByteArray(0))
 
         # begin to assemble the string to return (raw); start with database header
-        raw=self._headerInfoToByteArray()
+        raw=self._headerInfoToByteArray(applicationInformationOffset,sortInformationOffset)
 
         entries = [] # a list which holds all of the record/resource entries
         record_data = [] # holds record/resource data-chunks
