@@ -56,6 +56,7 @@ class BasePDBFilePlugin:
 		return CategoriesObject()
 
 	def createApplicationInformationObject(self,PalmDatabaseObject):
+		print 'called createappinfobject'
 		return applicationInformationObject()
 
 	def createSortBlockObject(self,PalmDatabaseObject):
@@ -302,7 +303,7 @@ class applicationInformationObject:
 	def fromByteArray(self,dstr):
 		self.attributes['payload']=dstr.encode('HEX')
 
-	def toByteArray(self,dstr):
+	def toByteArray(self):
 		return self.attributes.get('payload','').decode('HEX')
 	
 	def toXML(self):
@@ -319,7 +320,7 @@ class sortBlockObject:
 	def fromByteArray(self,dstr):
 		self.attributes['payload']=dstr.encode('HEX')
 
-	def toByteArray(self,dstr):
+	def toByteArray(self):
 		return self.attributes.get('payload','').decode('HEX')
 	
 	def toXML(self):
