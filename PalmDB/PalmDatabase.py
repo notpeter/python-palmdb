@@ -90,7 +90,7 @@ class PalmDatabase:
         self.dirty = True
 
     def _getPlugin(self):
-	return PluginManager.getPDBPlugin(self.attributes['creatorID'])
+	return PluginManager.getPDBPlugin(self.attributes.get('creatorID',None))
 
     def isResourceDatabase(self):
 	return self.attributes['flagResource']
@@ -155,8 +155,12 @@ class PalmDatabase:
 	flag=setBits(flag,self.attributes['flagBackup'],PalmHeaderInfo.flagBackupPosition)
 	flag=setBits(flag,self.attributes['flagOpen'],PalmHeaderInfo.flagOpenPosition)
 
+	print 'header info',self.attributes
+	print 'this is having problems because we need to convert the unicode strings to regular strings before'
+	print 'we try to write them out, we want to convert them to the palm charset would be my guess'
         raw = struct.pack(HeaderInfo.PDBHeaderStructString,
-            self.attributes['fileName'],
+# 	    'test',
+           self.attributes['fileName'].convert('ascii'),
             flag,
             self.attributes['version'],
             packPalmDate(self.attributes['createdTime']),
@@ -165,12 +169,15 @@ class PalmDatabase:
             self.attributes['modificationNumber'],
 	    applicationInformationOffset,
 	    sortInformationOffset,
+	    'test',
+#	    'test',
             self.attributes['databaseType'],
-            self.attributes['creatorID'],
+#            self.attributes['creatorID'],
             self.attributes['uid'],
             self.attributes['nextRecord'],
             len(self) # get our record count
 			  )
+	print 'before return header info',self.attributes
         return raw
 
     def toXML(self):
@@ -201,19 +208,20 @@ class PalmDatabase:
     def _palmHeaderFromDOMNode(self,DOMNode):
 	    headerDict=dictionaryFromXMLDOMNode(DOMNode)
 	    self.attributes.update(headerDict)
-    def getAppBlock(self):
-	    return self.appblock and self.appblock or None
-    def setAppBlock(self, raw):
-        self.dirty = True
-        self.appblock = raw
+#     def getAppBlock(self):
+# 	    return self.appblock and self.appblock or None
+#     def setAppBlock(self, raw):
+#         self.dirty = True
+#         self.appblock = raw
 
-    def getSortBlock(self): return self.sortblock and self.sortblock or None
-    def setSortBlock(self, raw):
-        self.dirty = True
-        self.appblock = raw
+#     def getSortBlock(self): return self.sortblock and self.sortblock or None
+#     def setSortBlock(self, raw):
+#         self.dirty = True
+#         self.appblock = raw
 
     # sequence/map API Begins
-    def __len__(self): return len(self.records)
+    def __len__(self):
+	    return len(self.records)
     def __add__(self,addend2):
         """
         permits one to create a new PDB which contains the palm header, AppBlock,
@@ -227,8 +235,6 @@ class PalmDatabase:
         newRecordList = copy.deepcopy(self.records) + copy.deepcopy(addend2.records)
         newDatabase = copy.deepcopy(self)
         newDatabase.records = newRecordList
-	# +++ FIX THIS +++
-#        newDatabase.palmDBInfo._updateNumberOfRecords(newDatabase)
         return newDatabase
     
     def __getitem__(self, index):
@@ -239,24 +245,16 @@ class PalmDatabase:
     def __delitem__(self, index):
         del(self.records[index])
         self.dirty = True
-# +++ FIX THIS +++
-#        self.palmDBInfo._updateNumberOfRecords(self)
     def append(self,record):
         self.records.append(record)
         self.dirty = True
-# +++ FIX THIS +++
-#        self.palmDBInfo._updateNumberOfRecords(self)
     def insert(self,index,record):
         self.records.insert(index,record)
         self.dirty = True
-# +++ FIX THIS +++
-#        self.palmDBInfo._updateNumberOfRecords(self)
     def remove(self,record):
         "Remove the first record with the specified ID"
         self.records.remove(record)
         self.dirty = True
-# +++ FIX THIS +++
-#        self.palmDBInfo._updateNumberOfRecords(self)
     def index(self,record):
         return self.records.index(record)
     def __contains__(self,record):
@@ -429,9 +427,7 @@ class PalmDatabase:
 		    applicationInfoBlock=applicationInfoBlock[categoriesObject.objectBinarySize():]
 		
             applicationInformationObject=plugin.createApplicationInformationObject(self)
-	    print 'appinfoobject',applicationInformationObject
 	    if applicationInformationObject <> None:
-	        print 'we have an application information object'
 		applicationInformationObject.fromByteArray(applicationInfoBlock)
 		self.attributes['_applicationInformationObject']=applicationInformationObject
 
@@ -466,18 +462,13 @@ class PalmDatabase:
 
         # first, we need to precalculate the offsets.
 	entries_len=plugin.getPalmRecordEntrySize(self)*len(self)
-	print 'count,entries_len is',len(self),entries_len
         offset = palmHeaderSize + entries_len + 2  #position following the entries
 
-	print 'offset before',offset
 	if self.attributes.has_key('_applicationInformationObject') or self.attributes.has_key('_categoriesObject'):
-	    print 'has app block'
             applicationInformationOffset = offset
 	    if self.attributes.has_key('_categoriesObject'):
-		    print 'has category block'
 		    offset += self.attributes['_categoriesObject'].objectBinarySize()
 	    if self.attributes.has_key('_applicationInformationObject'):
-		    print 'has appinfo block',len(self.attributes['_applicationInformationObject'])
 		    offset += len(self.attributes['_applicationInformationObject'])
         else:
             applicationInformationOffset = 0
@@ -488,7 +479,6 @@ class PalmDatabase:
         else:
             sortInformationOffset = 0
 
-	print 'offset after',offset
         # begin to assemble the string to return (raw); start with database header
         raw=self._headerInfoToByteArray(applicationInformationOffset,sortInformationOffset)
 

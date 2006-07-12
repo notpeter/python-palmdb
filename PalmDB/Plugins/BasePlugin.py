@@ -309,6 +309,8 @@ class applicationInformationObject:
 	def toXML(self):
 		attributesAsXML=returnDictionaryAsXML(self.attributes)
 		return returnAsXMLItem('applicationBlock',attributesAsXML,escape=False)
+	def fromDOMNode(self,DOMNode):
+		self.attributes=dictionaryFromXMLDOMNode(DOMNode)
 
 class sortBlockObject:
 	def __init__(self):
@@ -326,6 +328,8 @@ class sortBlockObject:
 	def toXML(self):
 		attributesAsXML=returnDictionaryAsXML(self.attributes)
 		return returnAsXMLItem('sortBlock',attributesAsXML,escape=False)
+	def fromDOMNode(self,DOMNode):
+		self.attributes=dictionaryFromXMLDOMNode(DOMNode)
 
 class BaseXMLReaderObject:
 	def fromXML(self,fileStream,palmDatabaseObject):
@@ -364,10 +368,16 @@ class GeneralPalmDBXMLReaderObject(GenericXMLReaderObject):
 		palmDatabaseObject.categoriesObject=categoriesObject
 	def parse_START_ELEMENT_applicationBlock(self,events,node,palmDatabaseObject):
 		events.expandNode(node)
-		raise NotImplementedError
+		plugin=palmDatabaseObject._getPlugin()
+		applicationInformationObject=plugin.createApplicationInformationObject(palmDatabaseObject)
+		applicationInformationObject.fromDOMNode(node)
+		palmDatabaseObject.attributes['_applicationInformationObject']=applicationInformationObject
 	def parse_START_ELEMENT_sortBlock(self,events,node,palmDatabaseObject):
 		events.expandNode(node)
-		raise NotImplementedError
+		plugin=palmDatabaseObject._getPlugin()
+		sortBlockObject=plugin.createSortBlockObject(palmDatabaseObject)
+		sortBlockObject.fromDOMNode(node)
+		palmDatabaseObject.attributes['_sortBlockObject']=sortBlockObject
 	def parse_START_ELEMENT_palmDataRecord(self,events,node,palmDatabaseObject):
 		events.expandNode(node)
 		plugin=palmDatabaseObject._getPlugin()
