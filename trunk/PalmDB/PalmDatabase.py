@@ -87,9 +87,6 @@ class PalmDatabase:
 
 	self.records = []
 	self.dirty = False
-	self.categoriesObject=None
-	self.applicationInformationObject=None
-	self.sortBlockObject=None
         self.dirty = True
 
     def _getPlugin(self):
@@ -190,12 +187,12 @@ class PalmDatabase:
 	returnValue+=plugin.getXMLVersionHeader(self)
 	returnValue+=plugin.getXMLFileHeader(self)
 	returnValue+=PalmHeaderAttributes
-	if self.categoriesObject:
-		returnValue+=self.categoriesObject.toXML()
-	if self.applicationInformationObject:
-		returnValue+=self.applicationInformationObject.toXML()
-	if self.sortBlockObject:
-		returnValue+=self.sortBlockObject.toXML()
+	if self.attributes.has_key('_categoriesObject'):
+		returnValue+=self.attributes['_categoriesObject'].toXML()
+	if self.attributes.has_key('_applicationInformationObject'):
+		returnValue+=self.attributes['_applicationInformationObject'].toXML()
+	if self.attributes.has_key('_sortBlockObject'):
+		returnValue+=self.attributes['_sortBlockObject'].toXML()
 	returnValue+=plugin.getRecordsAsXML(self)
 	returnValue+=plugin.getXMLFileFooter(self)
 	return returnValue
@@ -428,23 +425,26 @@ class PalmDatabase:
             if len(applicationInfoBlock) != appinfo_size:
                 raise IOError, _("Error: failed to read appinfo block")
 
-	    self.categoriesObject=plugin.createCategoriesObject(self)
-	    if self.categoriesObject <> None:
-		    self.categoriesObject.fromByteArray(applicationInfoBlock)
-		    applicationInfoBlock=applicationInfoBlock[self.categoriesObject.objectBinarySize():]
+	    categoriesObject=plugin.createCategoriesObject(self)
+	    if categoriesObject <> None:
+		    categoriesObject.fromByteArray(applicationInfoBlock)
+		    self.attributes['_categoriesObject']=categoriesObject
+		    applicationInfoBlock=applicationInfoBlock[categoriesObject.objectBinarySize():]
 		
-            self.applicationInformationObject=plugin.createApplicationInformationObject(self)
-	    if self.applicationInformationObject:
-		self.applicationInformationObject.fromByteArray(applicationInfoBlock)
+            applicationInformationObject=plugin.createApplicationInformationObject(self)
+	    if applicationInformationObject:
+		applicationInformationObject.fromByteArray(applicationInfoBlock)
+		self.attributes['_applicationInformationObject']=applicationInformationObject
 
         if sortinfo_size: # if SortInfo block exists
             sortInfoBlock = raw[sortInformationOffset:sortInformationOffset+sortinfo_size]
             if len(sortInfoBlock) != sortinfo_size:
                 raise IOError, _("Error: failed to read sortinfo block")
 
-            self.sortBlockObject=plugin.createSortBlockObject(self)
+            sortBlockObject=plugin.createSortBlockObject(self)
 	    if self.sortBlockObject:
-		self.sortBlockObject.fromByteArray(applicationInfoBlock)
+		sortBlockObject.fromByteArray(sortInfoBlock)
+		self.attributes['_sortBlockObject']=sortBlockObject
 
     def toByteArray(self):
         '''
@@ -469,18 +469,18 @@ class PalmDatabase:
 	entries_len=plugin.getPalmRecordEntrySize(self)*len(self.records)
         offset = palmHeaderSize + entries_len + 2  #position following the entries
 
-        if self.applicationInformationObject or self.categoriesObject:
+	if self.attributes.has_key('_applicationInformationObject') or self.attributes.has_key('_categoriesObject'):
             applicationInformationOffset = offset
-	    if self.categoriesObject:
-		    offset += len(self.categoriesObject)
-	    if self.applicationInformationObject:
-		    offset += len(self.applicationInformationObject)
+	    if self.attributes.has_key('_categoriesObject'):
+		    offset += len(self.attributes['_categoriesObject'])
+	    if self.attributes.has_key('_applicationInformationObject'):
+		    offset += len(self.attributes['_applicationInformationObject'])
         else:
             applicationInformationOffset = 0
 
-        if self.sortBlockObject:
+        if self.attributes.has_key('_sortBlockObject'):
             sortInformationOffset = offset
-            offset += len(self.sortBlockObject)
+            offset += len(self.attributes['_sortBlockObject'])
         else:
             sortInformationOffset = 0
 
@@ -508,12 +508,12 @@ class PalmDatabase:
         raw = raw + '\0\0' # padding?  dunno, it's always there
 
         # add the AppInfo and/or SortInfo blocks
-        if self.categoriesObject:
-		raw += self.categoriesObject.toByteArray()
-        if self.applicationInformationObject:
-		raw += self.applicationInformationObject.toByteArray()
-        if self.sortBlockObject:
-		raw += self.sortBlockObject.toByteArray()
+        if self.attributes.has_key('_categoriesObject'):
+		raw += self.attributes['_categoriesObject'].toByteArray()
+        if self.attributes.has_key('_applicationInformationObject'):
+		raw += self.attributes['_applicationInformationObject'].toByteArray()
+        if self.attributes.has_key('_sortBlockObject'):
+		raw += self.attributes['_sortBlockObject'].toByteArray()
 
         # finally, add the record/resource data chunks
         for x in record_data: 
