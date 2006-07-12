@@ -1,5 +1,5 @@
 include *.txt
 include *.py
-include UnitTests/PluginManagerTest.py
 include UnitTests/UtilTest.py
 include UnitTests/__init__.py
+include UnitTests/PluginManagerTest.py

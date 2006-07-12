@@ -429,7 +429,9 @@ class PalmDatabase:
 		    applicationInfoBlock=applicationInfoBlock[categoriesObject.objectBinarySize():]
 		
             applicationInformationObject=plugin.createApplicationInformationObject(self)
-	    if applicationInformationObject:
+	    print 'appinfoobject',applicationInformationObject
+	    if applicationInformationObject <> None:
+	        print 'we have an application information object'
 		applicationInformationObject.fromByteArray(applicationInfoBlock)
 		self.attributes['_applicationInformationObject']=applicationInformationObject
 
@@ -439,7 +441,7 @@ class PalmDatabase:
                 raise IOError, _("Error: failed to read sortinfo block")
 
             sortBlockObject=plugin.createSortBlockObject(self)
-	    if self.sortBlockObject:
+	    if self.sortBlockObject <> None:
 		sortBlockObject.fromByteArray(sortInfoBlock)
 		self.attributes['_sortBlockObject']=sortBlockObject
 
@@ -463,17 +465,19 @@ class PalmDatabase:
         palmHeaderSize = PalmHeaderInfo.PDBHeaderStructSize
 
         # first, we need to precalculate the offsets.
-	entries_len=plugin.getPalmRecordEntrySize(self)*len(self.records)
+	entries_len=plugin.getPalmRecordEntrySize(self)*len(self)
+	print 'count,entries_len is',len(self),entries_len
         offset = palmHeaderSize + entries_len + 2  #position following the entries
 
+	print 'offset before',offset
 	if self.attributes.has_key('_applicationInformationObject') or self.attributes.has_key('_categoriesObject'):
 	    print 'has app block'
             applicationInformationOffset = offset
 	    if self.attributes.has_key('_categoriesObject'):
 		    print 'has category block'
-		    offset += len(self.attributes['_categoriesObject'])
+		    offset += self.attributes['_categoriesObject'].objectBinarySize()
 	    if self.attributes.has_key('_applicationInformationObject'):
-		    print 'has appinfo block'
+		    print 'has appinfo block',len(self.attributes['_applicationInformationObject'])
 		    offset += len(self.attributes['_applicationInformationObject'])
         else:
             applicationInformationOffset = 0
@@ -484,22 +488,18 @@ class PalmDatabase:
         else:
             sortInformationOffset = 0
 
-        # make list containing offsets for record/resource data-chunk locations
-        rec_offsets = []
-        for x in self.records:
-            rec_offsets.append(offset)
-            offset = offset + len(x.toByteArray(0))
-
+	print 'offset after',offset
         # begin to assemble the string to return (raw); start with database header
         raw=self._headerInfoToByteArray(applicationInformationOffset,sortInformationOffset)
 
         entries = [] # a list which holds all of the record/resource entries
         record_data = [] # holds record/resource data-chunks
         # populate the lists...
-        for record, offset in map(None, self.records, rec_offsets):
+	for record in self:
 	    (entryData,recordData)=record.toByteArray(offset)
 	    entries.append(entryData)
 	    record_data.append(recordData)
+	    offset+=len(recordData)
 
         # add the record/resource entries onto the data to be returned
         for x in entries: 
