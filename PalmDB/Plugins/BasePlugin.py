@@ -291,8 +291,9 @@ class CategoriesObject(dict):
 	    dict.__delitem__(key)
     def update(self,dictionary):
 	    dict.update(self,dictionary)
-	    for (key,value) in self.iteritems():
-		    self._reverseLookup[value]=key
+	    # now update the reverse lookup
+	    (keys,values)=zip(*dictionary.items())
+	    self._reverseLookup.update(zip(values,keys))
     def reverseLookup(self,value):
 	    return self._reverseLookup[value]
 

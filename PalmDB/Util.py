@@ -94,6 +94,14 @@ def setBits(variable,value,MSBBitIndex,bitCount=1):
     result=result|value
     return result
 
+def setBooleanAttributeFromBits(dictionary,attributeName,bitStruct,bit):
+    dictionary[attributeName]=bool(getBits( bitStruct, bit ))
+def setBitsFromBooleanAttribute(dictionary,attributeName,bitStruct,bit):
+    if dictionary.get(attributeName,False):
+        return setBits(bitStruct,1,bit)
+    else:
+        return setBits(bitStruct,0,bit)
+
 PILOT_TIME_DELTA = 2082844800L
 def crackPalmDate(variable):
         if variable == 0:
@@ -221,3 +229,4 @@ def itemFromXMLDOMNode(XMLDOMNode):
         return datetime.datetime(year,month,day,hour,minutes,seconds)
     # +++ FIX THIS +++ Some types missing here
     return None
+
