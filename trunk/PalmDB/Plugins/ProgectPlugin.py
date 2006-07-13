@@ -37,6 +37,8 @@ import PalmDB.Plugins.BasePlugin
 
 from PalmDB.Util import getBits
 from PalmDB.Util import setBits
+from PalmDB.Util import setBooleanAttributeFromBits
+from PalmDB.Util import setBitsFromBooleanAttribute
 from PalmDB.Util import returnDictionaryAsXML
 from PalmDB.Util import dictionaryFromXMLDOMNode
 from PalmDB.Util import returnObjectAsXML
@@ -175,7 +177,7 @@ class PRI:
     XBFieldsStructString = '>H'
     XBFieldsStructSize=struct.calcsize(XBFieldsStructString)
 
-    # ItemType defines
+    # Setup ItemType defines
     PROGRESS_TYPE=0
     NUMERIC_TYPE=1
     ACTION_TYPE=2
@@ -183,7 +185,7 @@ class PRI:
     EXTENDED_TYPE=4
     LINK_TYPE=5
     INVALID_TYPE=6
-
+    # Setup ItemType text names
     typeTextNames={
         PROGRESS_TYPE:u'PROGRESS_TYPE',
         NUMERIC_TYPE:u'NUMERIC_PROGRESS_TYPE',
@@ -193,6 +195,10 @@ class PRI:
         LINK_TYPE:u'LINK_TYPE',
         INVALID_TYPE:u'INVALID_TYPE',
         }
+    # Setup reverse ItemType text names
+    reverseTypeTextNames={}
+    (keys,values)=zip(*typeTextNames.items())
+    reverseTypeTextRames.update(zip(values,keys))
     
 class ProgectRecord(PalmDB.Plugins.BasePlugin.DataRecord):
     '''
@@ -236,39 +242,35 @@ class ProgectRecord(PalmDB.Plugins.BasePlugin.DataRecord):
     def fromDOMNode(self,DOMNode):
 	    pass
     
-    def fromByteArray(self,hstr,dstr):
-        self._crackRecordHeader(hstr)
-
+    def _crackPayload(self,dstr):
         if len(dstr) < PRI.TaskAttrTypeStructSize:
             raise IOError, "Error: raw data passed in is too small; required (%d), available (%d)"%(PRI.TaskAttrTypeStructSize,len(dstr))
 
-        
         (taskAttrType, taskFormatType)= \
             struct.unpack(PRI.TaskAttrTypeStructString,dstr[:PRI.TaskAttrTypeStructSize])
 
-        # setup AttrType bits, level was handled above
+        # setup AttrType bits
         self.attributes['_level']=getBits( taskAttrType, 15, 8 )
-        self.attributes['_hasNext']=bool(getBits( taskAttrType, 7 ))
-        self.attributes['_hasChild']=bool(getBits( taskAttrType, 6 ))
-        self.attributes['opened']=bool(getBits( taskAttrType, 5 ))
-        self.attributes['_hasPrev']=bool(getBits( taskAttrType, 4 ))
-    
+        setBooleanAttributeFromBits(self.attributes,'_hasNext',taskAttrType,7)
+        setBooleanAttributeFromBits(self.attributes,'_hasChild',taskAttrType,6)
+        setBooleanAttributeFromBits(self.attributes,'opened'],taskAttrType,5)
+        setBooleanAttributeFromBits(self.attributes,'_hasPrev'],taskAttrType,4)
 
         # TaskFormatType values
-        self.attributes['_hasStartDate']=bool(getBits( taskFormatType, 15 ))
-    	self.attributes['_hasPred']=bool(getBits( taskFormatType, 14 ))
-        self.attributes['_hasDuration']=bool(getBits( taskFormatType, 13 ))
-        self.attributes['_hasDueDate']=bool(getBits( taskFormatType, 12 ))
-        self.attributes['hasToDo']=bool(getBits( taskFormatType, 11 ))
-        self.attributes['_hasNote']=bool(getBits( taskFormatType, 10 ))
-        self.attributes['hasLink']=bool(getBits( taskFormatType, 9 ))
+        setBooleanAttributeFromBits(self.attributes,'_hasStartDate',taskFormatType,15)
+    	setBooleanAttributeFromBits(self.attributes,'_hasPred',taskFormatType,14)
+        setBooleanAttributeFromBits(self.attributes,'_hasDuration',taskFormatType,13)
+        setBooleanAttributeFromBits(self.attributes,'_hasDueDate',taskFormatType,12)
+        setBooleanAttributeFromBits(self.attributes,'hasToDo',taskFormatType,11)
+        setBooleanAttributeFromBits(self.attributes,'_hasNote',taskFormatType,10)
+        setBooleanAttributeFromBits(self.attributes,'hasLink',taskFormatType,9)
 
         itemType=getBits( taskFormatType, 8, 5 )
         self.attributes['itemType']=PRI.typeTextNames[itemType]
-        self.attributes['_hasXB']=bool(getBits( taskFormatType, 3 ))
-        self.attributes['_newTask']=bool(getBits( taskFormatType, 2 ))
-        self.attributes['_newFormat']=bool(getBits( taskFormatType, 1 ))
-        self.attributes['_nextFormat']=bool(getBits( taskFormatType, 0 ))
+        setBooleanAttributeFromBits(self.attributes,'_hasXB',taskFormatType,3)
+        setBooleanAttributeFromBits(self.attributes,'_newTask',taskFormatType,2)
+        setBooleanAttributeFromBits(self.attributes,'_newFormat',taskFormatType,1)
+        setBooleanAttributeFromBits(self.attributes,'_nextFormat',taskFormatType,0)
 	    
         if self.attributes['_hasXB']:
             self.fromByteArrayTaskXBRecords(dstr[PRI.TaskAttrTypeStructSize:])
@@ -277,7 +279,42 @@ class ProgectRecord(PalmDB.Plugins.BasePlugin.DataRecord):
             self.fromByteArrayTaskStandardFields(dstr[PRI.TaskAttrTypeStructSize+self.XBSize:])
         else:
             self.fromByteArrayTaskStandardFields(dstr[PRI.TaskAttrTypeStructSize:])
-    
+    def _packPayload(self):
+        dstr=''
+        # setup AttrType bits
+	taskAttrType=0
+        taskAttrType=setBits(taskAttrType,self.attributes['_level'],15,8)
+        taskAttrType=setBitsFromBooleanAttribute(self.attributes,'_hasNext',taskAttrType,7)
+        taskAttrType=setBitsFromBooleanAttribute(self.attributes,'_hasChild',taskAttrType,6)
+        taskAttrType=setBitsFromBooleanAttribute(self.attributes,'opened',taskAttrType,5)
+        taskAttrType=setBitsFromBooleanAttribute(self.attributes,'_hasPrev',taskAttrType,4)
+
+        # TaskFormatType values
+	taskFormatType=0
+        taskFormatType=setBitsFromBooleanAttribute(self.attributes,'_hasStartDate',taskFormatType,15)
+    	taskFormatType=setBitsFromBooleanAttribute(self.attributes,'_hasPred',taskFormatType,14)
+        taskFormatType=setBitsFromBooleanAttribute(self.attributes,'_hasDuration',taskFormatType,13)
+        taskFormatType=setBitsFromBooleanAttribute(self.attributes,'_hasDueDate',taskFormatType,12)
+        taskFormatType=setBitsFromBooleanAttribute(self.attributes,'hasToDo',taskFormatType,11)
+        taskFormatType=setBitsFromBooleanAttribute(self.attributes,'_hasNote',taskFormatType,10)
+        taskFormatType=setBitsFromBooleanAttribute(self.attributes,'hasLink',taskFormatType,9)
+
+	itemType=PRI.reverseTypeTextNames[self.attributes['itemType']]
+	taskFormatType=setBits(taskFormatType,itemType,8,5)
+        taskFormatType=setBitsFromBooleanAttribute(self.attributes,'_hasXB',taskFormatType,3)
+        taskFormatType=setBitsFromBooleanAttribute(self.attributes,'_newTask',taskFormatType,2)
+        taskFormatType=setBitsFromBooleanAttribute(self.attributes,'_newFormat',taskFormatType,1)
+        taskFormatType=setBitsFromBooleanAttribute(self.attributes,'_nextFormat',taskFormatType,0)
+
+	# Pack header information
+	dstr+=struct.pack(PRI.TaskAttrTypeStructString,taskAttrType,taskFormatType)
+
+        if self.attributes['_hasXB']:
+	    dstr+=self.toByteArrayTaskXBRecords()
+	    # +++ FIX THIS +++
+            # self.XBSize+=2
+	dstr+=self.toByteArrayTaskStandardFields()
+
     def fromByteArrayTaskXBRecords( self, dstr ):
         (self.XBSize,)=struct.unpack(PRI.XBFieldsStructString,dstr[:PRI.XBFieldsStructSize])
 
