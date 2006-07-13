@@ -179,6 +179,8 @@ if __name__ == "__main__":
 
         ProgectDB2=PDBFile('lbPG-tutorial2.PDB',writeBack=True,read=False)
 
+        # With progect databases, we can't currently figure out the creator ID during load
+        ProgectDB2.setCreatorID('lbPG')
         InputFile=open('lbPG-tutorial.xml','rb')
         ProgectDB2.fromXML(InputFile)
         InputFile.close()

@@ -83,7 +83,9 @@ class PalmDatabase:
         '''
         Resets all class data to the defaults.
         '''
+#	creatorID=self.attributes.get('creatorID',None)
 	self.attributes.clear()
+#	self.attributes['creatorID']=creatorID
 
 	self.records = []
 	self.dirty = False
@@ -97,6 +99,27 @@ class PalmDatabase:
 
     def getCreatorID(self):
 	return self.attributes['creatorID']
+    def setCreatorID(self,creatorID):
+	    self.attributes['creatorID']=creatorID
+	    self.dirty = True
+
+    def getCategoriesObject(self):
+	    return self.attributes.get('_categoriesObject',None)
+    def setCategoriesObject(self,categoriesObject):
+	    self.attributes['_categoriesObject']=categoriesObject
+	    self.dirty = True
+
+    def getApplicationInformationObject(self):
+	    return self.attributes.get('_applicationInformationObject',None)
+    def setApplicationInformationObject(self,applicationInformationObject):
+	    self.attributes['_applicationInformationObject']=applicationInformationObject
+	    self.dirty = True
+
+    def getSortBlockObject(self):
+	    return self.attributes.get('_sortBlockObject',None)
+    def setSortBlockObject(self, sortBlockObject):
+	    self.attributes['_sortBlockObject']=sortBlockObject
+	    self.dirty = True
 
     def _headerInfoFromByteArray(self,raw):
         '''
@@ -195,6 +218,7 @@ class PalmDatabase:
 	return returnValue
     def fromXML(self,fileStream):
 	    plugin=self._getPlugin()
+	    print'plugin is ',plugin
 	    XMLReaderObject=plugin.getXMLReaderObject(self)
 	    XMLReaderObject.fromXML(fileStream,self)
 
@@ -479,10 +503,11 @@ class PalmDatabase:
         record_data = [] # holds record/resource data-chunks
         # populate the lists...
 	for record in self:
-	    (entryData,recordData)=record.toByteArray(offset)
-	    entries.append(entryData)
-	    record_data.append(recordData)
-	    offset+=len(recordData)
+		print 'record is',record
+		(entryData,recordData)=record.toByteArray(offset)
+		entries.append(entryData)
+		record_data.append(recordData)
+		offset+=len(recordData)
 
         # add the record/resource entries onto the data to be returned
         for x in entries: 
