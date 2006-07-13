@@ -261,6 +261,9 @@ class CategoriesObject(dict):
 	categoryLabels=list(categoryLabels)
 	categoryUniqIDs=list(categoryUniqIDs)
 
+	# have to convert unicode strings to palmos format
+	categoryLabels=[x.encode('palmos') for x in categoryLabels]
+	
 	# have to add in dummy data now
 	dummyCount=16-len(categoryLabels)
 	categoryLabels.extend(['']*dummyCount)
@@ -356,7 +359,7 @@ class GeneralPalmDBXMLReaderObject(GenericXMLReaderObject):
 		palmDatabaseObject.clear()
 	def parse_START_ELEMENT_palmDatabase(self,events,node,palmDatabaseObject):
 		# Set creatorID from header
-		palmDatabaseObject.attributes['creatorID']=node.attributes['type'].value
+		palmDatabaseObject.setCreatorID(node.attributes['type'].value)
 	def parse_START_ELEMENT_palmHeader(self,events,node,palmDatabaseObject):
 		events.expandNode(node)
 		palmDatabaseObject._palmHeaderFromDOMNode(node)
@@ -365,19 +368,19 @@ class GeneralPalmDBXMLReaderObject(GenericXMLReaderObject):
 		plugin=palmDatabaseObject._getPlugin()
 		categoriesObject=plugin.createCategoriesObject(palmDatabaseObject)
 		categoriesObject.fromDOMNode(node)
-		palmDatabaseObject.categoriesObject=categoriesObject
+		palmDatabaseObject.setCategoriesObject(categoriesObject)
 	def parse_START_ELEMENT_applicationBlock(self,events,node,palmDatabaseObject):
 		events.expandNode(node)
 		plugin=palmDatabaseObject._getPlugin()
 		applicationInformationObject=plugin.createApplicationInformationObject(palmDatabaseObject)
 		applicationInformationObject.fromDOMNode(node)
-		palmDatabaseObject.attributes['_applicationInformationObject']=applicationInformationObject
+		palmDatabaseObject.setApplicationInformationObject(applicationInformationObject)
 	def parse_START_ELEMENT_sortBlock(self,events,node,palmDatabaseObject):
 		events.expandNode(node)
 		plugin=palmDatabaseObject._getPlugin()
 		sortBlockObject=plugin.createSortBlockObject(palmDatabaseObject)
 		sortBlockObject.fromDOMNode(node)
-		palmDatabaseObject.attributes['_sortBlockObject']=sortBlockObject
+		palmDatabaseObject.setSortBlockObject(sortBlockObject)
 	def parse_START_ELEMENT_palmDataRecord(self,events,node,palmDatabaseObject):
 		events.expandNode(node)
 		plugin=palmDatabaseObject._getPlugin()
