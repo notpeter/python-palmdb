@@ -309,10 +309,9 @@ class ProgectRecord(PalmDB.Plugins.BasePlugin.DataRecord):
 	# Pack header information
 	dstr+=struct.pack(PRI.TaskAttrTypeStructString,taskAttrType,taskFormatType)
 
-        if self.attributes['_hasXB']:
-	    dstr+=self.toByteArrayTaskXBRecords()
-	    # +++ FIX THIS +++
-            # self.XBSize+=2
+	(XBRecordCount,XBRecordsData)=self.toByteArrayTaskXBRecords()
+	if XBRecordCount:
+		dstr+=XBRecordsData
 	dstr+=self.toByteArrayTaskStandardFields()
 
     def fromByteArrayTaskXBRecords( self, dstr ):
@@ -324,7 +323,26 @@ class ProgectRecord(PalmDB.Plugins.BasePlugin.DataRecord):
             (xbRecord,xbRecordSize)=xbRecordFactory.fromByteArray(xbRaw)
             self.extraBlockRecordList.append(xbRecord)
             xbRaw=xbRaw[xbRecordSize:]
+    def toByteArrayTaskXBRecords(self):
+        dstr=''
 
+        # first build up our XBRecordList, this may be lossy since we will only create
+	# XBRecords that are logical for the record type, and Progect keeps extrablocks
+	# around if you change the type of a task.
+	# This should be fixed (so that we don't lose the information) when we create the
+	# new Progect file format.
+        XBRecordList=[]
+	if self.attributes.get('icon',False):
+		XBRecordList.append(ExtraBlockIcon(self.attributes.get('icon',False)))
+		
+	# Pack XB Record List, put size first
+	XBRecordData=''
+	for XBRecord in XBRecordList:
+		XBRecordData+=XBRecord.toByteArray()
+	dstr+=struct.pack(PRI.XBFieldsStructString,len(XBRecordData))
+	dstr+=XBRecordData
+
+	return (len(XBRecordList),dstr)
     def fromByteArrayTaskStandardFields( self, dstr ):
         # we don't currently handle links
         if self.attributes['hasLink']:
@@ -348,8 +366,27 @@ class ProgectRecord(PalmDB.Plugins.BasePlugin.DataRecord):
         text=dstr[PRI.TaskStandardFieldStructSize:]
         self.attributes['description']=text.split('\0')[0]
         self.attributes['note']=text.split('\0')[1]
+    def toByteArrayTaskStandardFields( self):
+        dstr=''
 
+        # now correct dueDate field
+	dueDate=packProgectDate(self.attributes['dueDate'])
+	if self.attributes['priority']=='None':
+		priority=6
+	else:
+		priority=self.attributes['priority'].numerator
 
+        if self.attributes['itemType'] == 'ACTION_TYPE':
+		if self.attributes['completed']:
+			completed=10
+		else:
+			completed=0
+        if self.attributes['itemType'] == 'PROGRESS_TYPE':
+		completed=self.attributes['completed'].numerator
+
+	dstr+=struct.pack(PRI.TaskStandardFieldStructString,priority,completed,dueDate)
+	dstr+=self.attributes['description'].encode('palmos')+'\0'
+	dstr+=self.attributes['note'].encode('palmos')+'\0'
 
 class ExtraBlockNULL(object):
     def fromByteArray( self, raw ):
@@ -376,6 +413,8 @@ class ExtraBlockLinkLinkMaster(object):
         return returnObjectAsXML('linkLinkMaster',self.raw)
 
 class ExtraBlockIcon(object):
+    def __init__(self,icon):
+	    self.icon=icon
     def fromByteArray( self, raw ):
         (self.icon,)=struct.unpack(">H", raw)
     def __repr__( self ):
