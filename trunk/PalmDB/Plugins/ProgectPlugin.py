@@ -273,6 +273,7 @@ class ProgectRecord(PalmDB.Plugins.BasePlugin.DataRecord):
         setBooleanAttributeFromBits(self.attributes,'_nextFormat',taskFormatType,0)
 	    
         if self.attributes['_hasXB']:
+
             self.fromByteArrayTaskXBRecords(dstr[PRI.TaskAttrTypeStructSize:])
             # XBSize will always be two more than the size variable, to account for the variable
             self.XBSize+=2
@@ -281,6 +282,9 @@ class ProgectRecord(PalmDB.Plugins.BasePlugin.DataRecord):
             self.fromByteArrayTaskStandardFields(dstr[PRI.TaskAttrTypeStructSize:])
     def _packPayload(self):
         dstr=''
+
+	XBRecordsData=self.toByteArrayTaskXBRecords()
+
         # setup AttrType bits
 	taskAttrType=0
         taskAttrType=setBits(taskAttrType,self.attributes['_level'],15,8)
@@ -301,7 +305,12 @@ class ProgectRecord(PalmDB.Plugins.BasePlugin.DataRecord):
 
 	itemType=PRI.reverseTypeTextNames[self.attributes['itemType']]
 	taskFormatType=setBits(taskFormatType,itemType,8,5)
-        taskFormatType=setBitsFromBooleanAttribute(self.attributes,'_hasXB',taskFormatType,3)
+
+	if len(XBRecordsData):
+		taskFormatType=setBits,taskFormatType,1,3)
+	else:
+		taskFormatType=setBits,taskFormatType,0,3)
+
         taskFormatType=setBitsFromBooleanAttribute(self.attributes,'_newTask',taskFormatType,2)
         taskFormatType=setBitsFromBooleanAttribute(self.attributes,'_newFormat',taskFormatType,1)
         taskFormatType=setBitsFromBooleanAttribute(self.attributes,'_nextFormat',taskFormatType,0)
@@ -309,23 +318,13 @@ class ProgectRecord(PalmDB.Plugins.BasePlugin.DataRecord):
 	# Pack header information
 	dstr+=struct.pack(PRI.TaskAttrTypeStructString,taskAttrType,taskFormatType)
 
-	(XBRecordCount,XBRecordsData)=self.toByteArrayTaskXBRecords()
-	if XBRecordCount:
-		dstr+=XBRecordsData
+	dstr+=XBRecordsData
 	dstr+=self.toByteArrayTaskStandardFields()
 
     def fromByteArrayTaskXBRecords( self, dstr ):
-        (self.XBSize,)=struct.unpack(PRI.XBFieldsStructString,dstr[:PRI.XBFieldsStructSize])
-
-        xbRecordFactory=ExtraBlockRecordFactory()
-        xbRaw=dstr[PRI.XBFieldsStructSize:PRI.XBFieldsStructSize+self.XBSize]
-        while len(xbRaw):
-            (xbRecord,xbRecordSize)=xbRecordFactory.fromByteArray(xbRaw)
-            self.extraBlockRecordList.append(xbRecord)
-            xbRaw=xbRaw[xbRecordSize:]
+	    xbFactory=ExtraBlockRecordFactory()
+	    self.extraBlockRecordList=xbFactory.fromByteArray(dstr)
     def toByteArrayTaskXBRecords(self):
-        dstr=''
-
         # first build up our XBRecordList, this may be lossy since we will only create
 	# XBRecords that are logical for the record type, and Progect keeps extrablocks
 	# around if you change the type of a task.
@@ -333,16 +332,26 @@ class ProgectRecord(PalmDB.Plugins.BasePlugin.DataRecord):
 	# new Progect file format.
         XBRecordList=[]
 	if self.attributes.get('icon',False):
-		XBRecordList.append(ExtraBlockIcon(self.attributes.get('icon',False)))
+		XBRecordList.append(ExtraBlockIcon(self.attributes['icon']))
 		
-	# Pack XB Record List, put size first
-	XBRecordData=''
-	for XBRecord in XBRecordList:
-		XBRecordData+=XBRecord.toByteArray()
-	dstr+=struct.pack(PRI.XBFieldsStructString,len(XBRecordData))
-	dstr+=XBRecordData
+        if self.attributes['itemType'] == 'NUMERIC_PROGRESS_TYPE':
+		XBRecordList.append(ExtraBlockNumeric(self.attributes.get('completed',simpleRational(0,1))))
 
-	return (len(XBRecordList),dstr)
+        if self.attributes.get('linkToDo',False):
+		XBRecordList.append(ExtraBlockLinkToDo(self.attributes['linkToDo']))
+
+        if self.attributes.get('linkLinkMaster',False):
+		XBRecordList.append(ExtraBlockLinkLinkMaster(self.attributes['linkLinkMaster']))
+
++++ FIX THIS +++ Need to pull in more items here
+
+	# if no XB Records, then just return an empty string
+	if len(XBRecordList) == 0:
+		return ''
+	
+	xbFactory=ExtraBlockRecordFactory()
+	dstr=xbFactory.toByteArray(XBRecordList)
+	return dstr
     def fromByteArrayTaskStandardFields( self, dstr ):
         # we don't currently handle links
         if self.attributes['hasLink']:
@@ -417,14 +426,21 @@ class ExtraBlockIcon(object):
 	    self.icon=icon
     def fromByteArray( self, raw ):
         (self.icon,)=struct.unpack(">H", raw)
+    def toByteArray( self, raw ):
+        return struct.pack(">H", self.icon)
     def __repr__( self ):
        return 'ExtraBlockIcon(icon=%d)'%self.icon
     def toXML(self):
         return returnObjectAsXML('icon',self.icon)
 
 class ExtraBlockNumeric(object):
+    def __init__(self,rational):
+	    self.actual=rational.numerator
+	    self.limit=rational.denominator
     def fromByteArray( self, raw ):
         (self.limit,self.actual)=struct.unpack(">HH",raw)
+    def toByteArray( self, raw ):
+        return struct.pack(">HH",self.limit,self.actual)
     def __repr__( self ):
        return 'ExtraBlockNumeric(limit=%d,actual=%d)'%(self.limit,self.actual)
     def toXML(self):
@@ -453,7 +469,29 @@ class ExtraBlockRecordFactory( object ):
         self.Extra_Icon=50
         self.Extra_Numeric=51 # for numeric type
 
-    def fromByteArray( self, raw ):
+    def fromByteArray( self, dstr ):
+        (self.XBSize,)=struct.unpack(PRI.XBFieldsStructString,dstr[:PRI.XBFieldsStructSize])
+
+        xbRecordFactory=ExtraBlockRecordFactory()
+        xbRaw=dstr[PRI.XBFieldsStructSize:PRI.XBFieldsStructSize+self.XBSize]
+        while len(xbRaw):
+            (xbRecord,xbRecordSize)=self.recordFByteArray(xbRaw)
+            extraBlockRecordList.append(xbRecord)
+            xbRaw=xbRaw[xbRecordSize:]
+
+	return extraBlockRecordList
+    def toByteArray(self,extraBlockRecordList):
+        dstr=''
+	recordDstr=''
+
+	for xbRecord in extraBlockRecordList:
+		recordDstr+=self.recordToByteArray(xbRecord)
+
+	size=len(recordDstr)
+        dstr+==struct.pack(PRI.XBFieldsStructString,size)
+	dstr+=recordDstr
+	return dstr
+    def recordFromByteArray( self, raw ):
         '''
         Set raw data to marshall class.
         '''
@@ -478,3 +516,25 @@ class ExtraBlockRecordFactory( object ):
 
         newRecord.fromByteArray(body)
 	return (newRecord,self.__packSize+size)
+    def recordToByteArray( self, xbRecord ):
+        dstr=''
+	
+        if xbRecord.__class__.__name__ == 'ExtraBlockNULL':
+		type=self.Extra_NULL
+        if xbRecord.__class__.__name__ == 'ExtraBlockLinkToDo':
+		type=self.Extra_Link_ToDo
+        if xbRecord.__class__.__name__ == 'ExtraBlockLinkLinkMaster':
+		type=self.Extra_Link_LinkMaster
+        if xbRecord.__class__.__name__ == 'ExtraBlockIcon':
+		type=self.Extra_Icon
+        if xbRecord.__class__.__name__ == 'ExtraBlockNumeric':
+		type=self.Extra_Numeric
+	# toss unknown records, we aren't really setup to handle them yet
+		
+	recordDstr=xbRecord.toByteArray()
+	size=len(recordDstr)
+	subKey=0   # currently not used
+	reserve1=0 # Currently not used
+	dstr+=struct.pack(self.__packString,type,subKey,reserve1,size)
+	dstr+=recordDstr
+	return dstr
