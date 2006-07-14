@@ -149,7 +149,9 @@ def crackProgectDate(variable):
 
 	return datetime.date(year,getBits(variable,8,4),getBits(variable,4,5))
 
-def packProgectDate(year,date):
+def packProgectDate(date):
+	if date == None:
+		return 0
 	returnValue=0
 	returnValue=setBits(date.year-1904,returnValue,15,7)
 	returnValue=setBits(date.month,returnValue,8,4)
@@ -198,7 +200,7 @@ class PRI:
     # Setup reverse ItemType text names
     reverseTypeTextNames={}
     (keys,values)=zip(*typeTextNames.items())
-    reverseTypeTextRames.update(zip(values,keys))
+    reverseTypeTextNames.update(zip(values,keys))
     
 class ProgectRecord(PalmDB.Plugins.BasePlugin.DataRecord):
     '''
@@ -253,8 +255,8 @@ class ProgectRecord(PalmDB.Plugins.BasePlugin.DataRecord):
         self.attributes['_level']=getBits( taskAttrType, 15, 8 )
         setBooleanAttributeFromBits(self.attributes,'_hasNext',taskAttrType,7)
         setBooleanAttributeFromBits(self.attributes,'_hasChild',taskAttrType,6)
-        setBooleanAttributeFromBits(self.attributes,'opened'],taskAttrType,5)
-        setBooleanAttributeFromBits(self.attributes,'_hasPrev'],taskAttrType,4)
+        setBooleanAttributeFromBits(self.attributes,'opened',taskAttrType,5)
+        setBooleanAttributeFromBits(self.attributes,'_hasPrev',taskAttrType,4)
 
         # TaskFormatType values
         setBooleanAttributeFromBits(self.attributes,'_hasStartDate',taskFormatType,15)
@@ -307,9 +309,9 @@ class ProgectRecord(PalmDB.Plugins.BasePlugin.DataRecord):
 	taskFormatType=setBits(taskFormatType,itemType,8,5)
 
 	if len(XBRecordsData):
-		taskFormatType=setBits,taskFormatType,1,3)
+		taskFormatType=setBits(taskFormatType,1,3)
 	else:
-		taskFormatType=setBits,taskFormatType,0,3)
+		taskFormatType=setBits(taskFormatType,0,3)
 
         taskFormatType=setBitsFromBooleanAttribute(self.attributes,'_newTask',taskFormatType,2)
         taskFormatType=setBitsFromBooleanAttribute(self.attributes,'_newFormat',taskFormatType,1)
@@ -320,7 +322,7 @@ class ProgectRecord(PalmDB.Plugins.BasePlugin.DataRecord):
 
 	dstr+=XBRecordsData
 	dstr+=self.toByteArrayTaskStandardFields()
-
+	return dstr
     def fromByteArrayTaskXBRecords( self, dstr ):
 	    xbFactory=ExtraBlockRecordFactory()
 	    self.extraBlockRecordList=xbFactory.fromByteArray(dstr)
@@ -343,7 +345,7 @@ class ProgectRecord(PalmDB.Plugins.BasePlugin.DataRecord):
         if self.attributes.get('linkLinkMaster',False):
 		XBRecordList.append(ExtraBlockLinkLinkMaster(self.attributes['linkLinkMaster']))
 
-+++ FIX THIS +++ Need to pull in more items here
+#+++ FIX THIS +++ Need to pull in more items here
 
 	# if no XB Records, then just return an empty string
 	if len(XBRecordList) == 0:
@@ -379,12 +381,13 @@ class ProgectRecord(PalmDB.Plugins.BasePlugin.DataRecord):
         dstr=''
 
         # now correct dueDate field
-	dueDate=packProgectDate(self.attributes['dueDate'])
+	dueDate=packProgectDate(self.attributes.get('dueDate',None))
 	if self.attributes['priority']=='None':
 		priority=6
 	else:
 		priority=self.attributes['priority'].numerator
 
+	completed=0
         if self.attributes['itemType'] == 'ACTION_TYPE':
 		if self.attributes['completed']:
 			completed=10
@@ -396,7 +399,7 @@ class ProgectRecord(PalmDB.Plugins.BasePlugin.DataRecord):
 	dstr+=struct.pack(PRI.TaskStandardFieldStructString,priority,completed,dueDate)
 	dstr+=self.attributes['description'].encode('palmos')+'\0'
 	dstr+=self.attributes['note'].encode('palmos')+'\0'
-
+	return dstr
 class ExtraBlockNULL(object):
     def fromByteArray( self, raw ):
 	self.raw=raw
@@ -488,7 +491,7 @@ class ExtraBlockRecordFactory( object ):
 		recordDstr+=self.recordToByteArray(xbRecord)
 
 	size=len(recordDstr)
-        dstr+==struct.pack(PRI.XBFieldsStructString,size)
+        dstr+=struct.pack(PRI.XBFieldsStructString,size)
 	dstr+=recordDstr
 	return dstr
     def recordFromByteArray( self, raw ):
