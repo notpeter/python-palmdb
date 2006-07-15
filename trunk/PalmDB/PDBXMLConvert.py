@@ -38,7 +38,6 @@ import PluginManager
 from PalmDatabase import PalmHeaderInfo
 
 import sys
-import StringIO
 from optparse import OptionParser
 
 def guessPalmAppID(filename):
@@ -116,27 +115,17 @@ def main():
     
 #     print 'actually do something'
 
-    PalmDB=PalmDatabase.PalmDatabase()
     plugin=PluginManager.getPDBPlugin(palmAppID)
     if plugin is  None:
         return parser.error('Cannot determine plugin type, have to exit, sorry...')
 
+    PalmDB=PalmDatabase.PalmDatabase()
     if Palm == 0:
-        palmData=open(PalmFilename,'rb').read()
-        PalmDB.fromByteArray(palmData)
-        desktopData=PalmDB.toXML()
-        desktopData=plugin.doXSLTConversionToDesktop(applicationName,desktopData)
-        plugin.packXMLIntoFile(applicationName,DesktopFilename,desktopData)
+        plugin.readPalmDBFromFile(PalmDB,PalmFilename)
+        plugin.writePalmDBToApplicationFile(PalmDB,applicationName,DesktopFilename)
     else:
-        desktopData=plugin.unpackXMLFromFile(applicationName,DesktopFilename)
-        desktopData=plugin.doXSLTConversionFromDesktop(applicationName,desktopData)
-        PalmDB.setCreatorID(palmAppID)
-        PalmDB.fromXML(StringIO.StringIO(desktopData))
-        # +++ FIX THIS +++ have to ensure only RHS and not too long
-#        print 'records',len(PalmDB)
-        PalmDB.setFilename(PalmFilename)
-        palmData=PalmDB.toByteArray()
-        open(PalmFilename,'wb').write(palmData)
+        plugin.readPalmDBFromApplicationFile(PalmDB,applicationName,DesktopFilename)
+        plugin.writePalmDBToFile(PalmDB,PalmFilename)
 
 if __name__ == "__main__":
     sys.exit(main())
