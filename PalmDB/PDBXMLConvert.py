@@ -136,6 +136,7 @@ def main():
         else:
             open(DesktopFilename,'w').write(desktopData)
         # +++ FIX THIS +++ to the appropriate XSLT conversion here
+        None
     else:
         if GZIPResult:
             desktopData=open(DesktopFilename,'rb').read()
@@ -144,8 +145,12 @@ def main():
             desktopData=open(DesktopFilename,'r').read()
 
         # +++ FIX THIS +++ to the appropriate XSLT conversion here
+        None
+    
+        PalmDB.setCreatorID(palmAppID)
         PalmDB.fromXML(StringIO.StringIO(desktopData))
         # +++ FIX THIS +++ have to ensure only RHS and not too long
+#        print 'records',len(PalmDB)
         PalmDB.setFilename(PalmFilename)
         palmData=PalmDB.toByteArray()
         open(PalmFilename,'wb').write(palmData)
