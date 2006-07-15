@@ -45,9 +45,35 @@ from PalmDB.Util import returnObjectAsXML
 from PalmDB.Util import returnAsXMLItem
 from PalmDB.Util import simpleRational
 
+PDeskFromXMLXSLT='''
+PDesk From XML XSLT
+'''
+PDeskToXMLXSLT='''
+PDesk To XML XSLT
+'''
+
+NativeFromXMLXSLT=''
+NativeToXMLXSLT=''
+
 class ProgectPlugin(PalmDB.Plugins.BasePlugin.BasePDBFilePlugin):
+	# tuple is (XSLTFromXML,XSLTToXML,gzip_result)
+	applicationConversions={'NativeXML':(NativeFromXMLXSLT,NativeToXMLXSLT,False),
+				'NativeXMLGZ':(NativeFromXMLXSLT,NativeToXMLXSLT,True),
+				'PDeskXML':(PDeskFromXMLXSLT,PDeskToXMLXSLT,True)}
+
 	def getPDBCreatorID(self):
 		return 'lbPG'
+	def getPalmApplicationName(self):
+		return 'Progect'
+	def getApplicationNameFromFile(self,filename):
+		# return tuple (ApplicationName,XSLT,GZIPResult)
+		if filename.upper().endswith('.XML'):
+			return 'NativeXML'
+		if filename.upper().endswith('.XML.GZ'):
+			return 'NativeXMLGZ'
+		if filename.upper().endswith('.PML'):
+			return 'PDeskXML'
+		return None
 
 	def createPalmDatabaseRecord(self,PalmDatabaseObject):
             return ProgectRecord()

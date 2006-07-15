@@ -103,6 +103,11 @@ class PalmDatabase:
 	    self.attributes['creatorID']=creatorID
 	    self.dirty = True
 
+    def getFilename(self):
+	    return self.attributes['PalmFileName']
+    def setFilename(self,filename):
+	    self.attributes['PalmFileName']=filename
+	    
     def getCategoriesObject(self):
 	    return self.attributes.get('_categoriesObject',None)
     def setCategoriesObject(self,categoriesObject):
@@ -218,7 +223,6 @@ class PalmDatabase:
 	return returnValue
     def fromXML(self,fileStream):
 	    plugin=self._getPlugin()
-	    print'plugin is ',plugin
 	    XMLReaderObject=plugin.getXMLReaderObject(self)
 	    XMLReaderObject.fromXML(fileStream,self)
 
@@ -503,7 +507,6 @@ class PalmDatabase:
         record_data = [] # holds record/resource data-chunks
         # populate the lists...
 	for record in self:
-		print 'record is',record
 		(entryData,recordData)=record.toByteArray(offset)
 		entries.append(entryData)
 		record_data.append(recordData)

@@ -34,17 +34,31 @@ basePlugin=Plugins.BasePlugin.BasePDBFilePlugin()
 
 # +++ READ THIS +++ Plugins need to implement the interface in Plugins.BasePlugin.BasePDBFilePlugin
 PDBPlugins={}
+PalmApplications={}
 def registerPDBPlugin(PDBFilePluginClass):
 	type=PDBFilePluginClass.getPDBCreatorID()
 	PDBPlugins[type]=PDBFilePluginClass
-
+	PalmApplications[type]=PDBFilePluginClass.getPalmApplicationName()
 def deRegisterPDBPlugin(PDBFilePluginClass):
 	type=PDBFilePluginClass.getPDBCreatorID()
 	del(PDBPlugins[type])
+	del(PalmApplications[type])
 
 def getPDBPlugin(CreatorID):
         # if we cannot find an appropriate plugin, default to one that can handle any type
 	return PDBPlugins.get(CreatorID,basePlugin)
+def getPalmApplicationName(CreatorID):
+        # if we cannot find an appropriate plugin, default to one that can handle any type
+	return PalmApplications.get(CreatorID,None)
+def getCreatorIDFromApplicationName(applicationName):
+	reverseDictionary={}
+	(keys,values)=zip(*PalmApplications.items())
+	reverseDictionary.update(zip(values,keys))
+	return reverseDictionary.get(applicationName,None)
+
+def PalmApplicationName(CreatorID):
+        # if we cannot find an appropriate plugin, default to one that can handle any type
+	return PalmApplications.get(CreatorID,None)
 
 #
 #--------- Register Standard Plugins that come with Library ---------

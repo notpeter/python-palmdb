@@ -33,16 +33,33 @@
 __copyright__ = 'Copyright 2006 Rick Price <rick_price@users.sourceforge.net>'
 
 import PalmDB
+import PalmDatabase
+import PluginManager
+from PalmDatabase import PalmHeaderInfo
 
 import sys
+import StringIO
 from optparse import OptionParser
 
-def convertPalmApplicationNametoAppID(palmApplicationName):
-    pass
-def guessPalmAppID(fileName):
-    pass
-def guessApplicationName(fileName):
-    pass
+def guessPalmAppID(filename):
+    try:
+        PalmDB=PalmDatabase.PalmDatabase()
+        fileData=open(filename,'rb').read(PalmHeaderInfo.PDBHeaderStructSize)
+        PalmDB.fromByteArray(fileData,headerOnly=True)
+        return PalmDB.getCreatorID()
+    except:
+        return None
+def guessApplicationConversion(palmAppID,filename):
+    plugin=PluginManager.getPDBPlugin(palmAppID)
+    if plugin is  None:
+        return None
+    applicationName=plugin.getApplicationNameFromFile(filename)
+    return convertApplicationNameToConversion(palmAppID,applicationName)
+def convertApplicationNameToConversion(palmAppID,applicationName):
+    plugin=PluginManager.getPDBPlugin(palmAppID)
+    if plugin is  None:
+        return None
+    return plugin.getApplicationConversion(applicationName)
 
 def listSupportAppsCallBack(option, opt, value, parser):
     print 'print list of supported palm apps and their desktop apps'
@@ -77,23 +94,61 @@ def main():
         parser.error('Can only convert between between a Palm database and a desktop application. You do not seem to have specified a desktop application file.')
         
 
+    PalmFilename=arguments[Palm]
+    DesktopFilename=arguments[Desktop]
     if options.palmApplicationName:
-        palmAppID=convertPalmApplicationNametoAppID(options.palmApplicationName)
+        palmAppID=PluginManager.getCreatorIDFromApplicationName(options.palmApplicationName)
     else:
-        palmAppID=guessPalmAppID(arguments[Palm])
+        palmAppID=guessPalmAppID(PalmFilename)
 
     if options.desktopApplicationName:
-        applicationName=options.palmApplicationName
+        conversion=convertApplicationNameToConversion(palmAppID,options.palmApplicationName)
     else:
-        applicationName=guessApplicationName(arguments[Desktop])
+        conversion=guessApplicationConversion(palmAppID,DesktopFilename)
 
     if palmAppID is None:
         parser.error('Cannot determine Palm Creator ID, therefore cannot convert database')
 
+    FromXMLXSLT,ToXMLXSLT,GZIPResult=conversion
+
+    if Palm == 0:
+        print 'Converting ',PalmFilename,' to ', DesktopFilename
+    else:
+        print 'Converting ',DesktopFilename, ' to ',PalmFilename
         
-    print 'actually do something'    
-    # example of how to print out help
-#    parser.print_help()
+#     print 'Desktop Filename is',DesktopFilename
+#     print 'palm app id is',palmAppID
+#     print 'From XML XSLT is[',FromXMLXSLT,']'
+#     print 'To XML XSLT is[',ToXMLXSLT,']'
+#     print 'GZIP Result is',GZIPResult
+    
+#     print 'actually do something'
+
+    PalmDB=PalmDatabase.PalmDatabase()
+
+    if Palm == 0:
+        palmData=open(PalmFilename,'rb').read()
+        PalmDB.fromByteArray(palmData)
+        desktopData=PalmDB.toXML()
+        if GZIPResult:
+            desktopData=desktopData.encode('zip')
+            open(DesktopFilename,'wb').write(desktopData)
+        else:
+            open(DesktopFilename,'w').write(desktopData)
+        # +++ FIX THIS +++ to the appropriate XSLT conversion here
+    else:
+        if GZIPResult:
+            desktopData=open(DesktopFilename,'rb').read()
+            desktopData=desktopData.decode('zip')
+        else:
+            desktopData=open(DesktopFilename,'r').read()
+
+        # +++ FIX THIS +++ to the appropriate XSLT conversion here
+        PalmDB.fromXML(StringIO.StringIO(desktopData))
+        # +++ FIX THIS +++ have to ensure only RHS and not too long
+        PalmDB.setFilename(PalmFilename)
+        palmData=PalmDB.toByteArray()
+        open(PalmFilename,'wb').write(palmData)
 
 if __name__ == "__main__":
     sys.exit(main())

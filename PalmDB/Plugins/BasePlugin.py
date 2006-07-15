@@ -46,17 +46,34 @@ from PalmDB.Util import dictionaryFromXMLDOMNode
 RESOURCE_ENTRY_SIZE = 10  # size of a resource entry
 RECORD_ENTRY_SIZE = 8 # size of a record entry
 
-class BasePDBFilePlugin:
-	def getPDBCreatorID(self):
-	        #+++ READ THIS +++ This HAS to be redefined in child classes otherwise things won't work
-		raise NotImplementedError
-		return 'CrID'
+NativeFromXMLXSLT=''
+NativeToXMLXSLT=''
 
+class BasePDBFilePlugin:
+	# tuple is (XSLTFromXML,XSLTToXML,gzip_result)
+	applicationConversions={'NativeXML':(NativeFromXMLXSLT,NativeToXMLXSLT,False),'NativeXMLGZ':(NativeFromXMLXSLT,NativeToXMLXSLT,True)}
+		
+        #+++ READ THIS +++ This HAS to be redefined in child classes otherwise things won't work
+	def getPDBCreatorID(self):
+#		raise NotImplementedError
+		return 'Unknown'
+	#+++ READ THIS +++ This HAS to be redefined in child classes otherwise things won't work
+	def getPalmApplicationName(self):
+		return 'Unknown'
+
+	def getApplicationNameFromFile(self,filename):
+		# return tuple (ApplicationName,XSLT,GZIPResult)
+		if filename.upper().endswith('.XML'):
+			return 'NativeXML'
+		if filename.upper().endswith('.XML.GZ'):
+			return 'NativeXMLGZ'
+		return None
+	def getApplicationConversion(self,application):
+		return self.applicationConversions.get(application,None)
 	def createCategoriesObject(self,PalmDatabaseObject):
 		return CategoriesObject()
 
 	def createApplicationInformationObject(self,PalmDatabaseObject):
-		print 'called createappinfobject'
 		return applicationInformationObject()
 
 	def createSortBlockObject(self,PalmDatabaseObject):
