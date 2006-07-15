@@ -50,9 +50,6 @@ NativeFromXMLXSLT=''
 NativeToXMLXSLT=''
 
 class BasePDBFilePlugin:
-	# tuple is (XSLTFromXML,XSLTToXML,gzip_result)
-	applicationConversions={'NativeXML':(NativeFromXMLXSLT,NativeToXMLXSLT,False),'NativeXMLGZ':(NativeFromXMLXSLT,NativeToXMLXSLT,True)}
-		
         #+++ READ THIS +++ This HAS to be redefined in child classes otherwise things won't work
 	def getPDBCreatorID(self):
 #		raise NotImplementedError
@@ -68,8 +65,25 @@ class BasePDBFilePlugin:
 		if filename.upper().endswith('.XML.GZ'):
 			return 'NativeXMLGZ'
 		return None
-	def getApplicationConversion(self,application):
-		return self.applicationConversions.get(application,None)
+
+	def unpackXMLFromFile(self,application,filename):
+		if filename.upper().endswith('.GZ'):
+			XMLData=open(filename,'rb').read()
+			XMLData=XMLData.decode('zip')
+		else:
+			XMLData=open(filename,'r').read()
+		return XMLData
+	def packXMLIntoFile(self,application,filename,XMLData):
+		if filename.upper().endswith('.GZ'):
+			XMLData=XMLData.encode('zip')
+			XMLData=open(filename,'wb').write(XMLData)
+		else:
+			XMLData=open(filename,'w').write(XMLData)
+	def doXSLTConversionToDesktop(self,application,XMLData):
+		return XMLData
+	def doXSLTConversionFromDesktop(self,application,XMLData):
+		return XMLData
+
 	def createCategoriesObject(self,PalmDatabaseObject):
 		return CategoriesObject()
 
