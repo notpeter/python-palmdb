@@ -35,6 +35,7 @@ __copyright__ = 'Copyright 2006 Rick Price <rick_price@users.sourceforge.net>'
 
 import struct
 from xml.dom import pulldom
+import StringIO
 
 from PalmDB.Util import getBits
 from PalmDB.Util import setBits
@@ -83,6 +84,23 @@ class BasePDBFilePlugin:
 		return XMLData
 	def doXSLTConversionFromDesktop(self,application,XMLData):
 		return XMLData
+	def readPalmDBFromFile(self,PalmDB,filename):
+		palmData=open(filename,'rb').read()
+		PalmDB.fromByteArray(palmData)
+	def writePalmDBToFile(self,PalmDB,filename):
+		PalmDB.setFilename(filename)
+		palmData=PalmDB.toByteArray()
+		open(filename,'wb').write(palmData)
+
+	def readPalmDBFromApplicationFile(self,PalmDB,application,filename):
+		desktopData=self.unpackXMLFromFile(application,filename)
+		desktopData=self.doXSLTConversionFromDesktop(application,desktopData)
+		PalmDB.setCreatorID(self.getPDBCreatorID())
+		PalmDB.fromXML(StringIO.StringIO(desktopData))
+	def writePalmDBToApplicationFile(self,PalmDB,application,filename):
+		desktopData=PalmDB.toXML()
+		desktopData=self.doXSLTConversionToDesktop(application,desktopData)
+		self.packXMLIntoFile(application,filename,desktopData)
 
 	def createCategoriesObject(self,PalmDatabaseObject):
 		return CategoriesObject()
