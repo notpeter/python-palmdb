@@ -56,11 +56,6 @@ NativeFromXMLXSLT=''
 NativeToXMLXSLT=''
 
 class ProgectPlugin(PalmDB.Plugins.BasePlugin.BasePDBFilePlugin):
-	# tuple is (XSLTFromXML,XSLTToXML,gzip_result)
-	applicationConversions={'NativeXML':(NativeFromXMLXSLT,NativeToXMLXSLT,False),
-				'NativeXMLGZ':(NativeFromXMLXSLT,NativeToXMLXSLT,True),
-				'PDeskXML':(PDeskFromXMLXSLT,PDeskToXMLXSLT,True)}
-
 	def getPDBCreatorID(self):
 		return 'lbPG'
 	def getPalmApplicationName(self):

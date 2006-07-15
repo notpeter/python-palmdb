@@ -49,17 +49,11 @@ def guessPalmAppID(filename):
         return PalmDB.getCreatorID()
     except:
         return None
-def guessApplicationConversion(palmAppID,filename):
+def guessApplicationName(palmAppID,filename):
     plugin=PluginManager.getPDBPlugin(palmAppID)
     if plugin is  None:
         return None
-    applicationName=plugin.getApplicationNameFromFile(filename)
-    return convertApplicationNameToConversion(palmAppID,applicationName)
-def convertApplicationNameToConversion(palmAppID,applicationName):
-    plugin=PluginManager.getPDBPlugin(palmAppID)
-    if plugin is  None:
-        return None
-    return plugin.getApplicationConversion(applicationName)
+    return plugin.getApplicationNameFromFile(filename)
 
 def listSupportAppsCallBack(option, opt, value, parser):
     print 'print list of supported palm apps and their desktop apps'
@@ -102,14 +96,12 @@ def main():
         palmAppID=guessPalmAppID(PalmFilename)
 
     if options.desktopApplicationName:
-        conversion=convertApplicationNameToConversion(palmAppID,options.palmApplicationName)
+        applicationName=options.palmApplicationName
     else:
-        conversion=guessApplicationConversion(palmAppID,DesktopFilename)
+        applicationName=guessApplicationName(palmAppID,DesktopFilename)
 
     if palmAppID is None:
         parser.error('Cannot determine Palm Creator ID, therefore cannot convert database')
-
-    FromXMLXSLT,ToXMLXSLT,GZIPResult=conversion
 
     if Palm == 0:
         print 'Converting ',PalmFilename,' to ', DesktopFilename
@@ -125,28 +117,19 @@ def main():
 #     print 'actually do something'
 
     PalmDB=PalmDatabase.PalmDatabase()
+    plugin=PluginManager.getPDBPlugin(palmAppID)
+    if plugin is  None:
+        return parser.error('Cannot determine plugin type, have to exit, sorry...')
 
     if Palm == 0:
         palmData=open(PalmFilename,'rb').read()
         PalmDB.fromByteArray(palmData)
         desktopData=PalmDB.toXML()
-        if GZIPResult:
-            desktopData=desktopData.encode('zip')
-            open(DesktopFilename,'wb').write(desktopData)
-        else:
-            open(DesktopFilename,'w').write(desktopData)
-        # +++ FIX THIS +++ to the appropriate XSLT conversion here
-        None
+        desktopData=plugin.doXSLTConversionToDesktop(applicationName,desktopData)
+        plugin.packXMLIntoFile(applicationName,DesktopFilename,desktopData)
     else:
-        if GZIPResult:
-            desktopData=open(DesktopFilename,'rb').read()
-            desktopData=desktopData.decode('zip')
-        else:
-            desktopData=open(DesktopFilename,'r').read()
-
-        # +++ FIX THIS +++ to the appropriate XSLT conversion here
-        None
-    
+        desktopData=plugin.unpackXMLFromFile(applicationName,DesktopFilename)
+        desktopData=plugin.doXSLTConversionFromDesktop(applicationName,desktopData)
         PalmDB.setCreatorID(palmAppID)
         PalmDB.fromXML(StringIO.StringIO(desktopData))
         # +++ FIX THIS +++ have to ensure only RHS and not too long
@@ -157,34 +140,3 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
-
-# if __name__ == "__main__":
-#         ProgectDB=PDBFile('lbPG-tutorial.PDB')
-
-#         OutputFile=open('lbPG-tutorial.xml','wb')
-#         OutputFile.write(ProgectDB.toXML())
-#         OutputFile.close()
-
-#         ProgectDB2=PDBFile('lbPG-tutorial2.PDB',writeBack=True,read=False)
-
-#         # With progect databases, we can't currently figure out the creator ID during load
-#         ProgectDB2.setCreatorID('lbPG')
-#         InputFile=open('lbPG-tutorial.xml','rb')
-#         ProgectDB2.fromXML(InputFile)
-#         InputFile.close()
-
-#         print 'before save'
-#         ProgectDB2.save()
-#         print 'after save'
-        
-# #        XMLFile=open('test.xml')
-# #        print ProgectDB.toXML()
-# #         OutputFile=open('test2.xml','w')
-# #         OutputFile.write(ProgectDB.toXML())
-# #         OutputFile.close()
-# #         XMLFile2=open('test2.xml')
-# #         ProgectDB.fromXML(XMLFile2)
-# #         OutputFile=open('test3.xml','w')
-# #         OutputFile.write(ProgectDB.toXML())
-# #        x=ProgectDB.toByteArray()
-        
