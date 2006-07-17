@@ -35,6 +35,7 @@ __copyright__ = 'Copyright 2006 Rick Price <rick_price@users.sourceforge.net>'
 
 import struct
 from xml.dom import pulldom
+from Ft.Xml.Xslt import Transform
 import StringIO
 
 from PalmDB.Util import getBits
@@ -80,10 +81,26 @@ class BasePDBFilePlugin:
 			XMLData=open(filename,'wb').write(XMLData)
 		else:
 			XMLData=open(filename,'w').write(XMLData)
+	def getXSLTText(self,application,type):
+		return None
+# A possible implementation...
+# 		# have to create global vars with XSLT text
+# 		XSLTEval='XSLT_%s_%s'%(application,type)
+# 		try:
+# 			xslt = eval(XSLTEval)
+# 			return xslt
+# 		except Exception, e:
+# 			return None
 	def doXSLTConversionToDesktop(self,application,XMLData):
-		return XMLData
+		XSLT=self.getXSLTText(application,'ToDesktop')
+		if XSLT is None:
+			return XMLData
+		return Transform(XMLData,XSLT)
 	def doXSLTConversionFromDesktop(self,application,XMLData):
-		return XMLData
+		XSLT=self.getXSLTText(application,'FromDesktop')
+		if XSLT is None:
+			return XMLData
+		return Transform(XMLData,XSLT)
 	def readPalmDBFromFile(self,PalmDB,filename):
 		palmData=open(filename,'rb').read()
 		PalmDB.fromByteArray(palmData)
