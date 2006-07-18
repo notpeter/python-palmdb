@@ -28,19 +28,29 @@ id="{recordAttributes/attribute[@name='uid']/*/@value}"
 name="{recordAttributes/attribute[@name='description']/*/@value}"
 expand="{recordAttributes/attribute[@name='opened']/*/@value}"
 >
+<xsl:if test="recordAttributes/attribute[@name='dueDate']">
+<xsl:attribute name="duration"><xsl:text>1</xsl:text></xsl:attribute>
+<xsl:attribute name="start">
+<xsl:value-of select="recordAttributes/attribute[@name='dueDate']/*/@year"/>-<xsl:value-of select="recordAttributes/attribute[@name='dueDate']/*/@month"/>-<xsl:value-of select="recordAttributes/attribute[@name='dueDate']/*/@day"/>
+</xsl:attribute>
+</xsl:if>
 <notes><xsl:value-of select="recordAttributes/attribute[@name='note']/*/@value"/></notes>
 <xsl:apply-templates select="children/ProgectDataRecord"/>
 </task>
 </xsl:template>
 
 <!--
-<xsl:template match="attribute">
-<xsl:param name="attributeName" select="@name"/>
-<xsl:attribute name="{$attributeName}">
-<xsl:value-of select="*/@value"/>
+<xsl:template name="dueDate" match="ProgectDataRecord">
+<xsl:attribute name="splat"/>
+<xsl:attribute name="duration"><xsl:text>1</xsl:text></xsl:attribute>
+<xsl:attribute name="start">
+<xsl:value-of select="recordAttributes/attribute[@name='year']/*/@value"/>-
+<xsl:value-of select="recordAttributes/attribute[@name='month']/*/@value"/>-
+<xsl:value-of select="recordAttributes/attribute[@name='day']/*/@value"/>
 </xsl:attribute>
 </xsl:template>
 -->
+
 <!--
 <xsl:template match="@*|node()">
 <xsl:copy>
