@@ -28,12 +28,65 @@ id="{recordAttributes/attribute[@name='uid']/*/@value}"
 name="{recordAttributes/attribute[@name='description']/*/@value}"
 expand="{recordAttributes/attribute[@name='opened']/*/@value}"
 >
+<!-- transfer dueDate attribute, this is broken, it needs to go backwards by one day... -->
 <xsl:if test="recordAttributes/attribute[@name='dueDate']">
 <xsl:attribute name="duration"><xsl:text>1</xsl:text></xsl:attribute>
 <xsl:attribute name="start">
 <xsl:value-of select="recordAttributes/attribute[@name='dueDate']/*/@year"/>-<xsl:value-of select="recordAttributes/attribute[@name='dueDate']/*/@month"/>-<xsl:value-of select="recordAttributes/attribute[@name='dueDate']/*/@day"/>
 </xsl:attribute>
 </xsl:if>
+
+<!-- Transfer completed attribute -->
+<xsl:if test="recordAttributes/attribute[@name='completed']">
+
+<xsl:if test="recordAttributes/attribute[@name='completed']/boolean/@value = 'True'">
+<xsl:attribute name="complete">
+<xsl:value-of select="100"/>
+</xsl:attribute>
+</xsl:if>
+
+<xsl:if test="recordAttributes/attribute[@name='completed']/boolean/@value = 'False'">
+<xsl:attribute name="complete">
+<xsl:value-of select="0"/>
+</xsl:attribute>
+</xsl:if>
+
+<xsl:if test="recordAttributes/attribute[@name='completed']/rational">
+<xsl:attribute name="complete">
+<xsl:value-of select="(recordAttributes/attribute[@name='completed']/rational/@numerator) div (recordAttributes/attribute[@name='completed']/rational/@denominator) * 100"/>
+</xsl:attribute>
+</xsl:if>
+
+</xsl:if>
+<!-- transfer priority attribute -->
+<xsl:if test="recordAttributes/attribute[@name='priority']">
+
+<xsl:if test="recordAttributes/attribute[@name='priority']/string/@value = 'None'">
+<xsl:attribute name="priority">
+<xsl:value-of select="1"/>
+</xsl:attribute>
+</xsl:if>
+
+<xsl:if test="recordAttributes/attribute[@name='priority']/rational/@numerator &lt; 3">
+<xsl:attribute name="priority">
+<xsl:value-of select="0"/>
+</xsl:attribute>
+</xsl:if>
+
+<xsl:if test="recordAttributes/attribute[@name='priority']/rational/@numerator = 3">
+<xsl:attribute name="priority">
+<xsl:value-of select="1"/>
+</xsl:attribute>
+</xsl:if>
+
+<xsl:if test="recordAttributes/attribute[@name='priority']/rational/@numerator &gt; 3">
+<xsl:attribute name="priority">
+<xsl:value-of select="2"/>
+</xsl:attribute>
+</xsl:if>
+
+</xsl:if>
+
 <notes><xsl:value-of select="recordAttributes/attribute[@name='note']/*/@value"/></notes>
 <xsl:apply-templates select="children/ProgectDataRecord"/>
 </task>
