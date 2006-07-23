@@ -230,3 +230,73 @@ def itemFromXMLDOMNode(XMLDOMNode):
     # +++ FIX THIS +++ Some types missing here
     return None
 
+class StructMap:
+    typeConversion={
+        'padbyte':'x'
+        'char':'c'
+        'schar':'b'
+        'uchar':'B'
+        'short':'h'
+        'ushort':'H'
+        'int':'i'
+        'uint':'I'
+        'long':'l'
+        'ulong':'L'
+        'longlong':'q'
+        'ulonglong':'Q'
+        'float':'f'
+        'double':'d'
+        'char[]':'s'
+        'void *':'P'
+        }
+    byteOrder={
+        'native-native':'@',
+        'native-standard':'=',
+        'little-endian':'<',
+        'big-endian':'>',
+        'network':'!'
+        }
+    def __init__(self):
+        self.conversionList=[]
+        self.data={}
+        self.networkOrder='native-native'
+    def selfNetworkOrder(self,networkOrder):
+        self.networkOrder=networkOrder
+    def setConversion(self,conversionList):
+        '''
+        conversionList is a list of tuples that look like (repeat,name,type)
+        '''
+        self.conversionList=conversionList
+    def _getPackString(self):
+        # explicitly set network byte order
+        packString=self.byteOrder[self.networkOrder]
+        # build list of struct parameters
+        for conversion in self.conversionList:
+            (repeat,name,type)=conversion
+            if repeat > 1:
+                packString+=str(repeat)
+            packString+=self.conversionList[type]
+    
+    def _getParameterNames(self):
+        return [paramName for (repeat,paramName,type) in self.conversionList]
+    def crackByteArray(self,byteArray):
+        crackedData=struct.unpack(self._getPackString(),byteArray)
+        forDictData=zip(self._getParameterNames(),crackedData)
+        self.data.clear()
+        self.data.update(forDictData)
+    def packByteArray(self):
+        packedTuple=tuple([self.data[item] for item in self._getParameterNames()])
+        return struct.pack(self._getPackString,*packedTuple)
+    def __len__(self):
+        return struct.calcsize(_getPackString())
+
+    # map API Begins
+    def __getitem__(self, index):
+        return self.data[index]
+    def __setitem__(self, index,record):
+        self.data[index]=record
+    def __delitem__(self, index):
+        del(self.data[index])
+    def __contains__(self,record):
+        return self.data.__contains__(record)
+    # Sequence/map API Ends

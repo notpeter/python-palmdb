@@ -73,6 +73,63 @@ XSLT_PDeskXML_FromDesktop=None
 XSLT_OMNIOutliner_ToDesktop=''
 XSLT_OMNIOutliner_FromDesktop=''
 
+class ProgectAppInfoObject(BasePlugin.applicationInformationObject):
+	'''
+typedef struct {
+	UInt8 format;              // format of the records
+	UInt8 reserved;
+	Boolean hideDoneTasks;     // hide done tasks in project form
+	Boolean displayDueDates;   // draw the due dates on project form
+	Boolean displayPriorities; // draw the priority on project form
+	Boolean displayYear;       // draw the year with due date on project form
+	Boolean useFatherStatus;   // use father's due date and priority
+	// new in 0.15
+	Boolean autoSyncToDo;      // sync the todos on opening
+	// new in 0.16 : flat filter details
+	Boolean flatHideDone;
+	UInt8 flatDated;
+	UInt8 flatMinPriority;
+	Boolean flatOr;
+	Boolean flatMin; // 0.17
+	// new in 0.17 : display preferences
+	UInt8 boldMinPriority;
+	UInt8 boldMinDays; // 0 = no, 1 = overdue, 2 = today...
+	Boolean strikeDoneTasks;
+	Boolean hideDoneProgress;
+	Boolean hideProgress;
+	TaskType taskDefaults;
+	// new in 0.18 : sort in flat view
+	SortType flatSorted;
+	UInt8 flatDateLimit; // 0 = no, 1 = overdue, 2 = today...
+	// new in 0.20 : record completion date
+	Boolean completionDate; // true = record completion date
+	// new in 0.21
+	UInt16 flatCategories;
+	// new in 0.22
+	UInt8 wordWrapLines;
+	UInt8 drawTreeLines;  // Used as Boolean now. May become enum
+	// rtm group competed
+	Boolean completedGroup;  // 1 = move competed task to after un-completed and vice-versa
+} ProjectPrefsType;
+	'''
+	def __init__(self):
+		self.__packString = '!H'+('16s'*16)+('B'*16)+'B'+'x'
+	def __len__(self):
+	    return struct.calcsize(self.__packString)
+
+	def fromByteArray(self,dstr):
+		self.attributes['payload']=dstr.encode('HEX')
+
+	def toByteArray(self):
+		return self.attributes.get('payload','').decode('HEX')
+	
+	def toXML(self):
+		attributesAsXML=returnDictionaryAsXML(self.attributes)
+		return returnAsXMLItem('applicationBlock',attributesAsXML,escape=False)
+	def fromDOMNode(self,DOMNode):
+		self.attributes=dictionaryFromXMLDOMNode(DOMNode)
+
+
 class ProgectPlugin(PalmDB.Plugins.BasePlugin.BasePDBFilePlugin):
 	def getPDBCreatorID(self):
 		return 'lbPG'
