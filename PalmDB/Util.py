@@ -232,21 +232,21 @@ def itemFromXMLDOMNode(XMLDOMNode):
 
 class StructMap:
     typeConversion={
-        'padbyte':'x'
-        'char':'c'
-        'schar':'b'
-        'uchar':'B'
-        'short':'h'
-        'ushort':'H'
-        'int':'i'
-        'uint':'I'
-        'long':'l'
-        'ulong':'L'
-        'longlong':'q'
-        'ulonglong':'Q'
-        'float':'f'
-        'double':'d'
-        'char[]':'s'
+        'padbyte':'x',
+        'char':'c',
+        'schar':'b',
+        'uchar':'B',
+        'short':'h',
+        'ushort':'H',
+        'int':'i',
+        'uint':'I',
+        'long':'l',
+        'ulong':'L',
+        'longlong':'q',
+        'ulonglong':'Q',
+        'float':'f',
+        'double':'d',
+        'char[]':'s',
         'void *':'P'
         }
     byteOrder={
