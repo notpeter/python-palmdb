@@ -377,7 +377,7 @@ class applicationInformationObject:
 	def __init__(self):
 		self.attributes={}
 		self.attributes['payload']=''
-	def __len__(self):
+	def getSize(self):
 	    return len(self.attributes.get('payload','').decode('HEX'))
 
 	def fromByteArray(self,dstr):
@@ -396,7 +396,7 @@ class sortBlockObject:
 	def __init__(self):
 		self.attributes={}
 		self.attributes['payload']=''
-	def __len__(self):
+	def getSize(self):
 	    return len(self.attributes.get('payload','').decode('HEX'))
 
 	def fromByteArray(self,dstr):
