@@ -124,7 +124,6 @@ class ProgectAppInfoObject(PalmDB.Plugins.BasePlugin.applicationInformationObjec
 	
 	def toXML(self):
 		attributesAsXML=returnDictionaryAsXML(self.progectPrefsObject)
-		print self.progectPrefsObject
 		return returnAsXMLItem('applicationBlock',attributesAsXML,escape=False)
 	def fromDOMNode(self,DOMNode):
 		attributes=dictionaryFromXMLDOMNode(DOMNode)
