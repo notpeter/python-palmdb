@@ -510,7 +510,7 @@ class PalmDatabase:
 		(entryData,recordData)=record.toByteArray(offset)
 		entries.append(entryData)
 		record_data.append(recordData)
-		offset+=recordData.getSize()
+		offset+=len(recordData)
 
         # add the record/resource entries onto the data to be returned
         for x in entries: 
