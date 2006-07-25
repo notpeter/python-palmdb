@@ -290,6 +290,6 @@ class StructMap(dict):
         self.update(forDictData)
     def toByteArray(self):
         packedTuple=tuple([self[item] for item in self._getParameterNames()])
-        return struct.pack(self._getPackString,*packedTuple)
+        return struct.pack(self._getPackString(),*packedTuple)
     def getSize(self):
         return struct.calcsize(self._getPackString())
