@@ -36,6 +36,7 @@ __version__ = '$Id: PalmDB.py,v 1.11 2005/12/13 03:12:12 rprice Exp $'
 __copyright__ = 'Copyright 2006 Rick Price <rick_price@users.sourceforge.net>'
 
 import struct
+import traceback
 import PluginManager
 
 from PalmDB.Util import crackPalmDate
@@ -390,8 +391,9 @@ class PalmDatabase:
                 # Add to beginning of self.records list because we are going backwards
                 self.records.insert(0,record)
                 prev_offset = offset
-	    except:
-	        None
+	    except Exception,e:
+	        print 'Had some sort of error reading a record[',e,']'
+		traceback.print_exc()
         #-------END: INSTANTIATE AND APPEND DATABASE RECORDS / RESOURCES-------
 
 

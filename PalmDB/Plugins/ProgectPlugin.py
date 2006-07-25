@@ -386,8 +386,7 @@ class ProgectRecord(PalmDB.Plugins.BasePlugin.DataRecord):
 
             self.fromByteArrayTaskXBRecords(dstr[PRI.TaskAttrTypeStructSize:])
             # XBSize will always be two more than the size variable, to account for the variable
-            self.XBSize+=2
-            self.fromByteArrayTaskStandardFields(dstr[PRI.TaskAttrTypeStructSize+self.XBSize:])
+            self.fromByteArrayTaskStandardFields(dstr[PRI.TaskAttrTypeStructSize+2:])
         else:
             self.fromByteArrayTaskStandardFields(dstr[PRI.TaskAttrTypeStructSize:])
     def _packPayload(self):
@@ -465,6 +464,7 @@ class ProgectRecord(PalmDB.Plugins.BasePlugin.DataRecord):
     def fromByteArrayTaskStandardFields( self, dstr ):
         # we don't currently handle links
         if self.attributes['hasLink']:
+	    print 'dropping link record....'
             self.attributes['description']='Links Not Supported'
             self.attributes['note']='Links Not Supported'
             return
@@ -533,7 +533,7 @@ class ExtraBlockLinkLinkMaster(object):
         return returnObjectAsXML('linkLinkMaster',self.raw)
 
 class ExtraBlockIcon(object):
-    def __init__(self,icon):
+    def __init__(self,icon=0):
 	    self.icon=icon
     def fromByteArray( self, raw ):
         (self.icon,)=struct.unpack(">H", raw)
@@ -545,7 +545,7 @@ class ExtraBlockIcon(object):
         return returnObjectAsXML('icon',self.icon)
 
 class ExtraBlockNumeric(object):
-    def __init__(self,rational):
+    def __init__(self,rational=simpleRational(1,1)):
 	    self.actual=rational.numerator
 	    self.limit=rational.denominator
     def fromByteArray( self, raw ):
@@ -581,12 +581,13 @@ class ExtraBlockRecordFactory( object ):
         self.Extra_Numeric=51 # for numeric type
 
     def fromByteArray( self, dstr ):
+        extraBlockRecordList=[]
         (self.XBSize,)=struct.unpack(PRI.XBFieldsStructString,dstr[:PRI.XBFieldsStructSize])
 
         xbRecordFactory=ExtraBlockRecordFactory()
         xbRaw=dstr[PRI.XBFieldsStructSize:PRI.XBFieldsStructSize+self.XBSize]
         while len(xbRaw):
-            (xbRecord,xbRecordSize)=self.recordFByteArray(xbRaw)
+            (xbRecord,xbRecordSize)=self.recordFromByteArray(xbRaw)
             extraBlockRecordList.append(xbRecord)
             xbRaw=xbRaw[xbRecordSize:]
 
