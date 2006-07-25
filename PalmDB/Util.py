@@ -230,7 +230,7 @@ def itemFromXMLDOMNode(XMLDOMNode):
     # +++ FIX THIS +++ Some types missing here
     return None
 
-class StructMap:
+class StructMap(dict):
     typeConversion={
         'padbyte':'x',
         'char':'c',
@@ -273,7 +273,6 @@ class StructMap:
         packString=self.byteOrder[self.networkOrder]
         # build list of struct parameters
         for conversion in self.conversionList:
-            print 'conversion',conversion,len(conversion)
             if len(conversion) > 2:
                 (name,type,repeat)=conversion
                 if repeat > 1:
@@ -282,29 +281,16 @@ class StructMap:
             else:
                 (name,type)=conversion
             packString+=self.typeConversion[type]
-        print packString
         return packString
     def _getParameterNames(self):
         return [conversionTuple[0] for conversionTuple in self.conversionList]
     def crackByteArray(self,byteArray):
         crackedData=struct.unpack(self._getPackString(),byteArray)
-        print 'crackedData',crackedData
         forDictData=zip(self._getParameterNames(),crackedData)
         self.data.clear()
         self.data.update(forDictData)
     def packByteArray(self):
         packedTuple=tuple([self.data[item] for item in self._getParameterNames()])
         return struct.pack(self._getPackString,*packedTuple)
-    def __len__(self):
+    def getSize(self):
         return struct.calcsize(_getPackString())
-
-    # map API Begins
-    def __getitem__(self, index):
-        return self.data[index]
-    def __setitem__(self, index,record):
-        self.data[index]=record
-    def __delitem__(self, index):
-        del(self.data[index])
-    def __contains__(self,record):
-        return self.data.__contains__(record)
-    # Sequence/map API Ends

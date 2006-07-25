@@ -438,7 +438,7 @@ class PalmDatabase:
 
         if appinfo_size: # if AppInfo block exists
             applicationInfoBlock = raw[applicationInformationOffset:applicationInformationOffset+appinfo_size]
-            if len(applicationInfoBlock) != appinfo_size:
+            if applicationInfoBlock.getSize() != appinfo_size:
                 raise IOError, _("Error: failed to read appinfo block")
 
 	    categoriesObject=plugin.createCategoriesObject(self)
@@ -454,7 +454,7 @@ class PalmDatabase:
 
         if sortinfo_size: # if SortInfo block exists
             sortInfoBlock = raw[sortInformationOffset:sortInformationOffset+sortinfo_size]
-            if len(sortInfoBlock) != sortinfo_size:
+            if sortInfoBlock.getSize() != sortinfo_size:
                 raise IOError, _("Error: failed to read sortinfo block")
 
             sortBlockObject=plugin.createSortBlockObject(self)
@@ -490,13 +490,13 @@ class PalmDatabase:
 	    if self.attributes.has_key('_categoriesObject'):
 		    offset += self.attributes['_categoriesObject'].objectBinarySize()
 	    if self.attributes.has_key('_applicationInformationObject'):
-		    offset += len(self.attributes['_applicationInformationObject'])
+		    offset += self.attributes['_applicationInformationObject'].getSize()
         else:
             applicationInformationOffset = 0
 
         if self.attributes.has_key('_sortBlockObject'):
             sortInformationOffset = offset
-            offset += len(self.attributes['_sortBlockObject'])
+            offset += self.attributes['_sortBlockObject'].getSize()
         else:
             sortInformationOffset = 0
 
@@ -510,7 +510,7 @@ class PalmDatabase:
 		(entryData,recordData)=record.toByteArray(offset)
 		entries.append(entryData)
 		record_data.append(recordData)
-		offset+=len(recordData)
+		offset+=recordData.getSize()
 
         # add the record/resource entries onto the data to be returned
         for x in entries: 

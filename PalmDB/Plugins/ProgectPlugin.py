@@ -73,61 +73,60 @@ XSLT_PDeskXML_FromDesktop=None
 XSLT_OMNIOutliner_ToDesktop=''
 XSLT_OMNIOutliner_FromDesktop=''
 
-class ProgectAppInfoObject(BasePlugin.applicationInformationObject):
-	'''
-typedef struct {
-	UInt8 format;              // format of the records
-	UInt8 reserved;
-	Boolean hideDoneTasks;     // hide done tasks in project form
-	Boolean displayDueDates;   // draw the due dates on project form
-	Boolean displayPriorities; // draw the priority on project form
-	Boolean displayYear;       // draw the year with due date on project form
-	Boolean useFatherStatus;   // use father's due date and priority
-	// new in 0.15
-	Boolean autoSyncToDo;      // sync the todos on opening
-	// new in 0.16 : flat filter details
-	Boolean flatHideDone;
-	UInt8 flatDated;
-	UInt8 flatMinPriority;
-	Boolean flatOr;
-	Boolean flatMin; // 0.17
-	// new in 0.17 : display preferences
-	UInt8 boldMinPriority;
-	UInt8 boldMinDays; // 0 = no, 1 = overdue, 2 = today...
-	Boolean strikeDoneTasks;
-	Boolean hideDoneProgress;
-	Boolean hideProgress;
-	TaskType taskDefaults;
-	// new in 0.18 : sort in flat view
-	SortType flatSorted;
-	UInt8 flatDateLimit; // 0 = no, 1 = overdue, 2 = today...
-	// new in 0.20 : record completion date
-	Boolean completionDate; // true = record completion date
-	// new in 0.21
-	UInt16 flatCategories;
-	// new in 0.22
-	UInt8 wordWrapLines;
-	UInt8 drawTreeLines;  // Used as Boolean now. May become enum
-	// rtm group competed
-	Boolean completedGroup;  // 1 = move competed task to after un-completed and vice-versa
-} ProjectPrefsType;
-	'''
+class ProgectPrefsObject(Util.StructMap):
 	def __init__(self):
-		self.__packString = '!H'+('16s'*16)+('B'*16)+'B'+'x'
-	def __len__(self):
-	    return struct.calcsize(self.__packString)
-
+		Util.StructMap.__unit__(self)
+		self.selfNetworkOrder('palm')
+		self.setConversion([\
+			('format','uchar'),
+			('reserved','uchar'),
+			('hideDoneTasks','uchar'),
+			('displayDueDates','uchar'),
+			('displayPriorities','uchar'),
+			('displayYear','uchar'),
+			('useFatherStatus','uchar'),
+			('autoSyncToDo','uchar'),
+			('flatHideDone','uchar'),
+			('flatDated','uchar'),
+			('flatMinPriority','uchar'),
+			('flatOr','uchar'),
+			('flatMin','uchar'),
+			('boldMinPriority','uchar'),
+			('boldMinDays','uchar'),
+			('strikeDoneTasks','uchar'),
+			('hideDoneProgress','uchar'),
+			('junk_TaskAttrType','uint'),
+			('junk_TaskFormatType','uint'),
+			('junk_priority','uchar'),
+			('junk_completed','uchar'),
+			('junk_dueDate','uint'),
+			('junk_description','ulong'),
+			('junk_note','ulong'),
+			('sortType','int'),
+			('flatDateLimit','uchar'),
+			('completiondate','uchar'),
+			('flatCategories','uint'),
+			('wordWrapLines','uchar'),
+			('drawTreeLines','uchar'),
+			('compcetedGroup','uchar'),
+			])
+			
+class ProgectAppInfoObject(BasePlugin.applicationInformationObject):
+	def __init__(self):
+		self.progectPrefsObject=ProgectPrefsObject()
+	def getSize(self):
+	    return self.progectPrefsObject.getSize()
 	def fromByteArray(self,dstr):
-		self.attributes['payload']=dstr.encode('HEX')
-
+		self.progectPrefsObject.fromByteArray(dstr)
 	def toByteArray(self):
-		return self.attributes.get('payload','').decode('HEX')
+		return self.progectPrefsObject.toByteArray()
 	
 	def toXML(self):
-		attributesAsXML=returnDictionaryAsXML(self.attributes)
+		attributesAsXML=returnDictionaryAsXML(self.progectPrefsObject)
 		return returnAsXMLItem('applicationBlock',attributesAsXML,escape=False)
 	def fromDOMNode(self,DOMNode):
-		self.attributes=dictionaryFromXMLDOMNode(DOMNode)
+		attributes=dictionaryFromXMLDOMNode(DOMNode)
+		self.progectPrefsObject.update(attributes)
 
 
 class ProgectPlugin(PalmDB.Plugins.BasePlugin.BasePDBFilePlugin):
