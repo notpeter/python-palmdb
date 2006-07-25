@@ -254,7 +254,8 @@ class StructMap:
         'native-standard':'=',
         'little-endian':'<',
         'big-endian':'>',
-        'network':'!'
+        'network':'!',
+        'palm':'>',
         }
     def __init__(self):
         self.conversionList=[]
@@ -264,7 +265,7 @@ class StructMap:
         self.networkOrder=networkOrder
     def setConversion(self,conversionList):
         '''
-        conversionList is a list of tuples that look like (repeat,name,type)
+        conversionList is a list of tuples that look like (name,type,repeat)
         '''
         self.conversionList=conversionList
     def _getPackString(self):
@@ -272,15 +273,22 @@ class StructMap:
         packString=self.byteOrder[self.networkOrder]
         # build list of struct parameters
         for conversion in self.conversionList:
-            (repeat,name,type)=conversion
-            if repeat > 1:
-                packString+=str(repeat)
-            packString+=self.conversionList[type]
-    
+            print 'conversion',conversion,len(conversion)
+            if len(conversion) > 2:
+                (name,type,repeat)=conversion
+                if repeat > 1:
+                    raise ValueError('Can only use a repeat with a char[] type')
+                    packString+=str(repeat)
+            else:
+                (name,type)=conversion
+            packString+=self.typeConversion[type]
+        print packString
+        return packString
     def _getParameterNames(self):
-        return [paramName for (repeat,paramName,type) in self.conversionList]
+        return [conversionTuple[0] for conversionTuple in self.conversionList]
     def crackByteArray(self,byteArray):
         crackedData=struct.unpack(self._getPackString(),byteArray)
+        print 'crackedData',crackedData
         forDictData=zip(self._getParameterNames(),crackedData)
         self.data.clear()
         self.data.update(forDictData)
