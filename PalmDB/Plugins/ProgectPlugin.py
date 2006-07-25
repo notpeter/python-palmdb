@@ -44,6 +44,7 @@ from PalmDB.Util import dictionaryFromXMLDOMNode
 from PalmDB.Util import returnObjectAsXML
 from PalmDB.Util import returnAsXMLItem
 from PalmDB.Util import simpleRational
+from PalmDB.Util import StructMap
 
 # Load XSLT templates
 from ProgectXSLT_GanttProject import XSLT_GanttProject_ToDesktop
@@ -73,9 +74,9 @@ XSLT_PDeskXML_FromDesktop=None
 XSLT_OMNIOutliner_ToDesktop=''
 XSLT_OMNIOutliner_FromDesktop=''
 
-class ProgectPrefsObject(Util.StructMap):
+class ProgectPrefsObject(StructMap):
 	def __init__(self):
-		Util.StructMap.__unit__(self)
+		StructMap.__init__(self)
 		self.selfNetworkOrder('palm')
 		self.setConversion([\
 			('format','uchar'),
@@ -95,23 +96,23 @@ class ProgectPrefsObject(Util.StructMap):
 			('boldMinDays','uchar'),
 			('strikeDoneTasks','uchar'),
 			('hideDoneProgress','uchar'),
-			('junk_TaskAttrType','uint'),
-			('junk_TaskFormatType','uint'),
+			('junk_TaskAttrType','ushort'),
+			('junk_TaskFormatType','ushort'),
 			('junk_priority','uchar'),
 			('junk_completed','uchar'),
-			('junk_dueDate','uint'),
-			('junk_description','ulong'),
-			('junk_note','ulong'),
-			('sortType','int'),
+			('junk_dueDate','ushort'),
+			('junk_description','uint'),
+			('junk_note','uint'),
+			('sortType','ushort'),
 			('flatDateLimit','uchar'),
-			('completiondate','uchar'),
-			('flatCategories','uint'),
+			('completionDate','uchar'),
+			('flatCategories','ushort'),
 			('wordWrapLines','uchar'),
 			('drawTreeLines','uchar'),
-			('compcetedGroup','uchar'),
+			('completedGroup','uchar'),
 			])
 			
-class ProgectAppInfoObject(BasePlugin.applicationInformationObject):
+class ProgectAppInfoObject(PalmDB.Plugins.BasePlugin.applicationInformationObject):
 	def __init__(self):
 		self.progectPrefsObject=ProgectPrefsObject()
 	def getSize(self):
@@ -123,6 +124,7 @@ class ProgectAppInfoObject(BasePlugin.applicationInformationObject):
 	
 	def toXML(self):
 		attributesAsXML=returnDictionaryAsXML(self.progectPrefsObject)
+		print self.progectPrefsObject
 		return returnAsXMLItem('applicationBlock',attributesAsXML,escape=False)
 	def fromDOMNode(self,DOMNode):
 		attributes=dictionaryFromXMLDOMNode(DOMNode)
@@ -143,6 +145,9 @@ class ProgectPlugin(PalmDB.Plugins.BasePlugin.BasePDBFilePlugin):
 		if filename.upper().endswith('.GAN'):
 			return 'GanttProject'
 		return None
+
+	def createApplicationInformationObject(self,PalmDatabaseObject):
+		return ProgectAppInfoObject()
 
 	def getXSLTText(self,application,type):
 		# have to create global vars with XSLT text
