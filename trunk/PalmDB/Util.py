@@ -259,7 +259,6 @@ class StructMap(dict):
         }
     def __init__(self):
         self.conversionList=[]
-        self.data={}
         self.networkOrder='native-native'
     def selfNetworkOrder(self,networkOrder):
         self.networkOrder=networkOrder
@@ -284,13 +283,13 @@ class StructMap(dict):
         return packString
     def _getParameterNames(self):
         return [conversionTuple[0] for conversionTuple in self.conversionList]
-    def crackByteArray(self,byteArray):
+    def fromByteArray(self,byteArray):
         crackedData=struct.unpack(self._getPackString(),byteArray)
         forDictData=zip(self._getParameterNames(),crackedData)
-        self.data.clear()
-        self.data.update(forDictData)
-    def packByteArray(self):
-        packedTuple=tuple([self.data[item] for item in self._getParameterNames()])
+        self.clear()
+        self.update(forDictData)
+    def toByteArray(self):
+        packedTuple=tuple([self[item] for item in self._getParameterNames()])
         return struct.pack(self._getPackString,*packedTuple)
     def getSize(self):
-        return struct.calcsize(_getPackString())
+        return struct.calcsize(self._getPackString())

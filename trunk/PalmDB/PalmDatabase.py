@@ -438,7 +438,7 @@ class PalmDatabase:
 
         if appinfo_size: # if AppInfo block exists
             applicationInfoBlock = raw[applicationInformationOffset:applicationInformationOffset+appinfo_size]
-            if applicationInfoBlock.getSize() != appinfo_size:
+            if len(applicationInfoBlock) != appinfo_size:
                 raise IOError, _("Error: failed to read appinfo block")
 
 	    categoriesObject=plugin.createCategoriesObject(self)
@@ -454,7 +454,7 @@ class PalmDatabase:
 
         if sortinfo_size: # if SortInfo block exists
             sortInfoBlock = raw[sortInformationOffset:sortInformationOffset+sortinfo_size]
-            if sortInfoBlock.getSize() != sortinfo_size:
+            if len(sortInfoBlock) != sortinfo_size:
                 raise IOError, _("Error: failed to read sortinfo block")
 
             sortBlockObject=plugin.createSortBlockObject(self)
