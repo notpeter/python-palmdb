@@ -255,7 +255,7 @@ class StructMap(dict):
         'little-endian':'<',
         'big-endian':'>',
         'network':'!',
-        'palm':'>',
+        'palmos':'>',
         }
     def __init__(self):
         self.conversionList=[]

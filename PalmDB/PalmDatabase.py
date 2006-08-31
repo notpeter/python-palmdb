@@ -299,7 +299,7 @@ class PalmDatabase:
 	return offset;
         
     def fromByteArray(self, raw, headerOnly = False):
-        '''
+        """
         This function initializes this class instance, clearing the instance's
         existing data, and populating it using the complete raw data read from a PDB.
 
@@ -324,7 +324,7 @@ class PalmDatabase:
         info = x.getPalmDBInfo()
         if info[ 'creatorID'] == 'Gtkr':
             ...
-        '''
+        """
 
         # clear all existing records
         self.clear()
@@ -392,8 +392,8 @@ class PalmDatabase:
                 self.records.insert(0,record)
                 prev_offset = offset
 	    except Exception,e:
-	        print 'Had some sort of error reading a record[',e,']'
-		traceback.print_exc()
+	        print 'Had some sort of error reading record (',count,') [',e,']'
+#		traceback.print_exc()
         #-------END: INSTANTIATE AND APPEND DATABASE RECORDS / RESOURCES-------
 
 
