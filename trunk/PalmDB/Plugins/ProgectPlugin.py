@@ -77,7 +77,7 @@ XSLT_OMNIOutliner_FromDesktop=''
 class ProgectPrefsObject(StructMap):
 	def __init__(self):
 		StructMap.__init__(self)
-		self.selfNetworkOrder('palm')
+		self.selfNetworkOrder('palmos')
 		self.setConversion([\
 			('format','uchar'),
 			('reserved','uchar'),
@@ -206,6 +206,13 @@ class ProgectPalmDBXMLReaderObject(PalmDB.Plugins.BasePlugin.GeneralPalmDBXMLRea
 		self.previousPalmRecords={}
 		self.currentPalmRecord=None
 		self.currentHierarchyLevel=0
+	def parse_START_DOCUMENT(self,events,node,palmDatabaseObject):
+		PalmDB.Plugins.BasePlugin.GeneralPalmDBXMLReaderObject.parse_START_DOCUMENT(self,events,node,palmDatabaseObject)
+		# +++ FIX THIS +++
+		# add in a empty record, since Progect databases always have an empty record at the beginning
+#		plugin=palmDatabaseObject._getPlugin()
+#		palmDatabaseObject.append(plugin.createPalmDatabaseRecord(palmDatabaseObject))
+		# +++ FIX THIS +++
 	def parse_START_ELEMENT_ProgectDataRecord(self,events,node,palmDatabaseObject):
 		# Set _hasNext
 		try:
@@ -383,10 +390,9 @@ class ProgectRecord(PalmDB.Plugins.BasePlugin.DataRecord):
         setBooleanAttributeFromBits(self.attributes,'_nextFormat',taskFormatType,0)
 	    
         if self.attributes['_hasXB']:
-
-            self.fromByteArrayTaskXBRecords(dstr[PRI.TaskAttrTypeStructSize:])
-            # XBSize will always be two more than the size variable, to account for the variable
-            self.fromByteArrayTaskStandardFields(dstr[PRI.TaskAttrTypeStructSize+2:])
+            XBSize=self.fromByteArrayTaskXBRecords(dstr[PRI.TaskAttrTypeStructSize:])
+            # XB Offset will always be two more than the size variable, to account for the variable embedded in the structure
+            self.fromByteArrayTaskStandardFields(dstr[PRI.TaskAttrTypeStructSize+2+XBSize:])
         else:
             self.fromByteArrayTaskStandardFields(dstr[PRI.TaskAttrTypeStructSize:])
     def _packPayload(self):
@@ -432,7 +438,8 @@ class ProgectRecord(PalmDB.Plugins.BasePlugin.DataRecord):
 	return dstr
     def fromByteArrayTaskXBRecords( self, dstr ):
 	    xbFactory=ExtraBlockRecordFactory()
-	    self.extraBlockRecordList=xbFactory.fromByteArray(dstr)
+	    (XBSize,self.extraBlockRecordList)=xbFactory.fromByteArray(dstr)
+	    return XBSize
     def toByteArrayTaskXBRecords(self):
         # first build up our XBRecordList, this may be lossy since we will only create
 	# XBRecords that are logical for the record type, and Progect keeps extrablocks
@@ -483,8 +490,8 @@ class ProgectRecord(PalmDB.Plugins.BasePlugin.DataRecord):
             self.attributes['completed']=simpleRational(completed,10)
 
         text=dstr[PRI.TaskStandardFieldStructSize:]
-        self.attributes['description']=text.split('\0')[0]
-        self.attributes['note']=text.split('\0')[1]
+        self.attributes['description']=text.split('\0')[0].decode('palmos')
+        self.attributes['note']=text.split('\0')[1].decode('palmos')
     def toByteArrayTaskStandardFields( self):
         dstr=''
 
@@ -511,6 +518,8 @@ class ProgectRecord(PalmDB.Plugins.BasePlugin.DataRecord):
 class ExtraBlockNULL(object):
     def fromByteArray( self, raw ):
 	self.raw=raw
+    def toByteArray(self):
+        return self.raw
     def __repr__( self ):
        return 'ExtraBlockNULL(raw="%s")'%self.raw
     def toXML(self):
@@ -519,6 +528,8 @@ class ExtraBlockNULL(object):
 class ExtraBlockLinkToDo(object):
     def fromByteArray( self, raw ):
 	self.raw=raw
+    def toByteArray(self):
+        return self.raw
     def __repr__( self ):
        return 'ExtraBlockLinkToDo(raw="%s")'%self.raw
     def toXML(self):
@@ -527,6 +538,8 @@ class ExtraBlockLinkToDo(object):
 class ExtraBlockLinkLinkMaster(object):
     def fromByteArray( self, raw ):
 	self.raw=raw
+    def toByteArray(self):
+        return self.raw
     def __repr__( self ):
        return 'ExtraBlockLinkLinkMaster(raw="%s")'%self.raw
     def toXML(self):
@@ -537,7 +550,7 @@ class ExtraBlockIcon(object):
 	    self.icon=icon
     def fromByteArray( self, raw ):
         (self.icon,)=struct.unpack(">H", raw)
-    def toByteArray( self, raw ):
+    def toByteArray( self ):
         return struct.pack(">H", self.icon)
     def __repr__( self ):
        return 'ExtraBlockIcon(icon=%d)'%self.icon
@@ -550,7 +563,7 @@ class ExtraBlockNumeric(object):
 	    self.limit=rational.denominator
     def fromByteArray( self, raw ):
         (self.limit,self.actual)=struct.unpack(">HH",raw)
-    def toByteArray( self, raw ):
+    def toByteArray( self ):
         return struct.pack(">HH",self.limit,self.actual)
     def __repr__( self ):
        return 'ExtraBlockNumeric(limit=%d,actual=%d)'%(self.limit,self.actual)
@@ -561,6 +574,8 @@ class ExtraBlockNumeric(object):
 class ExtraBlockUnknown(object):
     def fromByteArray( self, raw ):
 	self.raw=raw
+    def toByteArray(self):
+        return self.raw
     def __repr__( self ):
        return 'ExtraBlockUnknown(raw="%s")'%self.raw
     def toXML(self):
@@ -591,7 +606,7 @@ class ExtraBlockRecordFactory( object ):
             extraBlockRecordList.append(xbRecord)
             xbRaw=xbRaw[xbRecordSize:]
 
-	return extraBlockRecordList
+	return (self.XBSize,extraBlockRecordList)
     def toByteArray(self,extraBlockRecordList):
         dstr=''
 	recordDstr=''
