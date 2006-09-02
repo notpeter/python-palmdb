@@ -172,6 +172,10 @@ class ProgectPlugin(PalmDB.Plugins.BasePlugin.BasePDBFilePlugin):
 		thisLevel=1
 		openLevel=0
 		recordNumber=1
+		# +++ REMOVE THIS +++
+#		print 'first real Progect record'
+#		print PalmDatabaseObject[1].attributes
+		# +++ REMOVE THIS +++
 		for record in PalmDatabaseObject[1:]:
 			if not lastHasNext:
 				for i in range(lastLevel-record.attributes['_level']-1,-1,-1):
@@ -205,14 +209,13 @@ class ProgectPalmDBXMLReaderObject(PalmDB.Plugins.BasePlugin.GeneralPalmDBXMLRea
 	def __init__(self):
 		self.previousPalmRecords={}
 		self.currentPalmRecord=None
-		self.currentHierarchyLevel=0
+		self.currentHierarchyLevel=1
 	def parse_START_DOCUMENT(self,events,node,palmDatabaseObject):
 		PalmDB.Plugins.BasePlugin.GeneralPalmDBXMLReaderObject.parse_START_DOCUMENT(self,events,node,palmDatabaseObject)
-		# +++ FIX THIS +++
 		# add in a empty record, since Progect databases always have an empty record at the beginning
-#		plugin=palmDatabaseObject._getPlugin()
-#		palmDatabaseObject.append(plugin.createPalmDatabaseRecord(palmDatabaseObject))
-		# +++ FIX THIS +++
+		ProgectFirstRecord=ProgectRecord()
+		ProgectFirstRecord._setProgectFirstRecordProperties()
+		palmDatabaseObject.append(ProgectFirstRecord)
 	def parse_START_ELEMENT_ProgectDataRecord(self,events,node,palmDatabaseObject):
 		# Set _hasNext
 		try:
@@ -343,6 +346,14 @@ class ProgectRecord(PalmDB.Plugins.BasePlugin.DataRecord):
 
         self.extraBlockRecordList=[]
 	    
+    def _setProgectFirstRecordProperties(self):
+	    self.attributes={'itemType': u'PROGRESS_TYPE','_hasDuration': False,'hasLink': False, '_hasDueDate': True,
+			     'dueDate': None, '_hasNext': False, 'uid': 1638401, 'category': 0, 'priority': 'None',
+			     'busy': False, 'opened': True, '_hasPrevious': False, '_newFormat': True, 'note': u'',
+			     'deleted': False, 'secret': False, '_nextFormat': False, 'description': u'', '_hasNote': False,
+			     '_hasChild': True, 'completed': simpleRational(numerator=0,denominator=10), '_hasXB': False,
+			     '_newTask': True, 'hasToDo': False, '_level': 0, '_hasPrev': False, 'dirty': True,
+			     '_hasPred': False, '_hasStartDate': False}	    
     def getRecordXMLName(self):
 	    return 'ProgectDataRecord'
 

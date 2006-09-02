@@ -46,6 +46,8 @@ class simpleRational:
     def __init__(self,numerator,denominator):
         self.numerator=numerator
         self.denominator=denominator
+    def __repr__(self):
+        return 'simpleRational(numerator=%s,denominator=%s)'%(self.numerator,self.denominator)
         
 def getBits(variable,MSBBitIndex,bitCount=1):
     """
