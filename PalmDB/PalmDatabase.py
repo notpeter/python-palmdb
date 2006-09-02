@@ -96,7 +96,7 @@ class PalmDatabase:
 	return PluginManager.getPDBPlugin(self.attributes.get('creatorID',None))
 
     def isResourceDatabase(self):
-	return self.attributes['flagResource']
+	return self.attributes.get('flagResource',False)
 
     def getCreatorID(self):
 	return self.attributes['creatorID']
@@ -507,6 +507,10 @@ class PalmDatabase:
 
         entries = [] # a list which holds all of the record/resource entries
         record_data = [] # holds record/resource data-chunks
+	# +++ REMOVE THIS +++
+#	print 'attributes of record'
+#	print self[1].attributes
+	# +++ REMOVE THIS +++
         # populate the lists...
 	for record in self:
 		(entryData,recordData)=record.toByteArray(offset)
