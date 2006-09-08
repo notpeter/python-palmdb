@@ -50,6 +50,8 @@ from PalmDB.Util import StructMap
 from ProgectXSLT_GanttProject import XSLT_GanttProject_ToDesktop
 from ProgectXSLT_GanttProject import XSLT_GanttProject_FromDesktop
 
+from ProgectXSLT_Treeline import XSLT_Treeline_ToDesktop
+from ProgectXSLT_Treeline import XSLT_Treeline_FromDesktop
 
 XSLT_NativeXML_ToDesktop=\
 '''
@@ -143,6 +145,10 @@ class ProgectPlugin(PalmDB.Plugins.BasePlugin.BasePDBFilePlugin):
 			return 'NativeXMLGZ'
 		if filename.upper().endswith('.GAN'):
 			return 'GanttProject'
+		if filename.upper().endswith('.TRL'):
+			return 'Treeline'
+		if filename.upper().endswith('.TRL.GZ'):
+			return 'Treeline'
 		return None
 
 	def createApplicationInformationObject(self,PalmDatabaseObject):
