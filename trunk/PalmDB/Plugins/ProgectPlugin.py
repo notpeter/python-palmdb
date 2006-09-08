@@ -367,6 +367,29 @@ class ProgectRecord(PalmDB.Plugins.BasePlugin.DataRecord):
 	    # should not matter anyway, we creat a new object for each row
 	    attributesDict=dictionaryFromXMLDOMNode(DOMNode)
 	    self.attributes.update(attributesDict)
+
+	    # set _hasXB
+	    if self.attributes['itemType'] == 'NUMERIC_PROGRESS_TYPE':
+		    self.attributes['_hasXB']=True
+	    for testFor in ['icon','linkToDo','linkLinkMaster']:
+		    if self.attributes.has_key(testFor):
+			    self.attributes['_hasXB']=True
+			    break
+	    # set some static flags
+	    self.attributes['_nextFormat']=True
+	    self.attributes['_newFormat']=True
+	    self.attributes['_newTask']=False
+	    # Some of these may need to be setup
+	    # _hasStartdate
+	    # _hasPred
+	    # _hasNote
+	    # _hasDueDate
+	    # _hasNext
+	    # _hasDuration
+	    # _hasPrevious
+	    # _hasChild
+	    # _level
+
     def fromDOMNode(self,DOMNode):
 	    pass
     
