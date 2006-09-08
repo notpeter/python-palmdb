@@ -271,9 +271,9 @@ def packProgectDate(date):
 	if date == None:
 		return 0
 	returnValue=0
-	returnValue=setBits(date.year-1904,returnValue,15,7)
-	returnValue=setBits(date.month,returnValue,8,4)
-	returnValue=setBits(date.day,returnValue,4,5)
+	returnValue=setBits(returnValue,date.year-1904,15,7)
+	returnValue=setBits(returnValue,date.month,8,4)
+	returnValue=setBits(returnValue,date.day,4,5)
 	return returnValue
 
 # Progect Record Information
@@ -367,32 +367,8 @@ class ProgectRecord(PalmDB.Plugins.BasePlugin.DataRecord):
 	    # should not matter anyway, we creat a new object for each row
 	    attributesDict=dictionaryFromXMLDOMNode(DOMNode)
 	    self.attributes.update(attributesDict)
-
-	    # set _hasXB
-	    if self.attributes['itemType'] == 'NUMERIC_PROGRESS_TYPE':
-		    self.attributes['_hasXB']=True
-	    for testFor in ['icon','linkToDo','linkLinkMaster']:
-		    if self.attributes.has_key(testFor):
-			    self.attributes['_hasXB']=True
-			    break
-	    # set some static flags
-	    self.attributes['_nextFormat']=True
-	    self.attributes['_newFormat']=True
-	    self.attributes['_newTask']=False
-	    # Some of these may need to be setup
-	    # _hasStartdate
-	    # _hasPred
-	    # _hasNote
-	    # _hasDueDate
-	    # _hasNext
-	    # _hasDuration
-	    # _hasPrevious
-	    # _hasChild
-	    # _level
-
     def fromDOMNode(self,DOMNode):
 	    pass
-    
     def _crackPayload(self,dstr):
         if len(dstr) < PRI.TaskAttrTypeStructSize:
             raise IOError, "Error: raw data passed in is too small; required (%d), available (%d)"%(PRI.TaskAttrTypeStructSize,len(dstr))
@@ -431,6 +407,41 @@ class ProgectRecord(PalmDB.Plugins.BasePlugin.DataRecord):
             self.fromByteArrayTaskStandardFields(dstr[PRI.TaskAttrTypeStructSize:])
     def _packPayload(self):
         dstr=''
+	# The progect format requires certain flags be set, this code ensures the attributes
+	# are set correctly before we try to build the binary data.
+	    
+	# set _hasXB
+	if self.attributes['itemType'] == 'NUMERIC_PROGRESS_TYPE':
+		self.attributes['_hasXB']=True
+		for testFor in ['icon','linkToDo','linkLinkMaster']:
+			if self.attributes.has_key(testFor):
+				self.attributes['_hasXB']=True
+				break
+			
+	# set some static flags
+	self.attributes['_nextFormat']=True
+	self.attributes['_newFormat']=True
+	self.attributes['_newTask']=False
+
+	# Setup bit flags for parameters that are set
+	# _hasNote
+	if len(self.attributes['note']):
+		self.attributes['_hasNote']=True
+	# _hasDueDate
+	if self.attributes.has_key('dueDate'):
+		self.attributes['_hasDueDate']=True
+
+	# +++ FIX THIS +++ I'm not sure if these are actually supported in Progect
+	# _hasStartdate
+	# _hasDuration
+	# +++ FIX THIS +++ I'm not sure if these are actually supported in Progect
+
+	# I believe these are handled elsewhere
+	# _hasPred
+	# _hasNext
+	# _hasPrevious
+	# _hasChild
+	# _level
 
 	XBRecordsData=self.toByteArrayTaskXBRecords()
 
