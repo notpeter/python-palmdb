@@ -50,24 +50,35 @@
 <xsl:element name="{@name}">
 <xsl:attribute name="type">Boolean</xsl:attribute>
 <xsl:attribute name="format">yes/no</xsl:attribute>
+<xsl:if test="@name='busy' or @name='opened' or @name='deleted' or @name='hasToDo' or @name='dirty'">
+<xsl:attribute name="hidden">y</xsl:attribute>
+</xsl:if>
 <xsl:apply-templates select="*"/>
 </xsl:element>
 </xsl:template>
 
 <xsl:template match="attribute[integer]">
 <xsl:element name="{@name}">
+<xsl:attribute name="type">Number</xsl:attribute>
+<xsl:attribute name="format">##########</xsl:attribute>
+<xsl:if test="@name='uid' or @name='icon' ">
+<xsl:attribute name="hidden">y</xsl:attribute>
+</xsl:if>
 <xsl:apply-templates select="*"/>
 </xsl:element>
 </xsl:template>
 
 <xsl:template match="attribute[rational]">
 <xsl:element name="{@name}">
+<xsl:attribute name="type">Text</xsl:attribute>
 <xsl:apply-templates select="*"/>
 </xsl:element>
 </xsl:template>
 
 <xsl:template match="attribute[date]">
 <xsl:element name="{@name}">
+<xsl:attribute name="type">Date</xsl:attribute>
+<xsl:attribute name="format">yyyy/mm/dd</xsl:attribute>
 <xsl:apply-templates select="*"/>
 </xsl:element>
 
