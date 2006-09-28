@@ -286,7 +286,7 @@ class StructMap(dict):
     def _getParameterNames(self):
         return [conversionTuple[0] for conversionTuple in self.conversionList]
     def fromByteArray(self,byteArray):
-        crackedData=struct.unpack(self._getPackString(),byteArray)
+        crackedData=struct.unpack(self._getPackString(),byteArray[:self.getSize()])
         forDictData=zip(self._getParameterNames(),crackedData)
         self.clear()
         self.update(forDictData)
