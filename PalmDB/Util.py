@@ -286,6 +286,9 @@ class StructMap(dict):
     def _getParameterNames(self):
         return [conversionTuple[0] for conversionTuple in self.conversionList]
     def fromByteArray(self,byteArray):
+        if len(byteArray) < self.getSize():
+            raise IOError("Error: raw data passed in to Structmap is too small; required (%d), available (%d)"%(self.getSize(),len(byteArray)))
+                    
         crackedData=struct.unpack(self._getPackString(),byteArray[:self.getSize()])
         forDictData=zip(self._getParameterNames(),crackedData)
         self.clear()
