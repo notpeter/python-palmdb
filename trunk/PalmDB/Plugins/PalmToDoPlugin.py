@@ -56,61 +56,64 @@ class PalmToDoPlugin(PalmDB.Plugins.BasePlugin.BasePDBFilePlugin):
 		return None
 
 	def createPalmDatabaseRecord(self,PalmDatabaseObject):
-            return PalmToDoRecord()
+		return PalmToDoRecord()
 
-class ProgectRecord(PalmDB.Plugins.BasePlugin.DataRecord):
-    '''
-    This class encapsulates a Palm ToDo application record.
-    '''
-    def __init__(self):
-        PalmDB.Plugins.BasePlugin.DataRecord.__init__(self)
+class PalmToDoRecord(PalmDB.Plugins.BasePlugin.DataRecord):
+	'''
+		This class encapsulates a Palm ToDo application record.
+	'''
+	def __init__(self):
+		PalmDB.Plugins.BasePlugin.DataRecord.__init__(self)
+		self.taskHeader=StructMap()
+		self.taskHeader.selfNetworkOrder('palmos')
+		# +++ FIX THIS +++
+		# you will need to set these according to the task header
+		# +++ FIX THIS +++
+		self.taskHeader.setConversion([('format','uchar'),('reserved','uchar'),])
+	
+		self.clear()
 
-	self.taskHeader=StructMap()
-	self.taskHeader.selfNetworkOrder('palmos')
-	# +++ FIX THIS +++
-	# you will need to set these according to the task header
-	# +++ FIX THIS +++
-	self.taskHeader.setConversion([('format','uchar'),('reserved','uchar'),])
+	def clear(self):
+		self.attributes.clear()
+		# +++ FIX THIS ++++
+		# you will need to set default values here for the task attributes
+		self.attributes['format']=8
+		self.attributes['reserved']=0
+		# +++ FIX THIS ++++
 
-	self.clear()
-        
-    def clear(self):
-        self.attributes.clear()
+		self.attributes['description']=''
+		self.attributes['note']=''
 
-	# +++ FIX THIS ++++
-	# you will need to set default values here for the task attributes
-	self.attributes['format']=8
-	self.attributes['reserved']=0
-	# +++ FIX THIS ++++
+	def getRecordXMLName(self):
+		return 'ToDoDataRecord'
 
-        self.attributes['description']=''
-        self.attributes['note']=''
+	
+	def _crackPayload(self,dstr):
+		self.attributes['debug_payload']=dstr.encode('HEX')
+		# check to see if we have enough data to grab the task header data
+		# it is not impossible for the data to be destroyed before we get it.
+		if len(dstr) < self.taskHeader.getSize():
+			raise IOError("Error: raw data passed in is too small; required (%d), available (%d)"%(self.taskHeader.getSize(),len(dstr)))
+		# tell the StructMap to crack the data for us
+		self.taskHeader.fromByteArray(dstr)
+		# now update our attributes so they will be output as XML
+		self.attributes.update(self.taskHeader)
 
-    def getRecordXMLName(self):
-	    return 'ToDoDataRecord'
-    
-    def _crackPayload(self,dstr):
-	    # check to see if we have enough data to grab the task header data
-	    # it is not impossible for the data to be destroyed before we get it.
-	    if len(dstr) < self.taskHeader.getSize():
-		    raise IOError("Error: raw data passed in is too small; required (%d), available (%d)"%(self.taskHeader.getSize(),len(dstr)))
-	    # tell the StructMap to crack the data for us
-	    self.taskHeader.fromByteArray(dstr)
-	    # now update our attributes so they will be output as XML
-	    self.attributes.update(self.taskHeader)
+		# find the part of the data that will be our description and note
+		descriptionNoteString=dstr[self.taskHeader.getSize():]
+		#descriptionNoteString = dstr[3:]
+		#print descriptionNoteString.split('\0')
+		# now we assume that the string _will_ end in a zero, this should break apart the strings for us
+		(description,note)=descriptionNoteString.split('\0')
 
-	    # find the part of the data that will be our description and note
-	    descriptionNoteString=dstr[self.taskHeader.getSize():]
-	    # now we assume that the string _will_ end in a zero, this should break apart the strings for us
-	    (description,note)=descriptionNoteString.split('\0')
-
-	    # now set in our attributes
-	    self.attributes['description']=description
-	    self.attributes['note']=note
-	    
-    def _packPayload(self):
-	    self.taskHeader.updateFromDict(self.attributes)
-	    dstr=self.taskHeader.toByteArray()
-	    dstr+=self.attributes['description']+'\0'
-	    dstr+=self.attributes['note']+'\0'
-	    return dstr
+		# now set in our attributes
+		self.attributes['description']=description
+		self.attributes['note']=note
+	
+	
+	def _packPayload(self):
+		self.taskHeader.updateFromDict(self.attributes)
+		dstr=self.taskHeader.toByteArray()
+		dstr+=self.attributes['description']+'\0'
+		dstr+=self.attributes['note']+'\0'
+		return dstr
