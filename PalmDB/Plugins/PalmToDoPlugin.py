@@ -68,8 +68,8 @@ class PalmToDoRecord(PalmDB.Plugins.BasePlugin.DataRecord):
 		self.taskHeader.selfNetworkOrder('palmos')
 		# +++ FIX THIS +++
 		# you will need to set these according to the task header
-		# +++ FIX THIS +++
 		self.taskHeader.setConversion([('format','uchar'),('reserved','uchar'),])
+		# +++ FIX THIS +++
 	
 		self.clear()
 
@@ -90,10 +90,7 @@ class PalmToDoRecord(PalmDB.Plugins.BasePlugin.DataRecord):
 	
 	def _crackPayload(self,dstr):
 		self.attributes['debug_payload']=dstr.encode('HEX')
-		# check to see if we have enough data to grab the task header data
-		# it is not impossible for the data to be destroyed before we get it.
-		if len(dstr) < self.taskHeader.getSize():
-			raise IOError("Error: raw data passed in is too small; required (%d), available (%d)"%(self.taskHeader.getSize(),len(dstr)))
+
 		# tell the StructMap to crack the data for us
 		self.taskHeader.fromByteArray(dstr)
 		# now update our attributes so they will be output as XML
