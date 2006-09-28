@@ -295,3 +295,6 @@ class StructMap(dict):
         return struct.pack(self._getPackString(),*packedTuple)
     def getSize(self):
         return struct.calcsize(self._getPackString())
+    def updateFromDict(self,dictionary):
+        for attribute in self._getParameterNames():
+            self[attribute]=dictionary.get(attribute,None)
