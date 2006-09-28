@@ -106,7 +106,7 @@ def setBitsFromBooleanAttribute(dictionary,attributeName,bitStruct,bit):
 
 PILOT_TIME_DELTA = 2082844800L
 def crackPalmDate(variable):
-        if variable == 0:
+        if variable == 0 or variable < PILOT_TIME_DELTA:
             return None
         else:
             return datetime.datetime.fromtimestamp(variable-PILOT_TIME_DELTA)

@@ -65,7 +65,9 @@ def PalmApplicationName(CreatorID):
 #
 
 import Plugins.ProgectPlugin
+import Plugins.PalmToDoPlugin
 #import StandardNotepadPDBPlugin
 
 registerPDBPlugin(Plugins.ProgectPlugin.ProgectPlugin())
+registerPDBPlugin(Plugins.PalmToDoPlugin.PalmToDoPlugin())
 #registerPDBPlugin(StandardNotepadPDBPlugin.plugin)
