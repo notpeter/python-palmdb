@@ -117,6 +117,29 @@ def packPalmDate(variable):
 	else:
 		return int(time.mktime(variable.timetuple())+PILOT_TIME_DELTA)
 
+def crackPalmDatePacked(variable):
+	# Date due field:
+    	# This field seems to be layed out like this:
+    	#     year  7 bits (0-128)
+    	#     month 4 bits (0-16)
+    	#     day   5 bits (0-32)
+
+        # it would seem that Palm uses 0xffff to mean no date at all
+        if variable == 0xffff:
+            return None
+        
+	year = getBits(variable,15,7)+1904
+	return datetime.date(year,getBits(variable,8,4),getBits(variable,4,5))
+
+def packPalmDatePacked(date):
+	if date == None:
+		return 0xffff
+	returnValue=0
+	returnValue=setBits(returnValue,date.year-1904,15,7)
+	returnValue=setBits(returnValue,date.month,8,4)
+	returnValue=setBits(returnValue,date.day,4,5)
+	return returnValue
+
 #
 # XML Helper Functions
 #
