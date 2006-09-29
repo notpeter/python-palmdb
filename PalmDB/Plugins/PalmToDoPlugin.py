@@ -35,8 +35,12 @@ import struct
 import datetime
 import PalmDB.Plugins.BasePlugin
 
-from PalmDB.Util import packPalmDate
-from PalmDB.Util import crackPalmDate
+from PalmDB.Util import setBooleanAttributeFromBits
+from PalmDB.Util import setBitsFromBooleanAttribute
+from PalmDB.Util import getBits
+
+from PalmDB.Util import packPalmDatePacked
+from PalmDB.Util import crackPalmDatePacked
 from PalmDB.Util import StructMap
 
 
@@ -77,6 +81,7 @@ class PalmToDoRecord(PalmDB.Plugins.BasePlugin.DataRecord):
 		# you will need to set default values here for the task attributes
 		self.attributes['dueDate']=None
 		self.attributes['priority']=0
+		self.attributes['completed']=False
 		# +++ FIX THIS ++++
 
 		self.attributes['description']=''
@@ -92,9 +97,12 @@ class PalmToDoRecord(PalmDB.Plugins.BasePlugin.DataRecord):
 		# tell the StructMap to crack the data for us
 		self.taskHeader.fromByteArray(dstr)
 
+
 		# copy the data from the structmap
-		self.attributes['dueDate']=crackPalmDate(self.taskHeader['dueDate'])
-		self.attributes['priority']=self.taskHeader['priority']
+		self.attributes['dueDate']=crackPalmDatePacked(self.taskHeader['dueDate'])
+		# evidently *completed* is the leftmost bit in priority
+		setBooleanAttributeFromBits(self.attributes,'completed',self.taskHeader['priority'],7)
+		self.attributes['priority']=getBits(self.taskHeader['priority'],6,7)
 
 		# find the part of the data that will be our description and note
 		descriptionNoteString=dstr[self.taskHeader.getSize():]
@@ -108,8 +116,9 @@ class PalmToDoRecord(PalmDB.Plugins.BasePlugin.DataRecord):
 	
 	def _packPayload(self):
 		# copy the data to the structmap
-		self.taskHeader['dueDate']=packPalmDate(self.attributes['dueDate'])
-		self.taskHeader['priority']=self.attributes['priority']
+		self.taskHeader['dueDate']=packPalmDatePacked(self.attributes['dueDate'])
+		# set the priority and completed in one statement
+		self.taskHeader['priority']=setBitsFromBooleanAttribute(self.attributes,'completed',self.taskHeader['priority'],7)
 
 		dstr=self.taskHeader.toByteArray()
 		dstr+=self.attributes['description']+'\0'
