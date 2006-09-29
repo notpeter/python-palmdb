@@ -35,10 +35,8 @@ import struct
 import datetime
 import PalmDB.Plugins.BasePlugin
 
-from PalmDB.Util import getBits
-from PalmDB.Util import setBits
-from PalmDB.Util import setBooleanAttributeFromBits
-from PalmDB.Util import setBitsFromBooleanAttribute
+from PalmDB.Util import packPalmDate
+from PalmDB.Util import crackPalmDate
 from PalmDB.Util import StructMap
 
 
@@ -68,7 +66,7 @@ class PalmToDoRecord(PalmDB.Plugins.BasePlugin.DataRecord):
 		self.taskHeader.selfNetworkOrder('palmos')
 		# +++ FIX THIS +++
 		# you will need to set these according to the task header
-		self.taskHeader.setConversion([('format','uchar'),('reserved','uchar'),])
+		self.taskHeader.setConversion([('dueDate','ulong'),('priority','uchar'),])
 		# +++ FIX THIS +++
 	
 		self.clear()
@@ -77,8 +75,8 @@ class PalmToDoRecord(PalmDB.Plugins.BasePlugin.DataRecord):
 		self.attributes.clear()
 		# +++ FIX THIS ++++
 		# you will need to set default values here for the task attributes
-		self.attributes['format']=8
-		self.attributes['reserved']=0
+		self.attributes['dueDate']=None
+		self.attributes['priority']=0
 		# +++ FIX THIS ++++
 
 		self.attributes['description']=''
@@ -93,13 +91,13 @@ class PalmToDoRecord(PalmDB.Plugins.BasePlugin.DataRecord):
 
 		# tell the StructMap to crack the data for us
 		self.taskHeader.fromByteArray(dstr)
-		# now update our attributes so they will be output as XML
-		self.attributes.update(self.taskHeader)
+
+		# copy the data from the structmap
+		self.attributes['dueDate']=crackPalmDate(self.taskHeader['dueDate'])
+		self.attributes['priority']=self.taskHeader['priority']
 
 		# find the part of the data that will be our description and note
 		descriptionNoteString=dstr[self.taskHeader.getSize():]
-		#descriptionNoteString = dstr[3:]
-		#print descriptionNoteString.split('\0')
 		# now we assume that the string _will_ end in a zero, this should break apart the strings for us
 		(description,note)=descriptionNoteString.split('\0')
 
@@ -109,7 +107,10 @@ class PalmToDoRecord(PalmDB.Plugins.BasePlugin.DataRecord):
 	
 	
 	def _packPayload(self):
-		self.taskHeader.updateFromDict(self.attributes)
+		# copy the data to the structmap
+		self.taskHeader['dueDate']=packPalmDate(self.attributes['dueDate'])
+		self.taskHeader['priority']=self.attributes['priority']
+
 		dstr=self.taskHeader.toByteArray()
 		dstr+=self.attributes['description']+'\0'
 		dstr+=self.attributes['note']+'\0'
