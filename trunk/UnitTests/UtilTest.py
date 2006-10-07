@@ -145,7 +145,9 @@ class UtilPalmDateTestCase(unittest.TestCase):
 		self.assertEqual(packPalmDate(datetime.datetime(1969, 12, 31, 19, 0)),PILOT_TIME_DELTA)
 	def testPalmDateRoundTrip(self):
 		'''Palm date round trip conversions'''
-		for seconds in range(1,pow(2,31),2592000):
+		# if we use 1 as the start of the range, as we did before, it cracks on Windows with a
+		# reasonable ValueError.
+		for seconds in range(PILOT_TIME_DELTA,pow(2,31),2592000):
 			self.assertEqual(packPalmDate(crackPalmDate(seconds)),seconds)
 
 		
