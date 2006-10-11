@@ -94,9 +94,10 @@ class PalmToDoRecord(PalmDB.Plugins.BasePlugin.DataRecord):
 	def _crackPayload(self,dstr):
 		self.attributes['debug_payload']=dstr.encode('HEX')
 
+		print 'before structmap'
 		# tell the StructMap to crack the data for us
 		self.taskHeader.fromByteArray(dstr)
-
+		print 'after structmap'
 
 		# copy the data from the structmap
 		self.attributes['dueDate']=crackPalmDatePacked(self.taskHeader['dueDate'])
@@ -104,14 +105,17 @@ class PalmToDoRecord(PalmDB.Plugins.BasePlugin.DataRecord):
 		setBooleanAttributeFromBits(self.attributes,'completed',self.taskHeader['priority'],7)
 		self.attributes['priority']=getBits(self.taskHeader['priority'],6,7)
 
+		print  'before cracking string'
 		# find the part of the data that will be our description and note
 		descriptionNoteString=dstr[self.taskHeader.getSize():]
 		# now we assume that the string _will_ end in a zero, this should break apart the strings for us
+		print 'descriptionNoteString',descriptionNoteString
+		print 'cracked',descriptionNoteString.split('\0')
 		(description,note)=descriptionNoteString.split('\0')
-
+		print 'after cracking string'
 		# now set in our attributes
-		self.attributes['description']=description
-		self.attributes['note']=note
+		self.attributes['description']=description.decode('palmos')
+		self.attributes['note']=note.decode('palmos')
 	
 	
 	def _packPayload(self):
@@ -121,6 +125,6 @@ class PalmToDoRecord(PalmDB.Plugins.BasePlugin.DataRecord):
 		self.taskHeader['priority']=setBitsFromBooleanAttribute(self.attributes,'completed',self.taskHeader['priority'],7)
 
 		dstr=self.taskHeader.toByteArray()
-		dstr+=self.attributes['description']+'\0'
-		dstr+=self.attributes['note']+'\0'
+		dstr+=self.attributes['description'].encode('palmos')+'\0'
+		dstr+=self.attributes['note'].encode('palmos')+'\0'
 		return dstr
