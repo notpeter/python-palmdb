@@ -94,6 +94,8 @@ class PalmToDoRecord(PalmDB.Plugins.BasePlugin.DataRecord):
 	def _crackPayload(self,dstr):
 		self.attributes['debug_payload']=dstr.encode('HEX')
 
+		print 'len of our dstr',len(dstr)
+
 		print 'before structmap'
 		# tell the StructMap to crack the data for us
 		self.taskHeader.fromByteArray(dstr)
