@@ -183,9 +183,9 @@ def returnRationalAsXML(itemName,numerator,denominator):
 
 def returnAttributeAsXML(itemName,itemType,item,escape=True):
     if escape:
-        itemAsString=escapeForXML(str(item))
+        itemAsString=escapeForXML(unicode(item))
     else:
-        itemAsString=str(item)
+        itemAsString=unicode(item)
 
     if len(itemAsString) or not XMLsuppressFalseOrBlank:
         return '<attribute name="%s"><%s value="%s"/></attribute>\n'%(itemName,itemType,itemAsString)
@@ -194,9 +194,9 @@ def returnAttributeAsXML(itemName,itemType,item,escape=True):
 
 def returnAsXMLItem(itemName,item,escape=True):
     if escape:
-        itemAsString=escapeForXML(str(item))
+        itemAsString=escapeForXML(unicode(item))
     else:
-        itemAsString=str(item)
+        itemAsString=unicode(item)
 
     if len(itemAsString) or not XMLsuppressFalseOrBlank:
         return '<%s>%s</%s>\n'%(itemName,itemAsString,itemName)
@@ -301,7 +301,7 @@ class StructMap(dict):
                 (name,type,repeat)=conversion
                 if repeat > 1:
                     raise ValueError('Can only use a repeat with a char[] type')
-                    packString+=str(repeat)
+                    packString+=unicode(repeat)
             else:
                 (name,type)=conversion
             packString+=self.typeConversion[type]

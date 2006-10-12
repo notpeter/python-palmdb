@@ -39,6 +39,8 @@ import struct
 import traceback
 import PluginManager
 
+from gettext import gettext as _
+
 from PalmDB.Util import crackPalmDate
 from PalmDB.Util import packPalmDate
 from PalmDB.Util import getBits
@@ -144,9 +146,9 @@ class PalmDatabase:
         if nextRecord or applicationInformationOffset < 0 or sortInformationOffset < 0 or numberOfRecords < 0:
             raise ValueError, _("Invalid database header.")
 
-	self.attributes['fileName']=fileName.split('\0')[0]
-	self.attributes['databaseType']=databaseType
-	self.attributes['creatorID']=creatorID
+	self.attributes['fileName']=fileName.split('\0')[0].decode('palmos')
+	self.attributes['databaseType']=databaseType.decode('palmos')
+	self.attributes['creatorID']=creatorID.decode('palmos')
 	self.attributes['createdTime']=crackPalmDate(createdTime)
 	self.attributes['modifiedTime']=crackPalmDate(modifiedTime)
 	self.attributes['backedUpTime']=crackPalmDate(backedUpTime)
@@ -298,11 +300,11 @@ class PalmDatabase:
 
 	return offset
 
-    def _getRecordHeader(self,raw,rawSize,maxRecords,desiredRecord):
+    def _getRecordHeader(self,plugin,raw,rawSize,maxRecords,desiredRecord):
         palmHeaderSize = PalmHeaderInfo.PDBHeaderStructSize
 	palmRecordEntrySize=plugin.getPalmRecordEntrySize(self)
         
-	startingRecordOffset=record*palmRecordEntrySize+palmHeaderSize
+	startingRecordOffset=desiredRecord*palmRecordEntrySize+palmHeaderSize
 	endingRecordOffset=startingRecordOffset+palmRecordEntrySize
 	
 	hstr=raw[startingRecordOffset:endingRecordOffset]
@@ -313,25 +315,25 @@ class PalmDatabase:
 
 	return hstr
 	
-    def _getRecordData(self,raw,rawSize,maxRecords,desiredRecord):
-        hstr=self._getRecordHeader(raw,rawSize,maxRecords,desiredRecord)
+    def _getRecordData(self,plugin,raw,rawSize,maxRecords,desiredRecord):
+        hstr=self._getRecordHeader(plugin,raw,rawSize,maxRecords,desiredRecord)
 
         startOffset=self._parseRecordOffset(hstr)
-	if desiredRecord < maxRecords:
-            endOffset=self._parseRecordOffset(self._getRecordHeader(raw,rawSize,maxRecords,desiredRecord+1))
+	if desiredRecord < maxRecords-1:
+            endOffset=self._parseRecordOffset(self._getRecordHeader(plugin,raw,rawSize,maxRecords,desiredRecord+1))
 	else:
 	    endOffset=rawSize
 
-	if startOffset > rawsize:
+	if startOffset > rawSize:
 	    raise IOError, _("Error: Invalid start offset (%d), off end of database")%(startOffset)
 
-	if endOffset > rawsize:
+	if endOffset > rawSize:
 	    raise IOError, _("Error: Invalid end offset (%d), off end of database")%(endOffset)
 
 	if startOffset > endOffset:
 	        raise IOError, _("Error: Invalid offset pair (%d,%d), start is greater than end.")%(startOffset,endOffset)
 
-	return (hstr,raw[startOffset,endOffset])
+	return (hstr,raw[startOffset:endOffset])
 	
     def fromByteArray(self, raw, headerOnly = False):
         """
@@ -373,7 +375,7 @@ class PalmDatabase:
 	plugin=self._getPlugin()
 
         # assign some needed variables that were retrieved from the header
-        rawsize = len(raw) # length of entire database
+        rawSize = len(raw) # length of entire database
 
         palmHeaderSize = PalmHeaderInfo.PDBHeaderStructSize
 	palmRecordEntrySize=plugin.getPalmRecordEntrySize(self)
@@ -381,12 +383,12 @@ class PalmDatabase:
         #-----BEGIN: INSTANTIATE AND APPEND DATABASE RECORDS / RESOURCES------
 
 	# check to make sure the Palm database is big enough to at least contain the records it says it does
-        if palmHeaderSize + palmRecordEntrySize * numberOfRecords > rawsize:
+        if palmHeaderSize + palmRecordEntrySize * numberOfRecords > rawSize:
             raise IOError, _("Error: database not big enough to have %d records")%(numberOfRecords)
 
         # create records for each Palm record
         for desiredRecord in range(numberOfRecords):
-	    (hstr,dstr)=self._getRecordData(raw,rawsize,numberOfRecords,desiredRecord)
+	    (hstr,dstr)=self._getRecordData(plugin,raw,rawSize,numberOfRecords,desiredRecord)
 
             # Create an instance of the record
             # recordMaker is either createRecordFromByteArray() or createResourceFromByteArray()
@@ -401,7 +403,7 @@ class PalmDatabase:
                 # Add to beginning of self.records list because we are going backwards
                 self.records.append(record)
 	    except Exception,e:
-	        print 'Had some sort of error reading record (',count,') [',e,']'
+	        print 'Had some sort of error reading record (',desiredRecord,') [',e,']'
 #		traceback.print_exc()
         #-------END: INSTANTIATE AND APPEND DATABASE RECORDS / RESOURCES-------
 
@@ -415,9 +417,9 @@ class PalmDatabase:
         # SortInfo block
         # Sequence of DB record data entries
 
-	# +++ FIX THIS +++ have to setup prev_offset correctly
-	prev_offset=0
-	# +++ FIX THIS +++ have to setup prev_offset correctly
+	# +++ FIX THIS +++ have to setup bottomOfAppRecords correctly
+	bottomOfAppRecords=self._parseRecordOffset(self._getRecordHeader(plugin,raw,rawSize,numberOfRecords,0))
+	# +++ FIX THIS +++ have to setup bottomOfAppRecords correctly
 
         # Calculate SortInfo block size
         # If no block, then of course size is zero
@@ -426,10 +428,10 @@ class PalmDatabase:
         sortinfo_size=0
         if sortInformationOffset: # if there is no SortInfo block, the offset=0
             if numberOfRecords > 0:
-                # prev_offset is the beginning of the first record's data chunk
-                sortinfo_size=prev_offset-sortInformationOffsets
+                # bottomOfAppRecords is the beginning of the first record's data chunk
+                sortinfo_size=bottomOfAppRecords-sortInformationOffset
             else: # if there are no records, then the SortInfo block ends at the end of the database
-                sortinfo_size=rawsize-sortInformationOffset
+                sortinfo_size=rawSize-sortInformationOffset
 
         # Calculate the AppInfo block size
         # If we have a sort block, the offset to that is what bounds the AppInfo block
@@ -440,9 +442,9 @@ class PalmDatabase:
             if sortInformationOffset > 0: # if there is a SortInfo block
                 appinfo_size=sortInformationOffset-applicationInformationOffset
             elif numberOfRecords > 0:
-                appinfo_size=prev_offset-applicationInformationOffset
+                appinfo_size=bottomOfAppRecords-applicationInformationOffset
             else:
-                appinfo_size=rawsize-applicationInformationOffset
+                appinfo_size=rawSize-applicationInformationOffset
 
         if appinfo_size < 0:
             raise IOError, _("Error: bad database header AppInfo Block size < 0 (%d)")%(appinfo_size)
