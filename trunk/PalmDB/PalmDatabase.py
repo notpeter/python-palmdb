@@ -296,8 +296,43 @@ class PalmDatabase:
         else:
             (offset, auid) = struct.unpack('>ll', hstr)
 
-	return offset;
+	return offset
+
+    def _getRecordHeader(self,raw,rawSize,maxRecords,desiredRecord):
+        palmHeaderSize = PalmHeaderInfo.PDBHeaderStructSize
+	palmRecordEntrySize=plugin.getPalmRecordEntrySize(self)
         
+	startingRecordOffset=record*palmRecordEntrySize+palmHeaderSize
+	endingRecordOffset=startingRecordOffset+palmRecordEntrySize
+	
+	hstr=raw[startingRecordOffset:endingRecordOffset]
+
+	# make sure we got the data we are looking for
+	if (not hstr) or (len(hstr) <> palmRecordEntrySize):
+	    raise IOError, _("Error: problem reading record entry, size was (%d), size should have been (%d)")%(len(hstr),palmRecordEntrySize)
+
+	return hstr
+	
+    def _getRecordData(self,raw,rawSize,maxRecords,desiredRecord):
+        hstr=self._getRecordHeader(raw,rawSize,maxRecords,desiredRecord)
+
+        startOffset=self._parseRecordOffset(hstr)
+	if desiredRecord < maxRecords:
+            endOffset=self._parseRecordOffset(self._getRecordHeader(raw,rawSize,maxRecords,desiredRecord+1))
+	else:
+	    endOffset=rawSize
+
+	if startOffset > rawsize:
+	    raise IOError, _("Error: Invalid start offset (%d), off end of database")%(startOffset)
+
+	if endOffset > rawsize:
+	    raise IOError, _("Error: Invalid end offset (%d), off end of database")%(endOffset)
+
+	if startOffset > endOffset:
+	        raise IOError, _("Error: Invalid offset pair (%d,%d), start is greater than end.")%(startOffset,endOffset)
+
+	return (hstr,raw[startOffset,endOffset])
+	
     def fromByteArray(self, raw, headerOnly = False):
         """
         This function initializes this class instance, clearing the instance's
@@ -345,52 +380,26 @@ class PalmDatabase:
 
         #-----BEGIN: INSTANTIATE AND APPEND DATABASE RECORDS / RESOURCES------
 
-        first_offset = 0        # need this to find the sort/app info blocks
-
-        # next two maintain state for the loop
-        prev_offset = rawsize    # track the offset of the previous block, but we are going backwards to simplify the algorithm
-
 	# check to make sure the Palm database is big enough to at least contain the records it says it does
         if palmHeaderSize + palmRecordEntrySize * numberOfRecords > rawsize:
             raise IOError, _("Error: database not big enough to have %d records")%(numberOfRecords)
 
         # create records for each Palm record
-        # have to use -1 as the final number, because range never reaches it, it always stops before it
-        for count in range(numberOfRecords-1,-1,-1):
-            startingRecordOffset=count*palmRecordEntrySize+palmHeaderSize
-            # we have to offset by one because we have to skip the Palm header
-            endingRecordOffset = (count+1)*palmRecordEntrySize + palmHeaderSize
-            
-            # extract the raw data for the current record/resource entry
-            hstr=raw[startingRecordOffset:endingRecordOffset]
-
-            # make sure we got the data we are looking for
-            if (not hstr) or (len(hstr) <> palmRecordEntrySize):
-                raise IOError, _("Error: problem reading record entry, size was (%d), size should have been (%d)")%(len(hstr),palmRecordEntrySize)
-
-            # parse the record entry
-            offset=self._parseRecordOffset(hstr)
+        for desiredRecord in range(numberOfRecords):
+	    (hstr,dstr)=self._getRecordData(raw,rawsize,numberOfRecords,desiredRecord)
 
             # Create an instance of the record
             # recordMaker is either createRecordFromByteArray() or createResourceFromByteArray()
 	    record = plugin.createPalmDatabaseRecord(self)
 	    if not record:
                 raise ValueError, _("Error: did not receive a PalmRecord back from the createPalmDatabaseRecord call into the plugin.problem reading record")
-
             # Check for problems
             try:
-                if offset > rawsize:
-                    raise IOError, _("Error: Invalid offset (%d), off end of database")%(offset)
-
-                if offset > prev_offset:
-                        raise IOError, _("Error: Invalid offset (%d), greater than previous offset (records being processed in reverse order)")%(offset)
-
                 # populate the record with the chunk data that it points to
-                record.fromByteArray(hstr,raw[offset:prev_offset])
+                record.fromByteArray(hstr,dstr)
 
                 # Add to beginning of self.records list because we are going backwards
-                self.records.insert(0,record)
-                prev_offset = offset
+                self.records.append(record)
 	    except Exception,e:
 	        print 'Had some sort of error reading record (',count,') [',e,']'
 #		traceback.print_exc()
@@ -406,6 +415,9 @@ class PalmDatabase:
         # SortInfo block
         # Sequence of DB record data entries
 
+	# +++ FIX THIS +++ have to setup prev_offset correctly
+	prev_offset=0
+	# +++ FIX THIS +++ have to setup prev_offset correctly
 
         # Calculate SortInfo block size
         # If no block, then of course size is zero
