@@ -68,21 +68,15 @@ class PalmToDoRecord(PalmDB.Plugins.BasePlugin.DataRecord):
 		PalmDB.Plugins.BasePlugin.DataRecord.__init__(self)
 		self.taskHeader=StructMap()
 		self.taskHeader.selfNetworkOrder('palmos')
-		# +++ FIX THIS +++
-		# you will need to set these according to the task header
-		self.taskHeader.setConversion([('dueDate','ulong'),('priority','uchar'),])
-		# +++ FIX THIS +++
+		self.taskHeader.setConversion([('dueDate','ushort'),('priority','uchar'),])
 	
 		self.clear()
 
 	def clear(self):
 		self.attributes.clear()
-		# +++ FIX THIS ++++
-		# you will need to set default values here for the task attributes
 		self.attributes['dueDate']=None
 		self.attributes['priority']=0
 		self.attributes['completed']=False
-		# +++ FIX THIS ++++
 
 		self.attributes['description']=''
 		self.attributes['note']=''
