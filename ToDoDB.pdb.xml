@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?><palmDatabase type="todo"><palmHeader><attribute name="uid"><integer value="707686514"/></attribute>
+<attribute name="modifiedTime"><date year="2006" month="10" day="11" hour="12" minutes="54" seconds="50"/></attribute>
+<attribute name="flagReadOnly"><boolean value="False"/></attribute>
+<attribute name="flagBackup"><boolean value="True"/></attribute>
+<attribute name="nextRecord"><integer value="0"/></attribute>
+<attribute name="modificationNumber"><integer value="16"/></attribute>
+<attribute name="fileName"><string value="ToDoDB"/></attribute>
+<attribute name="flagNewer"><boolean value="False"/></attribute>
+<attribute name="flagAppInfoDirty"><boolean value="False"/></attribute>
+<attribute name="flagResource"><boolean value="False"/></attribute>
+<attribute name="version"><integer value="0"/></attribute>
+<attribute name="flagExcludeFromSync"><boolean value="False"/></attribute>
+<attribute name="creatorID"><string value="todo"/></attribute>
+<attribute name="createdTime"><date year="1999" month="10" day="18" hour="7" minutes="20" seconds="42"/></attribute>
+<attribute name="flagOpen"><boolean value="False"/></attribute>
+<attribute name="databaseType"><string value="DATA"/></attribute>
+<attribute name="flagReset"><boolean value="False"/></attribute>
+</palmHeader>
+<palmCategories><attribute name="Personal"><integer value="2"/></attribute>
+<attribute name="Unfiled"><integer value="0"/></attribute>
+<attribute name="Business"><integer value="1"/></attribute>
+</palmCategories>
+<applicationBlock><attribute name="payload"><string value="000000010100"/></attribute>
+</applicationBlock>
+<PalmRecordList><ToDoDataRecord><attribute name="category"><integer value="0"/></attribute>
+<attribute name="note"><string value="To register your Palm™ handheld electronically, you must have an Internet connection or a modem connected to your computer.
+
+Or if you prefer, you can fill out and send the mail-in registration card included in your Palm package.
+
+Special rewards only for registered users:
+
+-FREE software programs *
+-Upgrade information
+-Important updates
+
+* For a complete list of free software, go to www.palm.com/eregdownload
+"/></attribute>
+<attribute name="busy"><boolean value="False"/></attribute>
+<attribute name="uid"><integer value="2"/></attribute>
+<attribute name="deleted"><boolean value="False"/></attribute>
+<attribute name="completed"><boolean value="False"/></attribute>
+<attribute name="priority"><integer value="111"/></attribute>
+<attribute name="secret"><boolean value="False"/></attribute>
+<attribute name="dirty"><boolean value="True"/></attribute>
+<attribute name="dueDate"><date year="1904" month="10" day="4" hour="0" minutes="0" seconds="0"/></attribute>
+<attribute name="description"><string value="n&apos;t forget to register!"/></attribute>
+</ToDoDataRecord>
+<ToDoDataRecord><attribute name="category"><integer value="0"/></attribute>
+<attribute name="note"><string value=""/></attribute>
+<attribute name="busy"><boolean value="False"/></attribute>
+<attribute name="uid"><integer value="16306177"/></attribute>
+<attribute name="deleted"><boolean value="False"/></attribute>
+<attribute name="completed"><boolean value="False"/></attribute>
+<attribute name="priority"><integer value="104"/></attribute>
+<attribute name="secret"><boolean value="False"/></attribute>
+<attribute name="dirty"><boolean value="True"/></attribute>
+<attribute name="dueDate"><date year="1904" month="10" day="20" hour="0" minutes="0" seconds="0"/></attribute>
+<attribute name="description"><string value="is is line2"/></attribute>
+</ToDoDataRecord>
+<ToDoDataRecord><attribute name="category"><integer value="0"/></attribute>
+<attribute name="note"><string value=""/></attribute>
+<attribute name="busy"><boolean value="False"/></attribute>
+<attribute name="uid"><integer value="16306178"/></attribute>
+<attribute name="deleted"><boolean value="False"/></attribute>
+<attribute name="completed"><boolean value="False"/></attribute>
+<attribute name="priority"><integer value="104"/></attribute>
+<attribute name="secret"><boolean value="False"/></attribute>
+<attribute name="dirty"><boolean value="True"/></attribute>
+<attribute name="dueDate"><date year="1904" month="10" day="20" hour="0" minutes="0" seconds="0"/></attribute>
+<attribute name="description"><string value="is is line3"/></attribute>
+</ToDoDataRecord>
+<ToDoDataRecord><attribute name="category"><integer value="0"/></attribute>
+<attribute name="note"><string value="This is the line4 note"/></attribute>
+<attribute name="busy"><boolean value="False"/></attribute>
+<attribute name="uid"><integer value="16306179"/></attribute>
+<attribute name="deleted"><boolean value="False"/></attribute>
+<attribute name="completed"><boolean value="False"/></attribute>
+<attribute name="priority"><integer value="104"/></attribute>
+<attribute name="secret"><boolean value="False"/></attribute>
+<attribute name="dirty"><boolean value="True"/></attribute>
+<attribute name="dueDate"><date year="1904" month="10" day="20" hour="0" minutes="0" seconds="0"/></attribute>
+<attribute name="description"><string value="is is line4"/></attribute>
+</ToDoDataRecord>
+</PalmRecordList>
+</palmDatabase>

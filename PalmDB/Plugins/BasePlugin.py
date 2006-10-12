@@ -33,6 +33,7 @@
 
 __copyright__ = 'Copyright 2006 Rick Price <rick_price@users.sourceforge.net>'
 
+import codecs
 import struct
 from xml.dom import pulldom
 from Ft.Xml.Xslt import Transform
@@ -73,14 +74,15 @@ class BasePDBFilePlugin:
 			XMLData=open(filename,'rb').read()
 			XMLData=XMLData.decode('zip')
 		else:
-			XMLData=open(filename,'r').read()
+			# +++ FIX THIS +++ Of course this is broken, what if it wasn't UTF8?
+			XMLData=codecs.open(filename,'r','utf8').read()
 		return XMLData
 	def packXMLIntoFile(self,application,filename,XMLData):
 		if filename.upper().endswith('.GZ'):
 			XMLData=XMLData.encode('zip')
 			XMLData=open(filename,'wb').write(XMLData)
 		else:
-			XMLData=open(filename,'w').write(XMLData)
+			XMLData=codecs.open(filename,'w','utf8').write(XMLData)
 	def getXSLTText(self,application,type):
 		return None
 # A possible implementation...
@@ -141,7 +143,7 @@ class BasePDBFilePlugin:
 			return DataRecord()
 
 	def getXMLVersionHeader(self,PalmDatabaseObject):
-		return '<?xml version="1.0" encoding="ISO-8859-1"?>'
+		return '<?xml version="1.0" encoding="UTF-8"?>'
 	def getXMLFileHeader(self,PalmDatabaseObject):
 		return '<palmDatabase type="%s">'%PalmDatabaseObject.getCreatorID()
 	def getXMLFileFooter(self,PalmDatabaseObject):
@@ -309,6 +311,9 @@ class CategoriesObject(dict):
 		categoryLabels=list(struct.unpack('16s'*16,raw[2:258]))
 		# Strip off the trailing zeroes
 		categoryLabels=map(lambda x : x.split('\0')[0],categoryLabels)
+		# decode Palm charset
+		categoryLabels=map(lambda x : x.decode('palmos'),categoryLabels)
+		# Get category ID's
 		categoryUniqIDs=list(struct.unpack('B'*16,raw[258:274]))
 		lastUniqID=struct.unpack('B',raw[274])[0]
 		# build category list, use name as key, number as value
