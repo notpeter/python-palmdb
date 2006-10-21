@@ -25,10 +25,10 @@
 
 """PRC/PDB file I/O in pure Python.
 
-    This module allows access to Palm OS(tm) database files on the desktop 
-    in pure Python. It is as simple as possible without (hopefully) being 
-    too simple. As much as possible Python idioms have been used to make
-    it easier to use and more versatile.
+	This module allows access to Palm OS(tm) database files on the desktop 
+	in pure Python. It is as simple as possible without (hopefully) being 
+	too simple. As much as possible Python idioms have been used to make
+	it easier to use and more versatile.
 """
 
 __copyright__ = 'Copyright 2006 Rick Price <rick_price@users.sourceforge.net>'
@@ -168,23 +168,23 @@ class BaseRecord:
 		self._crackPayload(dstr)
 		
 	def toByteArray(self,offset):
-	    return (self._packRecordHeader(offset),self._packPayload())
+		return (self._packRecordHeader(offset),self._packPayload())
 
 	def _crackRecordHeader(self,hstr):
 		# +++ READ THIS +++ This has to be implemented in a child class
 		raise NotImplementedError
 	def _crackPayload(self,dstr):
-	    self.attributes['payload']=dstr.encode('HEX')
+		self.attributes['payload']=dstr.encode('HEX')
 	def _packPayload(self):
-	    return self.attributes['payload'].decode('HEX')
+		return self.attributes['payload'].decode('HEX')
 
 	def getRecordXMLName(self):
 		# +++ READ THIS +++ This has to be implemented in a child class
 		raise NotImplementedError
 		return 'PalmRecord'
 	def toXML(self):
-	    attributesAsXML=returnDictionaryAsXML(self.attributes)
-	    return returnAsXMLItem(self.getRecordXMLName(),attributesAsXML,escape=False)
+		attributesAsXML=returnDictionaryAsXML(self.attributes)
+		return returnAsXMLItem(self.getRecordXMLName(),attributesAsXML,escape=False)
 	def fromDOMNode(self,DOMNode):
 		self.attributes=dictionaryFromXMLDOMNode(DOMNode)
 
@@ -245,7 +245,7 @@ class ResourceRecord(BaseRecord):
 	def __init__(self):
 		BaseRecord.__init__(self)
 		self.attributes['id']=0
-		self.attributes['resourceType']='    '
+		self.attributes['resourceType']='	'
 
 	def _crackRecordHeader(self,hstr):
 		(resourceType, id, offset) = struct.unpack('>4shl', hstr)
@@ -384,7 +384,7 @@ class applicationInformationObject:
 		self.attributes={}
 		self.attributes['payload']=''
 	def getSize(self):
-	    return len(self.attributes.get('payload','').decode('HEX'))
+		return len(self.attributes.get('payload','').decode('HEX'))
 
 	def fromByteArray(self,dstr):
 		self.attributes['payload']=dstr.encode('HEX')
@@ -403,7 +403,7 @@ class sortBlockObject:
 		self.attributes={}
 		self.attributes['payload']=''
 	def getSize(self):
-	    return len(self.attributes.get('payload','').decode('HEX'))
+		return len(self.attributes.get('payload','').decode('HEX'))
 
 	def fromByteArray(self,dstr):
 		self.attributes['payload']=dstr.encode('HEX')
