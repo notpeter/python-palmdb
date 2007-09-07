@@ -36,7 +36,7 @@ __copyright__ = 'Copyright 2006 Rick Price <rick_price@users.sourceforge.net>'
 import codecs
 import struct
 from xml.dom import pulldom
-from Ft.Xml.Xslt import Transform
+#from Ft.Xml.Xslt import Transform
 import StringIO
 
 from PalmDB.Util import getBits
@@ -46,28 +46,41 @@ from PalmDB.Util import returnAsXMLItem
 from PalmDB.Util import returnObjectAsXML
 from PalmDB.Util import dictionaryFromXMLDOMNode
 
+import DesktopApplications
+
 RESOURCE_ENTRY_SIZE = 10  # size of a resource entry
 RECORD_ENTRY_SIZE = 8 # size of a record entry
 
-NativeFromXMLXSLT=''
-NativeToXMLXSLT=''
 
 class BasePDBFilePlugin:
 	#+++ READ THIS +++ This HAS to be redefined in child classes otherwise things won't work
 	def getPDBCreatorID(self):
 #		raise NotImplementedError
 		return 'Unknown'
+	def getPDBTypeID(self):
+	#+++ READ THIS +++ This MAY need to be redefined in child classes
+		return 'DATA'
 	#+++ READ THIS +++ This HAS to be redefined in child classes otherwise things won't work
-	def getPalmApplicationName(self):
-		return 'Unknown'
-
-	def getApplicationNameFromFile(self,filename):
+	def getSupportedDesktopApplications(self,readOrWrite):
+		return ['PALMDB_XML']
+	#+++ READ THIS +++ This HAS to be redefined in child classes otherwise things won't work
+	def getSupportedApplicationsForFile(self,filename,readOrWrite):
 		# return tuple (ApplicationName,XSLT,GZIPResult)
 		if filename.upper().endswith('.XML'):
-			return 'NativeXML'
-		if filename.upper().endswith('.XML.GZ'):
-			return 'NativeXMLGZ'
-		return None
+			return ['PALMDB_XML']
+		return []
+	#+++ READ THIS +++ This HAS to be redefined in child classes otherwise things won't work
+	def loadFromApplicationFile(self,applicationID,fileObject):
+		if applicationID <> 'PALMDB_XML':
+			raise NotImplementedError('This plugin does not support'%(DesktopApplications.getDesktopApplicationNameFromID(applicationID)))
+		pass
+	#+++ READ THIS +++ This HAS to be redefined in child classes otherwise things won't work
+	def saveToApplicationFile(self,applicationID,fileObject):
+		if applicationID <> 'PALMDB_XML':
+			raise NotImplementedError('This plugin does not support'%(DesktopApplications.getDesktopApplicationNameFromID(applicationID)))
+		pass
+
+
 
 	def unpackXMLFromFile(self,application,filename):
 		if filename.upper().endswith('.GZ'):

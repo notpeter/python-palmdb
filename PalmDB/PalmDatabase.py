@@ -95,7 +95,7 @@ class PalmDatabase:
 		self.dirty = True
 
 	def _getPlugin(self):
-		return PluginManager.getPDBPlugin(self.attributes.get('creatorID',None))
+		return PluginManager.getPDBPlugin(self.attributes.get('creatorID',None),self.attributes.get('databaseType',None))
 
 	def isResourceDatabase(self):
 		return self.attributes.get('flagResource',False)
@@ -105,7 +105,11 @@ class PalmDatabase:
 	def setCreatorID(self,creatorID):
 		self.attributes['creatorID']=creatorID
 		self.dirty = True
-
+	def getTypeID(self):
+		return self.attributes['databaseType']
+	def setTypeID(self,typeID):
+		self.attributes['databaseType']=typeID
+		self.dirty = True
 	def getFilename(self):
 		return self.attributes['PalmFileName']
 	def setFilename(self,filename):

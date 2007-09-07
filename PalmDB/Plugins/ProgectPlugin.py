@@ -137,6 +137,8 @@ class ProgectPlugin(PalmDB.Plugins.BasePlugin.BasePDBFilePlugin):
 		return 'lbPG'
 	def getPalmApplicationName(self):
 		return 'Progect'
+	def getPDBTypeID(self):
+		return 'DATA'
 	def getApplicationNameFromFile(self,filename):
 		# return tuple (ApplicationName,XSLT,GZIPResult)
 		if filename.upper().endswith('.XML'):
