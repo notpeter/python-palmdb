@@ -40,16 +40,16 @@ from PalmDatabase import PalmHeaderInfo
 import sys
 from optparse import OptionParser
 
-def guessPalmAppID(filename):
+def guessPalmIDs(filename):
     try:
         PalmDB=PalmDatabase.PalmDatabase()
         fileData=open(filename,'rb').read(PalmHeaderInfo.PDBHeaderStructSize)
         PalmDB.fromByteArray(fileData,headerOnly=True)
-        return PalmDB.getCreatorID()
+        return (PalmDB.getCreatorID(),PalmDB.getTypeID())
     except:
         return None
-def guessApplicationName(palmAppID,filename):
-    plugin=PluginManager.getPDBPlugin(palmAppID)
+def guessApplicationName(palmAppID,palmTypeID,filename):
+    plugin=PluginManager.getPDBPlugin(palmAppID,palmTypeID)
     if plugin is  None:
         return None
     return plugin.getApplicationNameFromFile(filename)
@@ -90,17 +90,21 @@ def main():
     PalmFilename=arguments[Palm]
     DesktopFilename=arguments[Desktop]
     if options.palmApplicationName:
-        palmAppID=PluginManager.getCreatorIDFromApplicationName(options.palmApplicationName)
+        plugin=PluginManager.getPluginFromApplicationName(options.palmApplicationName)
+        palmAppID=plugin.getPDBCreatorID()
+        palmTypeID=PluginManager.getPDBTypeID()
     else:
-        palmAppID=guessPalmAppID(PalmFilename)
+        (palmAppID,palmTypeID)=guessPalmIDs(PalmFilename)
 
     if options.desktopApplicationName:
         applicationName=options.palmApplicationName
     else:
-        applicationName=guessApplicationName(palmAppID,DesktopFilename)
+        applicationName=guessApplicationName(palmAppID,palmTypeID,DesktopFilename)
 
     if palmAppID is None:
         parser.error('Cannot determine Palm Creator ID, therefore cannot convert database')
+    if palmTypeID is None:
+        parser.error('Cannot determine Palm Type ID, therefore cannot convert database')
 
     if Palm == 0:
         print 'Converting ',PalmFilename,' to ', DesktopFilename
@@ -115,7 +119,7 @@ def main():
     
 #     print 'actually do something'
 
-    plugin=PluginManager.getPDBPlugin(palmAppID)
+    plugin=PluginManager.getPDBPlugin(palmAppID,palmTypeID)
     if plugin is  None:
         return parser.error('Cannot determine plugin type, have to exit, sorry...')
 

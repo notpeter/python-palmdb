@@ -28,37 +28,34 @@
 
 __copyright__ = 'Copyright 2006 Rick Price <rick_price@users.sourceforge.net>'
 
+import DesktopApplications
 import Plugins.BasePlugin
 
 basePlugin=Plugins.BasePlugin.BasePDBFilePlugin()
 
 # +++ READ THIS +++ Plugins need to implement the interface in Plugins.BasePlugin.BasePDBFilePlugin
 PDBPlugins={}
-PalmApplications={}
 def registerPDBPlugin(PDBFilePluginClass):
-	type=PDBFilePluginClass.getPDBCreatorID()
-	PDBPlugins[type]=PDBFilePluginClass
-	PalmApplications[type]=PDBFilePluginClass.getPalmApplicationName()
+	creator=PDBFilePluginClass.getPDBCreatorID()
+	type=PDBFilePluginClass.getPDBTypeID()
+	PDBPlugins[(creator,type)]=PDBFilePluginClass
+	PalmApplications[(creator,type)]=PDBFilePluginClass.getPalmApplicationName()
 def deRegisterPDBPlugin(PDBFilePluginClass):
-	type=PDBFilePluginClass.getPDBCreatorID()
-	del(PDBPlugins[type])
-	del(PalmApplications[type])
+	creator=PDBFilePluginClass.getPDBCreatorID()
+	type=PDBFilePluginClass.getPDBTypeID()
+	del(PDBPlugins[(creator,type)])
+	del(PalmApplications[(creator,type)])
 
-def getPDBPlugin(CreatorID):
-        # if we cannot find an appropriate plugin, default to one that can handle any type
-	return PDBPlugins.get(CreatorID,basePlugin)
-def getPalmApplicationName(CreatorID):
-        # if we cannot find an appropriate plugin, default to one that can handle any type
-	return PalmApplications.get(CreatorID,None)
-def getCreatorIDFromApplicationName(applicationName):
+def getPDBPlugin(CreatorID,TypeID):
+	# if we cannot find an appropriate plugin, default to one that can handle any type
+	return PDBPlugins.get((CreatorID,TypeID),basePlugin)
+
+def getPluginsForFile(filename,readOrWrite):
 	reverseDictionary={}
 	(keys,values)=zip(*PalmApplications.items())
 	reverseDictionary.update(zip(values,keys))
-	return reverseDictionary.get(applicationName,None)
-
-def PalmApplicationName(CreatorID):
-        # if we cannot find an appropriate plugin, default to one that can handle any type
-	return PalmApplications.get(CreatorID,None)
+	key=reverseDictionary.get(applicationName,None)
+	return getPDBPlugin(*key)
 
 #
 #--------- Register Standard Plugins that come with Library ---------
