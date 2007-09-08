@@ -3,7 +3,7 @@ WRITE='WRITE'
 
 DesktopApplications={
 	'PALMDB_XML':'PalmDB Default XML Format',
-	'PDESK':'PDesk',
+	'PDESK_XML':'PDesk XML',
 	'GANTPROJECT':'Gantt Project',
 	'TREELINE':'Treeline',
 	}

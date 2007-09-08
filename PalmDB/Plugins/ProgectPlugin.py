@@ -133,25 +133,30 @@ class ProgectAppInfoObject(PalmDB.Plugins.BasePlugin.applicationInformationObjec
 
 
 class ProgectPlugin(PalmDB.Plugins.BasePlugin.BasePDBFilePlugin):
-	def getPDBCreatorID(self):
-		return 'lbPG'
+	def getPalmApplicationNameID(self):
+#		raise NotImplementedError
+		return 'PROGECT'
 	def getPalmApplicationName(self):
 		return 'Progect'
+	def getPDBCreatorID(self):
+		return 'lbPG'
 	def getPDBTypeID(self):
 		return 'DATA'
-	def getApplicationNameFromFile(self,filename):
+	def getSupportedDesktopApplications(self,readOrWrite):
+		return ['PDESK_XML']
+	def getSupportedApplicationsForFile(self,filename,readOrWrite):
 		# return tuple (ApplicationName,XSLT,GZIPResult)
-		if filename.upper().endswith('.XML'):
-			return 'NativeXML'
-		if filename.upper().endswith('.XML.GZ'):
-			return 'NativeXMLGZ'
-		if filename.upper().endswith('.GAN'):
-			return 'GanttProject'
-		if filename.upper().endswith('.TRL'):
-			return 'Treeline'
-		if filename.upper().endswith('.TRL.GZ'):
-			return 'Treeline'
-		return None
+		if filename.upper().endswith('.PML'):
+			return ['PDESK_XML']
+		return []
+	def loadFromApplicationFile(self,PalmDB,applicationID,fileObject):
+		if applicationID <> 'PDESK_XML':
+			raise NotImplementedError('This plugin does not support'%(DesktopApplications.getDesktopApplicationNameFromID(applicationID)))
+		pass
+	def saveToApplicationFile(self,PalmDB,applicationID,fileObject):
+		if applicationID <> 'PDESK_XML':
+			raise NotImplementedError('This plugin does not support'%(DesktopApplications.getDesktopApplicationNameFromID(applicationID)))
+		pass
 
 	def createApplicationInformationObject(self,PalmDatabaseObject):
 		return ProgectAppInfoObject()

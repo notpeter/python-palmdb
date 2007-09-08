@@ -113,7 +113,7 @@ def main():
 		if len(apps) == 0:
 			parser.error('Could not determine desktop application type.')
 		elif len(apps) > 1:
-			parser.error('More than one supported desktop application type for file, please specify.')
+			parser.error('More than one supported desktop application type for file, please specify one specifically.')
 		desktopApplicationID=apps[0]
 
 	if Palm == 0:
