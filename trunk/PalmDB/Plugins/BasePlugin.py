@@ -54,6 +54,13 @@ RECORD_ENTRY_SIZE = 8 # size of a record entry
 
 class BasePDBFilePlugin:
 	#+++ READ THIS +++ This HAS to be redefined in child classes otherwise things won't work
+	def getPalmApplicationNameID(self):
+#		raise NotImplementedError
+		return 'RAW_PALM_FORMAT'
+	def getPalmApplicationName(self):
+#		raise NotImplementedError
+		return 'RAW Palm Format'
+	#+++ READ THIS +++ This HAS to be redefined in child classes otherwise things won't work
 	def getPDBCreatorID(self):
 #		raise NotImplementedError
 		return 'Unknown'
@@ -70,12 +77,12 @@ class BasePDBFilePlugin:
 			return ['PALMDB_XML']
 		return []
 	#+++ READ THIS +++ This HAS to be redefined in child classes otherwise things won't work
-	def loadFromApplicationFile(self,applicationID,fileObject):
+	def loadFromApplicationFile(self,PalmDB,applicationID,fileObject):
 		if applicationID <> 'PALMDB_XML':
 			raise NotImplementedError('This plugin does not support'%(DesktopApplications.getDesktopApplicationNameFromID(applicationID)))
 		pass
 	#+++ READ THIS +++ This HAS to be redefined in child classes otherwise things won't work
-	def saveToApplicationFile(self,applicationID,fileObject):
+	def saveToApplicationFile(self,PalmDB,applicationID,fileObject):
 		if applicationID <> 'PALMDB_XML':
 			raise NotImplementedError('This plugin does not support'%(DesktopApplications.getDesktopApplicationNameFromID(applicationID)))
 		pass

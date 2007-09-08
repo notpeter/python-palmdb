@@ -35,27 +35,62 @@ basePlugin=Plugins.BasePlugin.BasePDBFilePlugin()
 
 # +++ READ THIS +++ Plugins need to implement the interface in Plugins.BasePlugin.BasePDBFilePlugin
 PDBPlugins={}
+PDBApplicationIDS={}
 def registerPDBPlugin(PDBFilePluginClass):
-	creator=PDBFilePluginClass.getPDBCreatorID()
-	type=PDBFilePluginClass.getPDBTypeID()
-	PDBPlugins[(creator,type)]=PDBFilePluginClass
-	PalmApplications[(creator,type)]=PDBFilePluginClass.getPalmApplicationName()
-def deRegisterPDBPlugin(PDBFilePluginClass):
-	creator=PDBFilePluginClass.getPDBCreatorID()
-	type=PDBFilePluginClass.getPDBTypeID()
-	del(PDBPlugins[(creator,type)])
-	del(PalmApplications[(creator,type)])
+	global PDBPlugins
+	global PDBApplicationIDS
 
-def getPDBPlugin(CreatorID,TypeID):
+	creator=PDBFilePluginClass.getPDBCreatorID()
+	type=PDBFilePluginClass.getPDBTypeID()
+	palmApplicationID=PDBFilePluginClass.getPalmApplicationNameID()
+
+	PDBPlugins[(creator,type)]=PDBFilePluginClass
+	PDBApplicationIDS[PalmApplicationID]=PDBFilePluginClass
+
+def deRegisterPDBPlugin(PDBFilePluginClass):
+	global PDBPlugins
+	global PDBApplicationIDS
+
+	creator=PDBFilePluginClass.getPDBCreatorID()
+	type=PDBFilePluginClass.getPDBTypeID()
+	palmApplicationID=PDBFilePluginClass.getPalmApplicationNameID()
+
+	del(PDBPlugins[(creator,type)])
+	del(PalmApplicationIDS[palmApplicationID])
+
+def getPDBPluginByType(CreatorID,TypeID):
 	# if we cannot find an appropriate plugin, default to one that can handle any type
 	return PDBPlugins.get((CreatorID,TypeID),basePlugin)
 
+def getPDBPluginByPalmApplicationID(palmApplicationID):
+	return PalmApplicationIDS[palmApplicationID]
+
 def getPluginsForFile(filename,readOrWrite):
-	reverseDictionary={}
-	(keys,values)=zip(*PalmApplications.items())
-	reverseDictionary.update(zip(values,keys))
-	key=reverseDictionary.get(applicationName,None)
-	return getPDBPlugin(*key)
+	if filename.upper().endswith('.PDB'):
+		if readOrWrite == DesktopApplications.READ:
+			file=open(filename,'rb')
+			palmIDS=guessPalmIDSFromFileObject(file)
+			plugin=getPDBPlugin(*palmIDS)
+			return [plugin]
+		else:
+			# without a file, we have no way of knowing what type of Palm Application it is
+			return []
+	else:
+		pluginList=[]
+		# So it does not seem to be a PDB file, we will have to ask each plugin if they know anything about the file
+		for pluginIDS,plugin in PDBPlugins.iteritems():
+			retval=plugin.getSupportedApplicationsForFile(filename,readOrWrite)
+			if retval:
+				pluginList.append(plugin)
+		return pluginList
+
+def guessPalmIDSFromFileObject(fileObject):
+	PalmDB=PalmDatabase.PalmDatabase()
+	if fileObject.tell() <> 0:
+		fileObject.seek(0)
+	fileData=fileObject.read(PalmHeaderInfo.PDBHeaderStructSize)
+	PalmDB.fromByteArray(fileData,headerOnly=True)
+	return (PalmDB.getCreatorID(),PalmDB.getTypeID())
 
 #
 #--------- Register Standard Plugins that come with Library ---------
