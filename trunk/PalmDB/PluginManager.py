@@ -30,6 +30,7 @@ __copyright__ = 'Copyright 2006 Rick Price <rick_price@users.sourceforge.net>'
 
 import DesktopApplications
 import Plugins.BasePlugin
+import PalmDatabase
 
 basePlugin=Plugins.BasePlugin.BasePDBFilePlugin()
 
@@ -70,7 +71,7 @@ def getPluginsForFile(filename,readOrWrite):
 		if readOrWrite == DesktopApplications.READ:
 			file=open(filename,'rb')
 			palmIDS=guessPalmIDSFromFileObject(file)
-			plugin=getPDBPlugin(*palmIDS)
+			plugin=getPDBPluginByType(*palmIDS)
 			return [plugin]
 		else:
 			# without a file, we have no way of knowing what type of Palm Application it is
@@ -88,7 +89,7 @@ def guessPalmIDSFromFileObject(fileObject):
 	PalmDB=PalmDatabase.PalmDatabase()
 	if fileObject.tell() <> 0:
 		fileObject.seek(0)
-	fileData=fileObject.read(PalmHeaderInfo.PDBHeaderStructSize)
+	fileData=fileObject.read(PalmDatabase.PalmHeaderInfo.PDBHeaderStructSize)
 	PalmDB.fromByteArray(fileData,headerOnly=True)
 	return (PalmDB.getCreatorID(),PalmDB.getTypeID())
 

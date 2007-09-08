@@ -95,13 +95,16 @@ def main():
 		plugin=PluginManager.getPDBPluginByPalmApplicationID(options.palmApplicationID)
 	else:
 		if Palm == 0:
-			plugin=PluginManager.getPluginsForFile(PalmFilename,DesktopApplications.READ)
+			pluginList=PluginManager.getPluginsForFile(PalmFilename,DesktopApplications.READ)
 		else:
-			plugin=PluginManager.getPluginsForFile(PalmFilename,DesktopApplications.WRITE)
-	if not plugin:
-		parser.error('Could not determine Palm application type.')
+			pluginList=PluginManager.getPluginsForFile(PalmFilename,DesktopApplications.WRITE)
+		if not pluginList:
+			parser.error('Could not determine Palm application type, please specify.')
+		if len(pluginList) > 1:
+			parser.error('Could not uniquely determine Palm application type, please specify.')
+		plugin=pluginList[0]
 	palmAppID=plugin.getPDBCreatorID()
-	palmTypeID=PluginManager.getPDBTypeID()
+	palmTypeID=plugin.getPDBTypeID()
 
 	if options.desktopApplicationID:
 		desktopApplicationID=options.desktopApplicationID
@@ -111,7 +114,7 @@ def main():
 		else:
 			apps=plugin.getSupportedApplicationsForFile(DesktopFilename,DesktopApplications.READ)
 		if len(apps) == 0:
-			parser.error('Could not determine desktop application type.')
+			parser.error('Could not determine desktop application type, please specify.')
 		elif len(apps) > 1:
 			parser.error('More than one supported desktop application type for file, please specify one specifically.')
 		desktopApplicationID=apps[0]
