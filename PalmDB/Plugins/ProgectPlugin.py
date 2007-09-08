@@ -119,14 +119,17 @@ class ProgectPlugin(PalmDB.Plugins.BasePlugin.BasePDBFilePlugin):
 		if filename.upper().endswith('.PML'):
 			return ['PDESK_XML']
 		return []
-	def loadFromApplicationFile(self,PalmDB,applicationID,fileObject):
+	def loadFromApplicationFile(self,PalmDB,applicationID,filename):
 		if applicationID <> 'PDESK_XML':
 			raise NotImplementedError('This plugin does not support'%(DesktopApplications.getDesktopApplicationNameFromID(applicationID)))
-		pass
-	def saveToApplicationFile(self,PalmDB,applicationID,fileObject):
+		desktopData=self.unpackXMLFromFile(applicationID,filename)
+		PalmDB.setCreatorID(self.getPDBCreatorID())
+		PalmDB.fromXML(StringIO.StringIO(desktopData))
+	def saveToApplicationFile(self,PalmDB,applicationID,filename):
 		if applicationID <> 'PDESK_XML':
 			raise NotImplementedError('This plugin does not support'%(DesktopApplications.getDesktopApplicationNameFromID(applicationID)))
-		pass
+		desktopData=PalmDB.toXML()
+		self.packXMLIntoFile(applicationID,filename,desktopData)
 
 	def createApplicationInformationObject(self,PalmDatabaseObject):
 		return ProgectAppInfoObject()
