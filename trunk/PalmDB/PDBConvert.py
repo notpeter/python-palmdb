@@ -134,12 +134,10 @@ def main():
 
 	PalmDB=PalmDatabase.PalmDatabase()
 	if Palm == 0:
-		desktopFile=open(DesktopFilename,'wb')
 		plugin.readPalmDBFromFile(PalmDB,PalmFilename)
-		plugin.saveToApplicationFile(PalmDB,desktopApplicationID,desktopFile)
+		plugin.saveToApplicationFile(PalmDB,desktopApplicationID,desktopFileName)
 	else:
-		desktopFile=open(DesktopFilename,'rb')
-		plugin.loadFromApplicationFile(PalmDB,desktopApplicationID,desktopFile)
+		plugin.loadFromApplicationFile(PalmDB,desktopApplicationID,desktopFileName)
 		plugin.writePalmDBToFile(PalmDB,PalmFilename)
 
 if __name__ == "__main__":

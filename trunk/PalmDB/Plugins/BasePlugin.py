@@ -77,52 +77,26 @@ class BasePDBFilePlugin:
 			return ['PALMDB_XML']
 		return []
 	#+++ READ THIS +++ This HAS to be redefined in child classes otherwise things won't work
-	def loadFromApplicationFile(self,PalmDB,applicationID,fileObject):
+	def loadFromApplicationFile(self,PalmDB,applicationID,filename):
 		if applicationID <> 'PALMDB_XML':
 			raise NotImplementedError('This plugin does not support'%(DesktopApplications.getDesktopApplicationNameFromID(applicationID)))
-		pass
+		desktopData=self.unpackXMLFromFile(applicationID,filename)
+		PalmDB.setCreatorID(self.getPDBCreatorID())
+		PalmDB.fromXML(StringIO.StringIO(desktopData))
 	#+++ READ THIS +++ This HAS to be redefined in child classes otherwise things won't work
-	def saveToApplicationFile(self,PalmDB,applicationID,fileObject):
+	def saveToApplicationFile(self,PalmDB,applicationID,filename):
 		if applicationID <> 'PALMDB_XML':
 			raise NotImplementedError('This plugin does not support'%(DesktopApplications.getDesktopApplicationNameFromID(applicationID)))
-		pass
+		desktopData=PalmDB.toXML()
+		self.packXMLIntoFile(applicationID,filename,desktopData)
 
-
-
-	def unpackXMLFromFile(self,application,filename):
-		if filename.upper().endswith('.GZ'):
-			XMLData=open(filename,'rb').read()
-			XMLData=XMLData.decode('zip')
-		else:
-			# +++ FIX THIS +++ Of course this is broken, what if it wasn't UTF8?
-			XMLData=codecs.open(filename,'r','utf8').read()
+	def unpackXMLFromFile(self,applicationID,fileObject):
+		# +++ FIX THIS +++ this of course is broken, because the file might not be encoded in utf8
+		XMLData=codecs.open(filename,'r','utf8').read()
 		return XMLData
-	def packXMLIntoFile(self,application,filename,XMLData):
-		if filename.upper().endswith('.GZ'):
-			XMLData=XMLData.encode('zip')
-			XMLData=open(filename,'wb').write(XMLData)
-		else:
-			XMLData=codecs.open(filename,'w','utf8').write(XMLData)
-	def getXSLTText(self,application,type):
-		return None
-# A possible implementation...
-# 		# have to create global vars with XSLT text
-# 		XSLTEval='XSLT_%s_%s'%(application,type)
-# 		try:
-# 			xslt = eval(XSLTEval)
-# 			return xslt
-# 		except Exception, e:
-# 			return None
-	def doXSLTConversionToDesktop(self,application,XMLData):
-		XSLT=self.getXSLTText(application,'ToDesktop')
-		if XSLT is None:
-			return XMLData
-		return Transform(XMLData,XSLT)
-	def doXSLTConversionFromDesktop(self,application,XMLData):
-		XSLT=self.getXSLTText(application,'FromDesktop')
-		if XSLT is None:
-			return XMLData
-		return Transform(XMLData,XSLT)
+	def packXMLIntoFile(self,applicationID,filename,XMLData):
+		XMLData=codecs.open(filename,'w','utf8').write(XMLData)
+
 	def readPalmDBFromFile(self,PalmDB,filename):
 		palmData=open(filename,'rb').read()
 		PalmDB.fromByteArray(palmData)
@@ -130,16 +104,6 @@ class BasePDBFilePlugin:
 		PalmDB.setFilename(filename)
 		palmData=PalmDB.toByteArray()
 		open(filename,'wb').write(palmData)
-
-	def readPalmDBFromApplicationFile(self,PalmDB,application,filename):
-		desktopData=self.unpackXMLFromFile(application,filename)
-		desktopData=self.doXSLTConversionFromDesktop(application,desktopData)
-		PalmDB.setCreatorID(self.getPDBCreatorID())
-		PalmDB.fromXML(StringIO.StringIO(desktopData))
-	def writePalmDBToApplicationFile(self,PalmDB,application,filename):
-		desktopData=PalmDB.toXML()
-		desktopData=self.doXSLTConversionToDesktop(application,desktopData)
-		self.packXMLIntoFile(application,filename,desktopData)
 
 	def createCategoriesObject(self,PalmDatabaseObject):
 		return CategoriesObject()
