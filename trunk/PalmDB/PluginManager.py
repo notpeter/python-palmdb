@@ -45,7 +45,7 @@ def registerPDBPlugin(PDBFilePluginClass):
 	palmApplicationID=PDBFilePluginClass.getPalmApplicationNameID()
 
 	PDBPlugins[(creator,type)]=PDBFilePluginClass
-	PDBApplicationIDS[PalmApplicationID]=PDBFilePluginClass
+	PDBApplicationIDS[palmApplicationID]=PDBFilePluginClass
 
 def deRegisterPDBPlugin(PDBFilePluginClass):
 	global PDBPlugins
@@ -101,5 +101,5 @@ import Plugins.PalmToDoPlugin
 #import StandardNotepadPDBPlugin
 
 registerPDBPlugin(Plugins.ProgectPlugin.ProgectPlugin())
-registerPDBPlugin(Plugins.PalmToDoPlugin.PalmToDoPlugin())
+#registerPDBPlugin(Plugins.PalmToDoPlugin.PalmToDoPlugin())
 #registerPDBPlugin(StandardNotepadPDBPlugin.plugin)
