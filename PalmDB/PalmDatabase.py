@@ -95,7 +95,7 @@ class PalmDatabase:
 		self.dirty = True
 
 	def _getPlugin(self):
-		return PluginManager.getPDBPlugin(self.attributes.get('creatorID',None),self.attributes.get('databaseType',None))
+		return PluginManager.getPDBPluginByType(self.attributes.get('creatorID',None),self.attributes.get('databaseType',None))
 
 	def isResourceDatabase(self):
 		return self.attributes.get('flagResource',False)
