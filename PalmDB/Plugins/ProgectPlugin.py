@@ -46,36 +46,6 @@ from PalmDB.Util import returnAsXMLItem
 from PalmDB.Util import simpleRational
 from PalmDB.Util import StructMap
 
-# Load XSLT templates
-from ProgectXSLT_GanttProject import XSLT_GanttProject_ToDesktop
-from ProgectXSLT_GanttProject import XSLT_GanttProject_FromDesktop
-
-from ProgectXSLT_Treeline import XSLT_Treeline_ToDesktop
-from ProgectXSLT_Treeline import XSLT_Treeline_FromDesktop
-
-XSLT_NativeXML_ToDesktop=\
-'''
-<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
-<xsl:template match="@*|node()">
-<xsl:copy>
-<xsl:apply-templates select="@*|node()"/>
-</xsl:copy>
-</xsl:template>
-<xsl:template match="@id"/>
-</xsl:stylesheet>
-'''
-XSLT_NativeXML_FromDesktop=XSLT_NativeXML_ToDesktop
-
-XSLT_NativeXMLGZ_ToDesktop=XSLT_NativeXML_ToDesktop
-XSLT_NativeXMLGZ_FromDesktop=XSLT_NativeXML_FromDesktop
-
-# PDesk reads/writes the data raw for now...
-XSLT_PDeskXML_ToDesktop=None
-XSLT_PDeskXML_FromDesktop=None
-
-XSLT_OMNIOutliner_ToDesktop=''
-XSLT_OMNIOutliner_FromDesktop=''
-
 class ProgectPrefsObject(StructMap):
 	def __init__(self):
 		StructMap.__init__(self)
@@ -160,15 +130,6 @@ class ProgectPlugin(PalmDB.Plugins.BasePlugin.BasePDBFilePlugin):
 
 	def createApplicationInformationObject(self,PalmDatabaseObject):
 		return ProgectAppInfoObject()
-
-	def getXSLTText(self,application,type):
-		# have to create global vars with XSLT text
-		XSLTEval='XSLT_%s_%s'%(application,type)
-		try:
-			xslt = eval(XSLTEval)
-			return xslt
-		except Exception, e:
-			return None
 
 	def createPalmDatabaseRecord(self,PalmDatabaseObject):
             return ProgectRecord()
