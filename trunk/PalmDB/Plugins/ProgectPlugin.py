@@ -115,8 +115,7 @@ class ProgectPlugin(PalmDB.Plugins.BasePlugin.BasePDBFilePlugin):
 	def getSupportedDesktopApplications(self,readOrWrite):
 		return ['PDESK_XML']
 	def getSupportedApplicationsForFile(self,filename,readOrWrite):
-		# return tuple (ApplicationName,XSLT,GZIPResult)
-		if filename.upper().endswith('.PML'):
+		if filename.upper().endswith('.PGT'):
 			return ['PDESK_XML']
 		return []
 	def loadFromApplicationFile(self,PalmDB,applicationID,filename):
@@ -135,7 +134,7 @@ class ProgectPlugin(PalmDB.Plugins.BasePlugin.BasePDBFilePlugin):
 		return ProgectAppInfoObject()
 
 	def createPalmDatabaseRecord(self,PalmDatabaseObject):
-            return ProgectRecord()
+		return ProgectRecord()
 
 	def getRecordsAsXML(self,PalmDatabaseObject):
 		recordsXML=''
@@ -232,10 +231,10 @@ class ProgectPalmDBXMLReaderObject(PalmDB.Plugins.BasePlugin.GeneralPalmDBXMLRea
 
 def crackProgectDate(variable):
 	# Date due field:
-    	# This field seems to be layed out like this:
-    	#     year  7 bits (0-128)
-    	#     month 4 bits (0-16)
-    	#     day   5 bits (0-32)
+	# This field seems to be layed out like this:
+	#     year  7 bits (0-128)
+	#     month 4 bits (0-16)
+	#     day   5 bits (0-32)
 	year = getBits(variable,15,7)
 	if year <> 0:
 		year += 1904

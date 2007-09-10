@@ -71,26 +71,26 @@ def main():
 		parser.error('Incorrect number of arguments')
 
 	Palm=None
-	Desktop=None
+	desktop=None
 	if arguments[0].upper().endswith('.PDB'):
 		Palm=0
 	if arguments[1].upper().endswith('.PDB'):
 		Palm=1
 
 	if not arguments[0].upper().endswith('.PDB'):
-		Desktop=0
+		desktop=0
 	if not arguments[1].upper().endswith('.PDB'):
-		Desktop=1
+		desktop=1
 
 	if Palm is None:
 		parser.error('Can only convert between between a Palm database and a desktop application. You do not seem to have specified a palm database. Palm databases have to end in .pdb to be recognized.')
 
-	if Desktop is None:
+	if desktop is None:
 		parser.error('Can only convert between between a Palm database and a desktop application. You do not seem to have specified a desktop application file.')
 
 
 	PalmFilename=arguments[Palm]
-	DesktopFilename=arguments[Desktop]
+	desktopFilename=arguments[desktop]
 	if options.palmApplicationID:
 		plugin=PluginManager.getPDBPluginByPalmApplicationID(options.palmApplicationID)
 	else:
@@ -110,9 +110,9 @@ def main():
 		desktopApplicationID=options.desktopApplicationID
 	else:
 		if Palm == 0:
-			apps=plugin.getSupportedApplicationsForFile(DesktopFilename,DesktopApplications.WRITE)
+			apps=plugin.getSupportedApplicationsForFile(desktopFilename,DesktopApplications.WRITE)
 		else:
-			apps=plugin.getSupportedApplicationsForFile(DesktopFilename,DesktopApplications.READ)
+			apps=plugin.getSupportedApplicationsForFile(desktopFilename,DesktopApplications.READ)
 		if len(apps) == 0:
 			parser.error('Could not determine desktop application type, please specify.')
 		elif len(apps) > 1:
@@ -120,11 +120,11 @@ def main():
 		desktopApplicationID=apps[0]
 
 	if Palm == 0:
-		print 'Converting ',PalmFilename,' to ', DesktopFilename
+		print 'Converting ',PalmFilename,' to ', desktopFilename
 	else:
-		print 'Converting ',DesktopFilename, ' to ',PalmFilename
+		print 'Converting ',desktopFilename, ' to ',PalmFilename
 		
-#     print 'Desktop Filename is',DesktopFilename
+#     print 'desktop Filename is',desktopFilename
 #     print 'palm app id is',palmAppID
 #     print 'From XML XSLT is[',FromXMLXSLT,']'
 #     print 'To XML XSLT is[',ToXMLXSLT,']'
@@ -135,9 +135,9 @@ def main():
 	PalmDB=PalmDatabase.PalmDatabase()
 	if Palm == 0:
 		plugin.readPalmDBFromFile(PalmDB,PalmFilename)
-		plugin.saveToApplicationFile(PalmDB,desktopApplicationID,desktopFileName)
+		plugin.saveToApplicationFile(PalmDB,desktopApplicationID,desktopFilename)
 	else:
-		plugin.loadFromApplicationFile(PalmDB,desktopApplicationID,desktopFileName)
+		plugin.loadFromApplicationFile(PalmDB,desktopApplicationID,desktopFilename)
 		plugin.writePalmDBToFile(PalmDB,PalmFilename)
 
 if __name__ == "__main__":
