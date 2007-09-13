@@ -44,18 +44,21 @@ from PalmDB.Util import crackPalmDatePacked
 from PalmDB.Util import StructMap
 
 
-class PalmToDoPlugin(PalmDB.Plugins.BasePlugin.BasePDBFilePlugin):
+class ProgectProjectListPlugin(PalmDB.Plugins.BasePlugin.BasePDBFilePlugin):
+	def getPluginID(self):
+		return 'PROGECT_PROJECT_LIST'
 	def getPDBCreatorID(self):
 		return 'lbPG'
-	def getPalmApplicationName(self):
-		return 'ProgectProjectList'
-	def getApplicationNameFromFile(self,filename):
-		# return tuple (ApplicationName,XSLT,GZIPResult)
-		if filename.upper() == 'lbPG-PROJECT_META_DATA.XML':
-			return 'NativeXML'
-		if filename.upper() == 'lbPG-PROJECT_META_DATA.XML.GZ':
-			return 'NativeXMLGZ'
-		return None
+	def getPDBTypeID(self):
+		return 'META'
+	def getDefaultDesktopApplicationID(self):
+		return 'PALMDB_XML'
+	def getSupportedDesktopApplications(self,readOrWrite):
+		return ['PALMDB_XML']
+	def getSupportedApplicationsForFile(self,filename,readOrWrite):
+		if filename.upper() == 'LBPG-PROJECT_META_DATA.XML':
+			return ['PALMDB_XML']
+		return []
 
 	def createPalmDatabaseRecord(self,PalmDatabaseObject):
 		return PalmToDoRecord()

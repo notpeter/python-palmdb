@@ -45,17 +45,19 @@ from PalmDB.Util import StructMap
 
 
 class PalmToDoPlugin(PalmDB.Plugins.BasePlugin.BasePDBFilePlugin):
+	def getPluginID(self):
+		return 'PALM_TODO'
 	def getPDBCreatorID(self):
 		return 'todo'
-	def getPalmApplicationName(self):
-		return 'PalmToDo'
-	def getApplicationNameFromFile(self,filename):
-		# return tuple (ApplicationName,XSLT,GZIPResult)
+	def getDefaultDesktopApplicationID(self):
+		return 'PALMDB_XML_TODOLIST'
+	def getSupportedDesktopApplications(self,readOrWrite):
+		return ['PALMDB_XML_TODOLIST']
+	def getSupportedApplicationsForFile(self,filename,readOrWrite):
 		if filename.upper().endswith('.XML'):
-			return 'NativeXML'
-		if filename.upper().endswith('.XML.GZ'):
-			return 'NativeXMLGZ'
-		return None
+			return ['PALMDB_XML_TODOLIST']
+		return []
+
 
 	def createPalmDatabaseRecord(self,PalmDatabaseObject):
 		return PalmToDoRecord()

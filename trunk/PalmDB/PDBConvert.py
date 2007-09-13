@@ -33,9 +33,10 @@
 __copyright__ = 'Copyright 2006 Rick Price <rick_price@users.sourceforge.net>'
 
 import PalmDB
+from PalmDB.DesktopApplications import READ
+from PalmDB.DesktopApplications import WRITE
 import PalmDatabase
 import PluginManager
-import DesktopApplications
 from PalmDatabase import PalmHeaderInfo
 
 import sys
@@ -95,9 +96,9 @@ def main():
 		plugin=PluginManager.getPDBPluginByPalmApplicationID(options.palmApplicationID)
 	else:
 		if Palm == 0:
-			pluginList=PluginManager.getPluginsForFile(PalmFilename,DesktopApplications.READ)
+			pluginList=PluginManager.getPluginsForFile(PalmFilename,READ)
 		else:
-			pluginList=PluginManager.getPluginsForFile(PalmFilename,DesktopApplications.WRITE)
+			pluginList=PluginManager.getPluginsForFile(PalmFilename,WRITE)
 		if not pluginList:
 			parser.error('Could not determine Palm application type, please specify.')
 		if len(pluginList) > 1:
@@ -110,9 +111,9 @@ def main():
 		desktopApplicationID=options.desktopApplicationID
 	else:
 		if Palm == 0:
-			apps=plugin.getSupportedApplicationsForFile(desktopFilename,DesktopApplications.WRITE)
+			apps=plugin.getSupportedApplicationsForFile(desktopFilename,WRITE)
 		else:
-			apps=plugin.getSupportedApplicationsForFile(desktopFilename,DesktopApplications.READ)
+			apps=plugin.getSupportedApplicationsForFile(desktopFilename,READ)
 		if len(apps) == 0:
 			parser.error('Could not determine desktop application type, please specify.')
 		elif len(apps) > 1:

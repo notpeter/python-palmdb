@@ -46,20 +46,21 @@ from PalmDB.Util import returnAsXMLItem
 from PalmDB.Util import returnObjectAsXML
 from PalmDB.Util import dictionaryFromXMLDOMNode
 
-import DesktopApplications
+from PalmDB.DesktopApplications import getDesktopApplicationNameFromID
+from PalmDB.DesktopApplications import READ
+from PalmDB.DesktopApplications import WRITE
 
 RESOURCE_ENTRY_SIZE = 10  # size of a resource entry
 RECORD_ENTRY_SIZE = 8 # size of a record entry
 
 
 class BasePDBFilePlugin:
-	#+++ READ THIS +++ This HAS to be redefined in child classes otherwise things won't work
-	def getPalmApplicationNameID(self):
-#		raise NotImplementedError
-		return 'RAW_PALM_FORMAT'
-	def getPalmApplicationName(self):
-#		raise NotImplementedError
-		return 'RAW Palm Format'
+#+++ READ THIS +++ This HAS to be redefined in child classes otherwise things won't work
+	def getPluginID(self):
+		return 'DEFAULT_PLUGIN'
+#+++ READ THIS +++ This HAS to be redefined in child classes otherwise things won't work
+	def getDefaultDesktopApplicationID(self):
+		return 'PALMDB_XML'
 	#+++ READ THIS +++ This HAS to be redefined in child classes otherwise things won't work
 	def getPDBCreatorID(self):
 #		raise NotImplementedError
@@ -76,17 +77,18 @@ class BasePDBFilePlugin:
 		if filename.upper().endswith('.XML'):
 			return ['PALMDB_XML']
 		return []
-	#+++ READ THIS +++ This HAS to be redefined in child classes otherwise things won't work
+
+
+
 	def loadFromApplicationFile(self,PalmDB,applicationID,filename):
-		if applicationID <> 'PALMDB_XML':
-			raise NotImplementedError('This plugin does not support'%(DesktopApplications.getDesktopApplicationNameFromID(applicationID)))
+		if applicationID not in self.getSupportedDesktopApplications(READ):
+			raise NotImplementedError('This plugin does not support'%(getDesktopApplicationNameFromID(applicationID)))
 		desktopData=self.unpackXMLFromFile(applicationID,filename)
 		PalmDB.setCreatorID(self.getPDBCreatorID())
 		PalmDB.fromXML(StringIO.StringIO(desktopData))
-	#+++ READ THIS +++ This HAS to be redefined in child classes otherwise things won't work
 	def saveToApplicationFile(self,PalmDB,applicationID,filename):
-		if applicationID <> 'PALMDB_XML':
-			raise NotImplementedError('This plugin does not support'%(DesktopApplications.getDesktopApplicationNameFromID(applicationID)))
+		if applicationID not in self.getSupportedDesktopApplications(WRITE):
+			raise NotImplementedError('This plugin does not support'%(getDesktopApplicationNameFromID(applicationID)))
 		desktopData=PalmDB.toXML()
 		self.packXMLIntoFile(applicationID,filename,desktopData)
 
