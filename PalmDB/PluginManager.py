@@ -36,35 +36,35 @@ basePlugin=Plugins.BasePlugin.BasePDBFilePlugin()
 
 # +++ READ THIS +++ Plugins need to implement the interface in Plugins.BasePlugin.BasePDBFilePlugin
 PDBPlugins={}
-PDBApplicationIDS={}
+PluginIDS={}
 def registerPDBPlugin(PDBFilePluginClass):
 	global PDBPlugins
-	global PDBApplicationIDS
+	global PluginIDS
 
 	creator=PDBFilePluginClass.getPDBCreatorID()
 	type=PDBFilePluginClass.getPDBTypeID()
-	palmApplicationID=PDBFilePluginClass.getPalmApplicationNameID()
+	pluginID=PDBFilePluginClass.getPluginID()
 
 	PDBPlugins[(creator,type)]=PDBFilePluginClass
-	PDBApplicationIDS[palmApplicationID]=PDBFilePluginClass
+	PluginIDS[pluginID]=PDBFilePluginClass
 
 def deRegisterPDBPlugin(PDBFilePluginClass):
 	global PDBPlugins
-	global PDBApplicationIDS
+	global PluginIDS
 
 	creator=PDBFilePluginClass.getPDBCreatorID()
 	type=PDBFilePluginClass.getPDBTypeID()
-	palmApplicationID=PDBFilePluginClass.getPalmApplicationNameID()
+	pluginID=PDBFilePluginClass.getPluginID()
 
 	del(PDBPlugins[(creator,type)])
-	del(PalmApplicationIDS[palmApplicationID])
+	del(PalmApplicationIDS[pluginID])
 
 def getPDBPluginByType(CreatorID,TypeID):
 	# if we cannot find an appropriate plugin, default to one that can handle any type
 	return PDBPlugins.get((CreatorID,TypeID),basePlugin)
 
-def getPDBPluginByPalmApplicationID(palmApplicationID):
-	return PalmApplicationIDS[palmApplicationID]
+def getPDBPluginByPluginID(pluginID):
+	return PalmApplicationIDS[pluginID]
 
 def getPluginsForFile(filename,readOrWrite):
 	if filename.upper().endswith('.PDB'):
@@ -99,8 +99,10 @@ def guessPalmIDSFromFileObject(fileObject):
 
 import Plugins.ProgectPlugin
 import Plugins.PalmToDoPlugin
+import Plugins.ProgectProjectListPlugin
 #import StandardNotepadPDBPlugin
 
 registerPDBPlugin(Plugins.ProgectPlugin.ProgectPlugin())
-#registerPDBPlugin(Plugins.PalmToDoPlugin.PalmToDoPlugin())
+registerPDBPlugin(Plugins.ProgectProjectListPlugin.ProgectProjectListPlugin())
+registerPDBPlugin(Plugins.PalmToDoPlugin.PalmToDoPlugin())
 #registerPDBPlugin(StandardNotepadPDBPlugin.plugin)

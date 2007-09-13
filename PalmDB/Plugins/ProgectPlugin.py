@@ -103,32 +103,18 @@ class ProgectAppInfoObject(PalmDB.Plugins.BasePlugin.applicationInformationObjec
 
 
 class ProgectPlugin(PalmDB.Plugins.BasePlugin.BasePDBFilePlugin):
-	def getPalmApplicationNameID(self):
-#		raise NotImplementedError
-		return 'PROGECT'
-	def getPalmApplicationName(self):
-		return 'Progect'
+	def getPluginID(self):
+		return 'PROGECT_PROJECT'
+	def getDefaultDesktopApplicationID(self):
+		return 'PDESK_XML'
 	def getPDBCreatorID(self):
 		return 'lbPG'
-	def getPDBTypeID(self):
-		return 'DATA'
 	def getSupportedDesktopApplications(self,readOrWrite):
 		return ['PDESK_XML']
 	def getSupportedApplicationsForFile(self,filename,readOrWrite):
 		if filename.upper().endswith('.PGT'):
 			return ['PDESK_XML']
 		return []
-	def loadFromApplicationFile(self,PalmDB,applicationID,filename):
-		if applicationID <> 'PDESK_XML':
-			raise NotImplementedError('This plugin does not support'%(DesktopApplications.getDesktopApplicationNameFromID(applicationID)))
-		desktopData=self.unpackXMLFromFile(applicationID,filename)
-		PalmDB.setCreatorID(self.getPDBCreatorID())
-		PalmDB.fromXML(StringIO.StringIO(desktopData))
-	def saveToApplicationFile(self,PalmDB,applicationID,filename):
-		if applicationID <> 'PDESK_XML':
-			raise NotImplementedError('This plugin does not support'%(DesktopApplications.getDesktopApplicationNameFromID(applicationID)))
-		desktopData=PalmDB.toXML()
-		self.packXMLIntoFile(applicationID,filename,desktopData)
 
 	def createApplicationInformationObject(self,PalmDatabaseObject):
 		return ProgectAppInfoObject()
