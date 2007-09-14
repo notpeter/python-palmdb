@@ -92,9 +92,9 @@ class BasePDBFilePlugin:
 		desktopData=PalmDB.toXML()
 		self.packXMLIntoFile(applicationID,filename,desktopData)
 
-	def unpackXMLFromFile(self,applicationID,fileObject):
-		# +++ FIX THIS +++ this of course is broken, because the file might not be encoded in utf8
-		XMLData=codecs.open(filename,'r','utf8').read()
+	def unpackXMLFromFile(self,applicationID,filename):
+		# +++ READ THIS +++ You should not be trying to decode the XML, it has to be a stream of bytes, the XML parser needs to do the decoding.
+		XMLData=open(filename,'rb').read()
 		return XMLData
 	def packXMLIntoFile(self,applicationID,filename,XMLData):
 		XMLData=codecs.open(filename,'w','utf8').write(XMLData)

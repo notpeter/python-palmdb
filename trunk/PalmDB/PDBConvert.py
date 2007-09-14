@@ -96,9 +96,11 @@ def main():
 		plugin=PluginManager.getPDBPluginByPalmApplicationID(options.palmApplicationID)
 	else:
 		if Palm == 0:
+			# We are converting from a Palm PDB, just check the PDB to see what it is
 			pluginList=PluginManager.getPluginsForFile(PalmFilename,READ)
 		else:
-			pluginList=PluginManager.getPluginsForFile(PalmFilename,WRITE)
+			# We don't have a Palm PDB yet, so check to see if we can figure it out from the file we have been given
+			pluginList=PluginManager.getPluginsForFile(desktopFilename,READ)
 		if not pluginList:
 			parser.error('Could not determine Palm application type, please specify.')
 		if len(pluginList) > 1:
@@ -111,8 +113,10 @@ def main():
 		desktopApplicationID=options.desktopApplicationID
 	else:
 		if Palm == 0:
+			# We are now writing out a desktop type file, see what we can use...
 			apps=plugin.getSupportedApplicationsForFile(desktopFilename,WRITE)
 		else:
+			# Determine the application type we can use to read the file
 			apps=plugin.getSupportedApplicationsForFile(desktopFilename,READ)
 		if len(apps) == 0:
 			parser.error('Could not determine desktop application type, please specify.')
@@ -125,13 +129,13 @@ def main():
 	else:
 		print 'Converting ',desktopFilename, ' to ',PalmFilename
 		
-#     print 'desktop Filename is',desktopFilename
-#     print 'palm app id is',palmAppID
-#     print 'From XML XSLT is[',FromXMLXSLT,']'
-#     print 'To XML XSLT is[',ToXMLXSLT,']'
-#     print 'GZIP Result is',GZIPResult
+#	print 'desktop Filename is',desktopFilename
+#	print 'palm app id is',palmAppID
+#	print 'From XML XSLT is[',FromXMLXSLT,']'
+#	print 'To XML XSLT is[',ToXMLXSLT,']'
+#	print 'GZIP Result is',GZIPResult
 
-#     print 'actually do something'
+#	print 'actually do something'
 
 	PalmDB=PalmDatabase.PalmDatabase()
 	if Palm == 0:
