@@ -110,9 +110,9 @@ class PalmToDoRecord(PalmDB.Plugins.BasePlugin.DataRecord):
 	
 	def _packPayload(self):
 		# copy the data to the structmap
-		self.taskHeader['dueDate']=packPalmDatePacked(self.attributes['dueDate'])
+		self.taskHeader['dueDate']=packPalmDatePacked(self.attributes.get('dueDate',None))
 		# set the priority and completed in one statement
-		self.taskHeader['priority']=setBitsFromBooleanAttribute(self.attributes,'completed',self.taskHeader['priority'],7)
+		self.taskHeader['priority']=setBitsFromBooleanAttribute(self.attributes,'completed',self.attributes.get('priority',0),7)
 
 		dstr=self.taskHeader.toByteArray()
 		dstr+=self.attributes['description'].encode('palmos')+'\0'
