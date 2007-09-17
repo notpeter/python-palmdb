@@ -59,13 +59,22 @@ class ProgectProjectListPlugin(PalmDB.Plugins.BasePlugin.BasePDBFilePlugin):
 		if filename.upper() == 'LBPG-PROJECT_META_DATA.XML':
 			return ['PALMDB_XML']
 		return []
-
 	def createPalmDatabaseRecord(self,PalmDatabaseObject):
-		return PalmToDoRecord()
+		return ProgectProjectRecord()
+	def getXMLReaderObject(self,PalmDatabaseObject):
+		return ProgectProjectListXMLReaderObject()
 
-class PalmToDoRecord(PalmDB.Plugins.BasePlugin.DataRecord):
+class ProgectProjectListXMLReaderObject(PalmDB.Plugins.BasePlugin.GeneralPalmDBXMLReaderObject):
+	def parse_START_ELEMENT_ProgectProjectDataRecord(self,events,node,palmDatabaseObject):
+		events.expandNode(node)
+		plugin=palmDatabaseObject._getPlugin()
+		palmRecord=plugin.createPalmDatabaseRecord(palmDatabaseObject)
+		palmRecord.fromDOMNode(node)
+		palmDatabaseObject.append(palmRecord)
+
+class ProgectProjectRecord(PalmDB.Plugins.BasePlugin.DataRecord):
 	'''
-		This class encapsulates a Palm ToDo application record.
+		This class encapsulates a Progect project list record.
 	'''
 	def __init__(self):
 		PalmDB.Plugins.BasePlugin.DataRecord.__init__(self)
@@ -85,7 +94,7 @@ class PalmToDoRecord(PalmDB.Plugins.BasePlugin.DataRecord):
 		self.attributes['note']=''
 
 	def getRecordXMLName(self):
-		return 'ToDoDataRecord'
+		return 'ProgectProjectDataRecord'
 
 	
 	def _crackPayload(self,dstr):
