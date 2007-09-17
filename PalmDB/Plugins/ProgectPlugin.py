@@ -166,7 +166,7 @@ class ProgectPlugin(PalmDB.Plugins.BasePlugin.BasePDBFilePlugin):
 		return recordsXML
 	def getXMLReaderObject(self,PalmDatabaseObject):
 		return ProgectPalmDBXMLReaderObject()
-	
+
 class ProgectPalmDBXMLReaderObject(PalmDB.Plugins.BasePlugin.GeneralPalmDBXMLReaderObject):
 	def __init__(self):
 		self.previousPalmRecords={}

@@ -57,10 +57,18 @@ class PalmToDoPlugin(PalmDB.Plugins.BasePlugin.BasePDBFilePlugin):
 		if filename.upper().endswith('.XML'):
 			return ['PALMDB_XML_TODOLIST']
 		return []
-
-
 	def createPalmDatabaseRecord(self,PalmDatabaseObject):
 		return PalmToDoRecord()
+	def getXMLReaderObject(self,PalmDatabaseObject):
+		return ToDoDBXMLReaderObject()
+
+class ToDoDBXMLReaderObject(PalmDB.Plugins.BasePlugin.GeneralPalmDBXMLReaderObject):
+	def parse_START_ELEMENT_ToDoDataRecord(self,events,node,palmDatabaseObject):
+		events.expandNode(node)
+		plugin=palmDatabaseObject._getPlugin()
+		palmRecord=plugin.createPalmDatabaseRecord(palmDatabaseObject)
+		palmRecord.fromDOMNode(node)
+		palmDatabaseObject.append(palmRecord)
 
 class PalmToDoRecord(PalmDB.Plugins.BasePlugin.DataRecord):
 	'''

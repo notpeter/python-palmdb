@@ -142,8 +142,7 @@ class BasePDBFilePlugin:
 		return recordsXML
 	def getXMLReaderObject(self,PalmDatabaseObject):
 		return GeneralPalmDBXMLReaderObject()
-		
-	
+
 class BaseRecord:
 	def __init__(self):
 		self.attributes={}
@@ -418,10 +417,6 @@ class GenericXMLReaderObject(BaseXMLReaderObject):
 		parseMethod=getattr(self, "parse_%s_%s"%(type,node.nodeName),None)
 		if parseMethod:
 			parseMethod(events,node,palmDatabaseObject)
-		else:
-			# if we didn't find a handler, but it seems to be a record, try the default
-			if type == 'START_ELEMENT' and node.nodeName.endswith('DataRecord'):
-				self.parse_START_ELEMENT_palmDataRecord(events,node,palmDatabaseObject)
 	def parse_START_ELEMENT(self,events,node,palmDatabaseObject):
 		self._callParseMethod(events,node,palmDatabaseObject,'START_ELEMENT')
 	def parse_END_ELEMENT(self,events,node,palmDatabaseObject):
