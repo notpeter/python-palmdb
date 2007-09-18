@@ -57,7 +57,7 @@ def deRegisterPDBPlugin(PDBFilePluginClass):
 	pluginID=PDBFilePluginClass.getPluginID()
 
 	del(PDBPlugins[(creator,type)])
-	del(PalmApplicationIDS[pluginID])
+	del(PluginIDS[pluginID])
 
 def getPDBPluginByType(CreatorID,TypeID):
 	# if we cannot find an appropriate plugin, default to one that can handle any type
