@@ -19,18 +19,18 @@ class PluginManagerTestCase(unittest.TestCase):
  		self.assertRaises(AttributeError,registerPDBPlugin,None)
  	def testGetPluginNone(self):
  		'''Attempt to get plugin for a non-existent type'''
-		self.assertEquals(getPDBPlugin(None),basePlugin)
+		self.assertEquals(getPDBPluginByType(None,None),basePlugin)
  	def testRegisterTestPluginNone(self):
  		'''Attempt to register test plugin'''
 		plugin=TestPDBPlugin()
 		registerPDBPlugin(plugin)
-		self.assertEquals(getPDBPlugin(plugin.getPDBCreatorID()),plugin)
+		self.assertEquals(getPDBPluginByType(plugin.getPDBCreatorID(),plugin.getPDBTypeID()),plugin)
  	def testDeRegisterTestPluginNone(self):
  		'''Attempt to de-register test plugin'''
 		plugin=TestPDBPlugin()
 		
 		registerPDBPlugin(plugin)
-		self.assertEquals(getPDBPlugin(plugin.getPDBCreatorID()),plugin)
+		self.assertEquals(getPDBPluginByType(plugin.getPDBCreatorID(),plugin.getPDBTypeID()),plugin)
 
 		deRegisterPDBPlugin(plugin)
 		# make sure it's gone
@@ -39,3 +39,7 @@ class PluginManagerTestCase(unittest.TestCase):
 if __name__ == "__main__":
 	unittest.main()
 
+	def getPDBCreatorID(self):
+#		raise NotImplementedError
+		return 'Unknown'
+	def getPDBTypeID(self):
