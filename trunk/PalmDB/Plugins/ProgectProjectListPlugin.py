@@ -47,6 +47,8 @@ from PalmDB.Util import StructMap
 class ProgectProjectListPlugin(PalmDB.Plugins.BasePlugin.BasePDBFilePlugin):
 	def getPluginID(self):
 		return 'PROGECT_PROJECT_LIST'
+	def getPDBFormatName(self):
+		return 'Progect Project List'
 	def getPDBCreatorID(self):
 		return 'lbPG'
 	def getPDBTypeID(self):

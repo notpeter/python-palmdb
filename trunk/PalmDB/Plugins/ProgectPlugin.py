@@ -105,6 +105,8 @@ class ProgectAppInfoObject(PalmDB.Plugins.BasePlugin.applicationInformationObjec
 class ProgectPlugin(PalmDB.Plugins.BasePlugin.BasePDBFilePlugin):
 	def getPluginID(self):
 		return 'PROGECT_PROJECT'
+	def getPDBFormatName(self):
+		return 'Progect'
 	def getDefaultDesktopApplicationID(self):
 		return 'PDESK_XML'
 	def getPDBCreatorID(self):
