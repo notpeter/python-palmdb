@@ -80,17 +80,15 @@ class ProgectProjectRecord(PalmDB.Plugins.BasePlugin.DataRecord):
 		PalmDB.Plugins.BasePlugin.DataRecord.__init__(self)
 		self.taskHeader=StructMap()
 		self.taskHeader.selfNetworkOrder('palmos')
-		self.taskHeader.setConversion([('dueDate','ushort'),('priority','uchar'),])
+		self.taskHeader.setConversion([('cardNumber','ushort'),('lastSentinelValue','ushort'),('databaseName','char[]',32)])
 	
 		self.clear()
 
 	def clear(self):
 		self.attributes.clear()
-		self.attributes['dueDate']=None
-		self.attributes['priority']=0
-		self.attributes['completed']=False
-
-		self.attributes['description']=''
+		self.attributes['cardNumber']=0
+		self.attributes['lastSentinelValue']=0
+		self.attributes['databaseName']=False
 		self.attributes['note']=''
 
 	def getRecordXMLName(self):
@@ -104,27 +102,24 @@ class ProgectProjectRecord(PalmDB.Plugins.BasePlugin.DataRecord):
 		self.taskHeader.fromByteArray(dstr)
 
 		# copy the data from the structmap
-		self.attributes['dueDate']=crackPalmDatePacked(self.taskHeader['dueDate'])
-		# evidently *completed* is the leftmost bit in priority
-		setBooleanAttributeFromBits(self.attributes,'completed',self.taskHeader['priority'],7)
-		self.attributes['priority']=getBits(self.taskHeader['priority'],6,7)
+		self.attributes['cardNumber']=self.taskHeader['cardNumber']
+		self.attributes['lastSentinelValue']=self.taskHeader['lastSentinelValue']
+		(databaseName,)=self.taskHeader['databaseName'].split('\0')[:1]
+		self.attributes['databaseName']=databaseName.decode('palmos')
 
-		# find the part of the data that will be our description and note
-		descriptionNoteString=dstr[self.taskHeader.getSize():]
+		# find the part of the data that will be our note
+		noteString=dstr[self.taskHeader.getSize():]
 		# now we assume that the string _will_ end in a zero, this should break apart the strings for us
-		(description,note)=descriptionNoteString.split('\0')[:2]
+		(note,)=noteString.split('\0')[:1]
 		# now set in our attributes
-		self.attributes['description']=description.decode('palmos')
 		self.attributes['note']=note.decode('palmos')
-	
-	
+
 	def _packPayload(self):
 		# copy the data to the structmap
-		self.taskHeader['dueDate']=packPalmDatePacked(self.attributes['dueDate'])
-		# set the priority and completed in one statement
-		self.taskHeader['priority']=setBitsFromBooleanAttribute(self.attributes,'completed',self.taskHeader['priority'],7)
+		self.taskHeader['cardNumber']=self.attributes['cardNumber']
+		self.taskHeader['lastSentinelValue']=self.attributes['lastSentinelValue']
+		self.taskHeader['databaseName']=self.attributes['databaseName'].encode('palmos')
 
 		dstr=self.taskHeader.toByteArray()
-		dstr+=self.attributes['description'].encode('palmos')+'\0'
 		dstr+=self.attributes['note'].encode('palmos')+'\0'
 		return dstr
