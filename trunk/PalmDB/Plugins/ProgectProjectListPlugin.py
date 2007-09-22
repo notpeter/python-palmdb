@@ -52,12 +52,12 @@ class ProgectProjectListPlugin(PalmDB.Plugins.BasePlugin.BasePDBFilePlugin):
 	def getPDBTypeID(self):
 		return 'META'
 	def getDefaultDesktopApplicationID(self):
-		return 'PALMDB_XML'
+		return 'PDESK_PROJECT_LIST_XML'
 	def getSupportedDesktopApplications(self,readOrWrite):
-		return ['PALMDB_XML']
+		return ['PDESK_PROJECT_LIST_XML']
 	def getSupportedApplicationsForFile(self,filename,readOrWrite):
 		if filename.upper() == 'LBPG-PROJECT_META_DATA.XML':
-			return ['PALMDB_XML']
+			return ['PDESK_PROJECT_LIST_XML']
 		return []
 	def createPalmDatabaseRecord(self,PalmDatabaseObject):
 		return ProgectProjectRecord()
