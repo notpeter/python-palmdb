@@ -63,7 +63,7 @@ def main():
 	plugin=None
 	parser = OptionParser(usage="%prog [options] from.ext to.ext", version="%prog 1.0")
 
-	parser.add_option('-d','--desktopApplication',dest='desktopApplicationID',help='specify desktop application by name',metavar='Application_Name')
+	parser.add_option('-d','--desktopApplicationID',dest='desktopApplicationID',help='specify desktop application by ID.',metavar='Application_Name_ID')
 	parser.add_option('-p','--palmApplicationID',dest='palmApplicationID',help='specify palm application by ID',metavar='Palm_Application_ID')
 	parser.add_option('-l','--listApps',action='callback',help='print out a list of supported Palm application IDs and their corresponding Desktop Applications',callback=listSupportAppsCallBack)
 	
