@@ -59,6 +59,9 @@ class BasePDBFilePlugin:
 	def getPluginID(self):
 		return 'DEFAULT_PLUGIN'
 #+++ READ THIS +++ This HAS to be redefined in child classes otherwise things won't work
+	def getPDBFormatName(self):
+		return 'Unknown PDB Format'
+#+++ READ THIS +++ This HAS to be redefined in child classes otherwise things won't work
 	def getDefaultDesktopApplicationID(self):
 		return 'PALMDB_XML'
 	#+++ READ THIS +++ This HAS to be redefined in child classes otherwise things won't work

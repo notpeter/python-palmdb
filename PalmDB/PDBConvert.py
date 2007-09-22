@@ -35,6 +35,9 @@ __copyright__ = 'Copyright 2006 Rick Price <rick_price@users.sourceforge.net>'
 import PalmDB
 from PalmDB.DesktopApplications import READ
 from PalmDB.DesktopApplications import WRITE
+from PalmDB.DesktopApplications import getDesktopApplicationDict
+from PalmDB.DesktopApplications import getDesktopApplicationNameFromID
+
 import PalmDatabase
 import PluginManager
 from PalmDatabase import PalmHeaderInfo
@@ -57,8 +60,25 @@ def guessApplicationName(palmAppID,palmTypeID,filename):
 	return plugin.getApplicationNameFromFile(filename)
 
 def listSupportAppsCallBack(option, opt, value, parser):
-	print 'print list of supported palm apps and their desktop apps'
+	desktopApplicationDict=getDesktopApplicationDict()
+	print
+	print
+	print 'Supported Desktop Application IDs by Palm Database Type'
+	print '-----------------------------------'
+	for plugin in PluginManager.getPluginList():
+		print '%s  -  %s'%(plugin.getPluginID(),plugin.getPDBFormatName())
+		print
+		print '  Reading'
+		for desktopFormat in plugin.getSupportedDesktopApplications(READ):
+			print '    %s  -  %s'%(desktopFormat,desktopApplicationDict[desktopFormat])
+		print
+		print '  Writing'
+		for desktopFormat in plugin.getSupportedDesktopApplications(WRITE):
+			print '    %s  -  %s'%(desktopFormat,desktopApplicationDict[desktopFormat])
+		print
+		print
 	sys.exit(2)
+
 def main():
 	plugin=None
 	parser = OptionParser(usage="%prog [options] from.ext to.ext", version="%prog 1.0")

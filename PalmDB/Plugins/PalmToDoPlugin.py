@@ -47,6 +47,8 @@ from PalmDB.Util import StructMap
 class PalmToDoPlugin(PalmDB.Plugins.BasePlugin.BasePDBFilePlugin):
 	def getPluginID(self):
 		return 'PALM_TODO'
+	def getPDBFormatName(self):
+		return 'Palm TODO'
 	def getPDBCreatorID(self):
 		return 'todo'
 	def getDefaultDesktopApplicationID(self):

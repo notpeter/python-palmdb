@@ -93,6 +93,8 @@ def guessPalmIDSFromFileObject(fileObject):
 	PalmDB.fromByteArray(fileData,headerOnly=True)
 	return (PalmDB.getCreatorID(),PalmDB.getTypeID())
 
+def getPluginList():
+	return PDBPlugins.values()
 #
 #--------- Register Standard Plugins that come with Library ---------
 #
