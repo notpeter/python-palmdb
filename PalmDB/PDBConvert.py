@@ -93,7 +93,7 @@ def main():
 	PalmFilename=arguments[Palm]
 	desktopFilename=arguments[desktop]
 	if options.palmApplicationID:
-		plugin=PluginManager.getPDBPluginByPalmApplicationID(options.palmApplicationID)
+		plugin=PluginManager.getPDBPluginByPluginID(options.palmApplicationID)
 	else:
 		if Palm == 0:
 			# We are converting from a Palm PDB, just check the PDB to see what it is

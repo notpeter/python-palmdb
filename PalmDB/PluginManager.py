@@ -64,7 +64,7 @@ def getPDBPluginByType(CreatorID,TypeID):
 	return PDBPlugins.get((CreatorID,TypeID),basePlugin)
 
 def getPDBPluginByPluginID(pluginID):
-	return PalmApplicationIDS[pluginID]
+	return PluginIDS[pluginID]
 
 def getPluginsForFile(filename,readOrWrite):
 	if filename.upper().endswith('.PDB'):
