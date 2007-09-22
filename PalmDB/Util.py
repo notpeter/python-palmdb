@@ -300,8 +300,9 @@ class StructMap(dict):
 			if len(conversion) > 2:
 				(name,type,repeat)=conversion
 				if repeat > 1:
-					raise ValueError('Can only use a repeat with a char[] type')
-					packString+=unicode(repeat)
+					if type != 'char[]':
+						raise ValueError('Can only use a repeat with a char[] type')
+					packString+=str(repeat)
 			else:
 				(name,type)=conversion
 			packString+=self.typeConversion[type]
