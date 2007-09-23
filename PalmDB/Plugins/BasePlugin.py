@@ -225,6 +225,8 @@ class DataRecord(BaseRecord):
 		returnValue=setBits(returnValue,self.attributes['busy'],1)
 		returnValue=setBits(returnValue,self.attributes['secret'],0)
 		return returnValue
+	def getCategory(self):
+		return self.attributes['category']
 
 class ResourceRecord(BaseRecord):
 	'''
