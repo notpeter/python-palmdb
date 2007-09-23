@@ -42,8 +42,10 @@ def filterForRecordsByCategory(records,category=None):
     return a list of records that match the criteria.  When category=None,
     all records are returned.
     '''
-    return filter(lambda x : (category == None or x.category == category), records)
+    return filter(lambda x : (category == None or x.getCategory() == category), records)
 
+# +++ FIX THIS +++ The following functions are broken because x does not have attributes, we need to add
+# +++ FIX THIS +++ functions to the base data class to get the values
 def filterForResourcesByTypeID(records,type=None,id=None):
     '''
     This function lets you filter a list of resources by type and/or id.

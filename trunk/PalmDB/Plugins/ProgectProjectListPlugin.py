@@ -96,7 +96,9 @@ class ProgectProjectRecord(PalmDB.Plugins.BasePlugin.DataRecord):
 	def getRecordXMLName(self):
 		return 'ProgectProjectDataRecord'
 
-	
+	def getDatabaseName(self):
+		return self.attributes['databaseName']
+
 	def _crackPayload(self,dstr):
 #		self.attributes['debug_payload']=dstr.encode('HEX')
 
