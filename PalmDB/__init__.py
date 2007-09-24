@@ -44,8 +44,6 @@ def filterForRecordsByCategory(records,category=None):
     '''
     return filter(lambda x : (category == None or x.getCategory() == category), records)
 
-# +++ FIX THIS +++ The following functions are broken because x does not have attributes, we need to add
-# +++ FIX THIS +++ functions to the base data class to get the values
 def filterForResourcesByTypeID(records,type=None,id=None):
     '''
     This function lets you filter a list of resources by type and/or id.
@@ -53,7 +51,7 @@ def filterForResourcesByTypeID(records,type=None,id=None):
     When passed a list of resources, and the appropriate filter it will
     return a list of resources that match the criteria.
     '''
-    return filter(lambda x : (type == None or x.type == type) and (id == None or x.id == id), records)
+    return filter(lambda x : (type == None or x.getResourceType() == type) and (id == None or x.getResourceID() == id), records)
 
 def filterForModifiedRecords(records):
     '''
@@ -61,7 +59,7 @@ def filterForModifiedRecords(records):
 
     When passed a list of records, this function will return a list of the modified records.
     '''
-    return filter(lambda x : x.attr & attrModified, records)
+    return filter(lambda x : x.attributes['dirty'], records)
 
 def filterOutDeletedRecords(records):
     '''
@@ -69,7 +67,7 @@ def filterOutDeletedRecords(records):
 
     When passed a list of records, this function will return a list of the non-deleted records.
     '''
-    return filter(lambda x : x.attr & attrDeleted, records)
+    return filter(lambda x : x.attributes['deleted'], records)
 
 def resetRecordDirtyFlags(records):
     '''
@@ -78,8 +76,9 @@ def resetRecordDirtyFlags(records):
     When passed a list of records, this function will reset the dirty bit on each record.
     '''
     for record in records:
-        record.attr = record.attr & ~attrDirty
+        record.attr = record.attributes['dirty']=False
 
+# +++ FIX THIS +++ The following functions are broken because they have not been updated
 class PDBFile(PalmDatabase.PalmDatabase):
     """
     Class for directly reading from / writing to PDB files.
