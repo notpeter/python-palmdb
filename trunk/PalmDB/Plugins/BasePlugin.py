@@ -235,7 +235,7 @@ class ResourceRecord(BaseRecord):
 	def __init__(self):
 		BaseRecord.__init__(self)
 		self.attributes['id']=0
-		self.attributes['resourceType']='	'
+		self.attributes['resourceType']='    '
 
 	def _crackRecordHeader(self,hstr):
 		(resourceType, id, offset) = struct.unpack('>4shl', hstr)
@@ -246,6 +246,11 @@ class ResourceRecord(BaseRecord):
 
 	def getRecordXMLName(self):
 		return 'palmResourceRecord'
+
+	def getResourceType(self):
+		return self.attributes['resourceType']
+	def getResourceID(self):
+		return self.attributes['id']
 
 # you need to pass the AppBlock into this class in the constructor
 class CategoriesObject(dict):
