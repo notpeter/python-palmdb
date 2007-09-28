@@ -24,180 +24,197 @@
 
 """PRC/PDB file I/O in pure Python.
 
-    This module allows access to Palm OS(tm) database files on the desktop 
-    in pure Python. It is as simple as possible without (hopefully) being 
-    too simple. As much as possible Python idioms have been used to make
-    it easier to use and more versatile.
+	This module allows access to Palm OS(tm) database files on the desktop 
+	in pure Python. It is as simple as possible without (hopefully) being 
+	too simple. As much as possible Python idioms have been used to make
+	it easier to use and more versatile.
 """
 
 __copyright__ = 'Copyright 2006 Rick Price <rick_price@users.sourceforge.net>'
 
 import PalmDatabase
+import PluginManager
+from PalmDB.DesktopApplications import READ
+from PalmDB.DesktopApplications import WRITE
 
 def filterForRecordsByCategory(records,category=None):
-    '''
-    This function lets you filter a list of records by category.
+	'''
+	This function lets you filter a list of records by category.
 
-    When passed a list of records, and the appropriate category it will
-    return a list of records that match the criteria.  When category=None,
-    all records are returned.
-    '''
-    return filter(lambda x : (category == None or x.getCategory() == category), records)
+	When passed a list of records, and the appropriate category it will
+	return a list of records that match the criteria.  When category=None,
+	all records are returned.
+	'''
+	return filter(lambda x : (category == None or x.getCategory() == category), records)
 
 def filterForResourcesByTypeID(records,type=None,id=None):
-    '''
-    This function lets you filter a list of resources by type and/or id.
+	'''
+	This function lets you filter a list of resources by type and/or id.
 
-    When passed a list of resources, and the appropriate filter it will
-    return a list of resources that match the criteria.
-    '''
-    return filter(lambda x : (type == None or x.getResourceType() == type) and (id == None or x.getResourceID() == id), records)
+	When passed a list of resources, and the appropriate filter it will
+	return a list of resources that match the criteria.
+	'''
+	return filter(lambda x : (type == None or x.getResourceType() == type) and (id == None or x.getResourceID() == id), records)
 
 def filterForModifiedRecords(records):
-    '''
-    This function returns a list of modified records from a list of records.
+	'''
+	This function returns a list of modified records from a list of records.
 
-    When passed a list of records, this function will return a list of the modified records.
-    '''
-    return filter(lambda x : x.attributes['dirty'], records)
+	When passed a list of records, this function will return a list of the modified records.
+	'''
+	return filter(lambda x : x.attributes['dirty'], records)
 
 def filterOutDeletedRecords(records):
-    '''
-    This function returns a list of non-deleted records from a list of records.
+	'''
+	This function returns a list of non-deleted records from a list of records.
 
-    When passed a list of records, this function will return a list of the non-deleted records.
-    '''
-    return filter(lambda x : x.attributes['deleted'], records)
+	When passed a list of records, this function will return a list of the non-deleted records.
+	'''
+	return filter(lambda x : x.attributes['deleted'], records)
 
 def resetRecordDirtyFlags(records):
-    '''
-    This function resets the dirty bit on a list of records.
+	'''
+	This function resets the dirty bit on a list of records.
 
-    When passed a list of records, this function will reset the dirty bit on each record.
-    '''
-    for record in records:
-        record.attr = record.attributes['dirty']=False
+	When passed a list of records, this function will reset the dirty bit on each record.
+	'''
+	for record in records:
+		record.attr = record.attributes['dirty']=False
 
 # +++ FIX THIS +++ The following functions are broken because they have not been updated
 class PDBFile(PalmDatabase.PalmDatabase):
-    """
-    Class for directly reading from / writing to PDB files.
+	"""
+	Class for directly reading from / writing to PDB files.
 
-    Arguments are as follows:
+	Arguments are as follows:
 
-    fileName:       name of file to be read/written
+	fileName:       name of file to be read/written
 
-    recordFactory:  a function which is called to return record objects during
-                    loading of file.  Optional; usually not necessary to specify.
+	recordFactory:  a function which is called to return record objects during
+					loading of file.  Optional; usually not necessary to specify.
 
-    read:           Attempt to load the data contained in the specified file.
-                    Should be set to False if creating a new file which does
-                    not yet exist.
+	read:           Attempt to load the data contained in the specified file.
+					Should be set to False if creating a new file which does
+					not yet exist.
 
-    writeBack:      When this is set to True, deleting the object will cause 
-                    any changes to the database to be written back to the most
-                    recently specified file (specified for reading or writing).
-    """
+	writeBack:      When this is set to True, deleting the object will cause 
+					any changes to the database to be written back to the most
+					recently specified file (specified for reading or writing).
+	"""
 
-    def __init__(self, fileName=None, read=True, writeBack=False):
-        PalmDatabase.PalmDatabase.__init__(self)
-        self.fileName = fileName
-        self.writeBack = writeBack
-#        if recordFactory <> None:
-#            self.setDatabaseRecordFactory(recordFactory)
+	def __init__(self, fileName=None, read=True, writeBack=False):
+		PalmDatabase.PalmDatabase.__init__(self)
+		self.fileName = fileName
+		self.writeBack = writeBack
 
-        if self.fileName and read:
-            self.load(fileName)
+		if self.fileName and read:
+			self.load(fileName)
 
-    def __del__(self):
-        if self.writeBack and self.fileName:
-            self.save()
+	def __del__(self):
+		if self.writeBack and self.fileName:
+			self.save()
 
-    def load(self, fileName=None):
-        '''
-        Open fileName and load the Palm database file contents.  If no filename
-        provided, then attempt to load the file specified in the self.fileName
-        class varaiable.
+	def load(self, fileName=None):
+		'''
+		Open fileName and load the Palm database file contents.  If no filename
+		provided, then attempt to load the file specified in the self.fileName
+		class varaiable.
 
-        Any existing records of this object are cleared prior to loading the
-        new info.
-        '''
+		Any existing records of this object are cleared prior to loading the
+		new info.
+		'''
 
-        if not fileName:
-            if not self.fileName:
-                raise UserWarning, "No filename specified from which to load data"
-        else:
-            self.fileName = fileName # store current filename as class variable
-        f = open(self.fileName, 'rb')
-        data = f.read()
-        self.fromByteArray(data)
-        f.close()
+		if not fileName:
+			if not self.fileName:
+				raise UserWarning, "No filename specified from which to load data"
+		else:
+			self.fileName = fileName # store current filename as class variable
 
-    def close(self):
-        """
-        Deprecated. Just a wrapper for backward compatibility.  There is little
-        benefit to using this function.  Use save() instead.
-        """
-        if self.writeBack: self.save()
+		pluginList=PluginManager.getPluginsForFile(self.fileName,READ)
+		if not pluginList:
+			raise UserWarning('Could not determine Palm application type, please specify. This is highly unlikely to happen since a default plugin should be chosen.')
+		if len(pluginList) > 1:
+			raise UserWarning('Could not uniquely determine Palm application plugin type, please specify.')
+		self.plugin=pluginList[0]
+		self.plugin.readPalmDBFromFile(self,self.fileName)
 
-    def save(self, fileName=None, saveCopyOnly=False):
-        '''
-        Save the Palm database to the specified file, or if no file is specified,
-        attept to save it to the file from which the current database was loaded.
+	def close(self):
+		"""
+		Deprecated. Just a wrapper for backward compatibility.  There is little
+		benefit to using this function.  Use save() instead.
+		"""
+		if self.writeBack: self.save()
 
-        By default, when a filename is specified, it becomes the new default
-        filename (the one written to when just a save() is called without
-        arguments).
+	def save(self, fileName=None, saveCopyOnly=False):
+		'''
+		Save the Palm database to the specified file, or if no file is specified,
+		attept to save it to the file from which the current database was loaded.
 
-        If saveCopyOnly is True, then only a *copy* of the current database is
-        saved to the specified file, but the default filename (self.fileName)
-        is not changed.
+		By default, when a filename is specified, it becomes the new default
+		filename (the one written to when just a save() is called without
+		arguments).
 
-        '''
-        if self.fileName: # if a filename is defined
-            if not fileName: # by default save to same file
-                if self.dirty: # if no filename given, only write if dirty
-                    f = open(self.fileName, 'wb')
-                    f.write(self.toByteArray())
-                    f.close()
-            else: #  if a filename is given, write to it with no regard for its "dirtyness"
-                if not saveCopyOnly:
-                    self.fileName = fileName # set new filename class variable
-                    f = open(fileName, 'wb')
-                    f.write(self.toByteArray())
-                    f.close()
-                    self.dirty = False # now 'clean' since it's been saved
-                else:
-                    raise UserWarning, "Cannot save: no fileName available"
+		If saveCopyOnly is True, then only a *copy* of the current database is
+		saved to the specified file, but the default filename (self.fileName)
+		is not changed.
 
+		'''
+		# if no filename at all we can't do anything
+		if not fileName and not self.fileName:
+			raise UserWarning, "Cannot save: no fileName available"
+
+		# if we are not saveCopyOnly, then save the filename we have been given
+		if fileName and not saveCopyOnly:
+			self.fileName=fileName
+
+		# if fileName was not specified, and we don't have changes, just return
+		if not fileName and not self.dirty:
+			return
+
+		if fileName:
+			fileNameToUse=fileName
+		else:
+			fileNameToUse=self.fileName
+
+		self.plugin.writePalmDBToFile(self,fileNameToUse)
+
+		if not saveCopyOnly:
+			self.dirty = False # now 'clean' since it's been saved
+
+	def saveApplicationFile(self,fileName):
+		# We are now writing out a desktop type file, see what we can use...
+		apps=self.plugin.getSupportedApplicationsForFile(fileName,WRITE)
+		if len(apps) == 0:
+			raise UserWarning('Could not determine desktop application type from filename, please specify.')
+		elif len(apps) > 1:
+			parser.error('More than one supported desktop application type for file, please specify one specifically.')
+		self.desktopApplicationID=apps[0]
+
+		self.plugin.saveToApplicationFile(self,self.desktopApplicationID,fileName)
+
+	def readApplicationFile(self,fileName):
+		pluginList=PluginManager.getPluginsForFile(fileName,READ)
+		if not pluginList:
+			raise UserError('Could not determine Palm application type, please specify.')
+		if len(pluginList) > 1:
+			raise UserError('Could not uniquely determine Palm application plugin type, please specify.')
+		self.plugin=pluginList[0]
+
+		# Determine the application type we can use to read the file
+		apps=self.plugin.getSupportedApplicationsForFile(fileName,READ)
+		if len(apps) == 0:
+			raise UserError('Could not determine desktop application type, please specify.')
+		elif len(apps) > 1:
+			raise UserError('More than one supported desktop application type for file, please specify one specifically.')
+		self.desktopApplicationID=apps[0]
+
+		self.plugin.loadFromApplicationFile(self,self.desktopApplicationID,fileName)
 
 if __name__ == "__main__":
-        ProgectDB=PDBFile('lbPG-tutorial.PDB')
+		ProgectDB=PDBFile('lbPG-tutorial.pdb')
+		ProgectDB.saveApplicationFile('lbPG-tutorial.pgt')
 
-        OutputFile=open('lbPG-tutorial.xml','wb')
-        OutputFile.write(ProgectDB.toXML())
-        OutputFile.close()
+		ProgectDB2=PDBFile('lbPG-tutorial2.pdb',writeBack=True,read=False)
+		ProgectDB2.readApplicationFile('lbPG-tutorial.pgt')
 
-        ProgectDB2=PDBFile('lbPG-tutorial2.PDB',writeBack=True,read=False)
-
-        # With progect databases, we can't currently figure out the creator ID during load
-        ProgectDB2.setCreatorID('lbPG')
-        InputFile=open('lbPG-tutorial.xml','rb')
-        ProgectDB2.fromXML(InputFile)
-        InputFile.close()
-
-        print 'before save'
-        ProgectDB2.save()
-        print 'after save'
-        
-#        XMLFile=open('test.xml')
-#        print ProgectDB.toXML()
-#         OutputFile=open('test2.xml','w')
-#         OutputFile.write(ProgectDB.toXML())
-#         OutputFile.close()
-#         XMLFile2=open('test2.xml')
-#         ProgectDB.fromXML(XMLFile2)
-#         OutputFile=open('test3.xml','w')
-#         OutputFile.write(ProgectDB.toXML())
-#        x=ProgectDB.toByteArray()
-        
+		ProgectDB2.save()

@@ -122,9 +122,9 @@ def main():
 			# We don't have a Palm PDB yet, so check to see if we can figure it out from the file we have been given
 			pluginList=PluginManager.getPluginsForFile(desktopFilename,READ)
 		if not pluginList:
-			parser.error('Could not determine Palm application type, please specify.')
+			parser.error('Could not determine Palm application type, please specify. This is highly unlikely to happen since a default plugin should be chosen.')
 		if len(pluginList) > 1:
-			parser.error('Could not uniquely determine Palm application type, please specify.')
+			parser.error('Could not uniquely determine Palm application plugin type, please specify.')
 		plugin=pluginList[0]
 	palmAppID=plugin.getPDBCreatorID()
 	palmTypeID=plugin.getPDBTypeID()

@@ -88,6 +88,7 @@ class BasePDBFilePlugin:
 			raise NotImplementedError('This plugin does not support [%s; %s]'%(applicationID,getDesktopApplicationNameFromID(applicationID)))
 		desktopData=self.unpackXMLFromFile(applicationID,filename)
 		PalmDB.setCreatorID(self.getPDBCreatorID())
+		PalmDB.setTypeID(self.getPDBTypeID())
 		PalmDB.fromXML(StringIO.StringIO(desktopData))
 	def saveToApplicationFile(self,PalmDB,applicationID,filename):
 		if applicationID not in self.getSupportedDesktopApplications(WRITE):
