@@ -1,65 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Komodo Project File - DO NOT EDIT -->
 <project id="2dbed34f-ce60-479b-9790-ada0379de6a1" name="PythonPalmDB.kpf" kpf_version="4">
-<preference-set idref="2dbed34f-ce60-479b-9790-ada0379de6a1/PalmDB/Plugins/BasePlugin.py">
-  <string id="lastInvocation">default</string>
-<preference-set id="Invocations">
-<preference-set id="default">
-  <string id="postparams"></string>
-  <string id="userEnvironment"></string>
-  <string id="language">Python</string>
-  <string id="getparams"></string>
-  <boolean id="use-console">0</boolean>
-  <string id="mpostparams"></string>
-  <boolean id="show-dialog">1</boolean>
-  <string id="request-method">GET</string>
-  <string id="params"></string>
-  <string id="executable-params"></string>
-  <string id="posttype">application/x-www-form-urlencoded</string>
-  <string id="documentRoot"></string>
-  <string id="cookieparams"></string>
-  <string relative="path" id="filename">PalmDB/Plugins/BasePlugin.py</string>
-  <boolean id="sim-cgi">0</boolean>
-  <string id="cwd"></string>
-  <string id="userCGIEnvironment"></string>
-</preference-set>
-</preference-set>
-</preference-set>
-<preference-set idref="2dbed34f-ce60-479b-9790-ada0379de6a1">
-  <boolean id="import_live">1</boolean>
-</preference-set>
-<preference-set idref="2dbed34f-ce60-479b-9790-ada0379de6a1/PalmDB/PluginManager.py">
-  <string id="lastInvocation">default</string>
-<preference-set id="Invocations">
-<preference-set id="default">
-  <string id="postparams"></string>
-  <string id="language">Python</string>
-  <string id="getparams"></string>
-  <boolean id="use-console">0</boolean>
-  <string relative="path" id="filename">PalmDB/PluginManager.py</string>
-  <string id="mpostparams"></string>
-  <boolean id="show-dialog">1</boolean>
-  <string id="request-method">GET</string>
-  <string id="params"></string>
-  <string id="executable-params"></string>
-  <string id="posttype">application/x-www-form-urlencoded</string>
-  <string id="documentRoot"></string>
-  <string id="cookieparams"></string>
-  <string id="userEnvironment"></string>
-  <boolean id="sim-cgi">0</boolean>
-  <string id="cwd"></string>
-  <string id="userCGIEnvironment"></string>
-</preference-set>
-</preference-set>
-</preference-set>
 <preference-set idref="2dbed34f-ce60-479b-9790-ada0379de6a1/UnitTests/PluginManagerTest.py">
   <string id="lastInvocation">default</string>
 <preference-set id="Invocations">
 <preference-set id="default">
   <string id="postparams"></string>
-  <string id="userEnvironment"></string>
   <string id="language">Python</string>
   <string id="getparams"></string>
+  <boolean id="show-dialog">1</boolean>
   <boolean id="use-console">0</boolean>
   <string id="mpostparams"></string>
   <string relative="path" id="filename">UnitTests/PluginManagerTest.py</string>
@@ -69,26 +18,101 @@
   <string id="posttype">application/x-www-form-urlencoded</string>
   <string id="documentRoot"></string>
   <string id="cookieparams"></string>
-  <boolean id="show-dialog">1</boolean>
+  <string id="userEnvironment"></string>
   <boolean id="sim-cgi">0</boolean>
   <string id="cwd"></string>
   <string id="userCGIEnvironment"></string>
 </preference-set>
 </preference-set>
 </preference-set>
+<preference-set idref="2dbed34f-ce60-479b-9790-ada0379de6a1">
+  <boolean id="import_live">1</boolean>
+</preference-set>
 <preference-set idref="2dbed34f-ce60-479b-9790-ada0379de6a1/PalmDB/PDBConvert.py">
+  <string id="lastInvocation">default</string>
+<preference-set id="Invocations">
+<preference-set id="default">
+  <string id="postparams"></string>
+  <string id="userEnvironment"></string>
+  <string id="language">Python</string>
+  <string id="getparams"></string>
+  <boolean id="use-console">0</boolean>
+  <string id="mpostparams"></string>
+  <boolean id="show-dialog">1</boolean>
+  <string id="request-method">GET</string>
+  <string id="params">--desktopApplicationID PDESK_PROJECT_LIST_XML -p PROGECT_PROJECT_LIST ../ExamplePDB/lbPG-PROJECT_META_DATA.PDB lbPG-PROJECT_META_DATA.XML</string>
+  <string id="executable-params"></string>
+  <string id="posttype">application/x-www-form-urlencoded</string>
+  <string id="documentRoot"></string>
+  <string id="cookieparams"></string>
+  <string relative="path" id="filename">PalmDB/PDBConvert.py</string>
+  <boolean id="sim-cgi">0</boolean>
+  <string id="cwd"></string>
+  <string id="userCGIEnvironment"></string>
+</preference-set>
+</preference-set>
+</preference-set>
+<preference-set idref="2dbed34f-ce60-479b-9790-ada0379de6a1/PalmDB/DesktopApplications.py">
   <string id="lastInvocation">default</string>
 <preference-set id="Invocations">
 <preference-set id="default">
   <string id="postparams"></string>
   <string id="language">Python</string>
   <string id="getparams"></string>
+  <boolean id="use-console">0</boolean>
+  <string relative="path" id="filename">PalmDB/DesktopApplications.py</string>
+  <string id="mpostparams"></string>
   <boolean id="show-dialog">1</boolean>
+  <string id="request-method">GET</string>
+  <string id="params"></string>
+  <string id="executable-params"></string>
+  <string id="posttype">application/x-www-form-urlencoded</string>
+  <string id="documentRoot"></string>
+  <string id="cookieparams"></string>
+  <string id="userEnvironment"></string>
+  <boolean id="sim-cgi">0</boolean>
+  <string id="cwd"></string>
+  <string id="userCGIEnvironment"></string>
+</preference-set>
+</preference-set>
+</preference-set>
+<preference-set idref="2dbed34f-ce60-479b-9790-ada0379de6a1/PalmDB/Plugins/ProgectProjectListPlugin.py">
+  <string id="lastInvocation">default</string>
+<preference-set id="Invocations">
+<preference-set id="default">
+  <string id="postparams"></string>
+  <string id="userEnvironment"></string>
+  <string id="language">Python</string>
+  <string id="getparams"></string>
   <boolean id="use-console">0</boolean>
   <string id="mpostparams"></string>
-  <string relative="path" id="filename">PalmDB/PDBConvert.py</string>
+  <boolean id="show-dialog">1</boolean>
   <string id="request-method">GET</string>
-  <string id="params">--desktopApplicationID PDESK_PROJECT_LIST_XML -p PROGECT_PROJECT_LIST ../ExamplePDB/lbPG-PROJECT_META_DATA.PDB lbPG-PROJECT_META_DATA.XML</string>
+  <string id="params"></string>
+  <string id="executable-params"></string>
+  <string id="posttype">application/x-www-form-urlencoded</string>
+  <string id="documentRoot"></string>
+  <string id="cookieparams"></string>
+  <string relative="path" id="filename">PalmDB/Plugins/ProgectProjectListPlugin.py</string>
+  <boolean id="sim-cgi">0</boolean>
+  <string id="cwd"></string>
+  <string id="userCGIEnvironment"></string>
+</preference-set>
+</preference-set>
+</preference-set>
+<preference-set idref="2dbed34f-ce60-479b-9790-ada0379de6a1/PalmDB/__init__.py">
+  <string id="lastInvocation">default</string>
+<preference-set id="Invocations">
+<preference-set id="default">
+  <string id="postparams"></string>
+  <string id="language">Python</string>
+  <string id="getparams"></string>
+  <boolean id="use-console">0</boolean>
+  <string relative="path" id="filename">PalmDB/__init__.py</string>
+  <string id="mpostparams"></string>
+  <boolean id="show-dialog">1</boolean>
+  <string id="request-method">GET</string>
+  <string id="params"></string>
   <string id="executable-params"></string>
   <string id="posttype">application/x-www-form-urlencoded</string>
   <string id="documentRoot"></string>
@@ -105,10 +129,10 @@
 <preference-set id="Invocations">
 <preference-set id="default">
   <string id="postparams"></string>
-  <string id="userEnvironment"></string>
   <string id="language">Python</string>
   <string id="getparams"></string>
   <boolean id="use-console">0</boolean>
+  <string relative="path" id="filename">PalmDB/Plugins/PalmToDoPlugin.py</string>
   <string id="mpostparams"></string>
   <boolean id="show-dialog">1</boolean>
   <string id="request-method">GET</string>
@@ -117,7 +141,31 @@
   <string id="posttype">application/x-www-form-urlencoded</string>
   <string id="documentRoot"></string>
   <string id="cookieparams"></string>
-  <string relative="path" id="filename">PalmDB/Plugins/PalmToDoPlugin.py</string>
+  <string id="userEnvironment"></string>
+  <boolean id="sim-cgi">0</boolean>
+  <string id="cwd"></string>
+  <string id="userCGIEnvironment"></string>
+</preference-set>
+</preference-set>
+</preference-set>
+<preference-set idref="2dbed34f-ce60-479b-9790-ada0379de6a1/PalmDB/PluginManager.py">
+  <string id="lastInvocation">default</string>
+<preference-set id="Invocations">
+<preference-set id="default">
+  <string id="postparams"></string>
+  <string id="userEnvironment"></string>
+  <string id="language">Python</string>
+  <string id="getparams"></string>
+  <boolean id="use-console">0</boolean>
+  <string id="mpostparams"></string>
+  <string relative="path" id="filename">PalmDB/PluginManager.py</string>
+  <string id="request-method">GET</string>
+  <string id="params"></string>
+  <string id="executable-params"></string>
+  <string id="posttype">application/x-www-form-urlencoded</string>
+  <string id="documentRoot"></string>
+  <string id="cookieparams"></string>
+  <boolean id="show-dialog">1</boolean>
   <boolean id="sim-cgi">0</boolean>
   <string id="cwd"></string>
   <string id="userCGIEnvironment"></string>
@@ -129,9 +177,9 @@
 <preference-set id="Invocations">
 <preference-set id="default">
   <string id="postparams"></string>
-  <string id="userEnvironment"></string>
   <string id="language">Python</string>
   <string id="getparams"></string>
+  <boolean id="show-dialog">1</boolean>
   <boolean id="use-console">0</boolean>
   <string id="mpostparams"></string>
   <string relative="path" id="filename">PalmDB/PalmDatabase.py</string>
@@ -141,30 +189,6 @@
   <string id="posttype">application/x-www-form-urlencoded</string>
   <string id="documentRoot"></string>
   <string id="cookieparams"></string>
-  <boolean id="show-dialog">1</boolean>
-  <boolean id="sim-cgi">0</boolean>
-  <string id="cwd"></string>
-  <string id="userCGIEnvironment"></string>
-</preference-set>
-</preference-set>
-</preference-set>
-<preference-set idref="2dbed34f-ce60-479b-9790-ada0379de6a1/PalmDB/Plugins/ProgectProjectListPlugin.py">
-  <string id="lastInvocation">default</string>
-<preference-set id="Invocations">
-<preference-set id="default">
-  <string id="postparams"></string>
-  <string id="language">Python</string>
-  <string id="getparams"></string>
-  <boolean id="show-dialog">1</boolean>
-  <boolean id="use-console">0</boolean>
-  <string id="mpostparams"></string>
-  <string relative="path" id="filename">PalmDB/Plugins/ProgectProjectListPlugin.py</string>
-  <string id="request-method">GET</string>
-  <string id="params"></string>
-  <string id="executable-params"></string>
-  <string id="posttype">application/x-www-form-urlencoded</string>
-  <string id="documentRoot"></string>
-  <string id="cookieparams"></string>
   <string id="userEnvironment"></string>
   <boolean id="sim-cgi">0</boolean>
   <string id="cwd"></string>
@@ -172,15 +196,15 @@
 </preference-set>
 </preference-set>
 </preference-set>
-<preference-set idref="2dbed34f-ce60-479b-9790-ada0379de6a1/PalmDB/DesktopApplications.py">
+<preference-set idref="2dbed34f-ce60-479b-9790-ada0379de6a1/PalmDB/Plugins/BasePlugin.py">
   <string id="lastInvocation">default</string>
 <preference-set id="Invocations">
 <preference-set id="default">
   <string id="postparams"></string>
-  <string id="userEnvironment"></string>
   <string id="language">Python</string>
   <string id="getparams"></string>
   <boolean id="use-console">0</boolean>
+  <string relative="path" id="filename">PalmDB/Plugins/BasePlugin.py</string>
   <string id="mpostparams"></string>
   <boolean id="show-dialog">1</boolean>
   <string id="request-method">GET</string>
@@ -189,7 +213,7 @@
   <string id="posttype">application/x-www-form-urlencoded</string>
   <string id="documentRoot"></string>
   <string id="cookieparams"></string>
-  <string relative="path" id="filename">PalmDB/DesktopApplications.py</string>
+  <string id="userEnvironment"></string>
   <boolean id="sim-cgi">0</boolean>
   <string id="cwd"></string>
   <string id="userCGIEnvironment"></string>

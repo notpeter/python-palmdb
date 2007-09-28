@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-PalmDBVersion = '1.8.0'
+PalmDBVersion = '1.8.1'
 
 setup(
     name="PalmDB",
