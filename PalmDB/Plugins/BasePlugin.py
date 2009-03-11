@@ -324,6 +324,9 @@ class CategoriesObject(dict):
 		self.clear()
 		self.update(tempDict)
 
+		# Return list of labels for indexing with record categories.
+		return categoryLabels
+
 	def toByteArray(self):
 		'''
 		Get raw data to marshal class
