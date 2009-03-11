@@ -337,7 +337,12 @@ class PalmDatabase:
 		if startOffset > endOffset:
 			raise IOError, _("Error: Invalid offset pair (%d,%d), start is greater than end.")%(startOffset,endOffset)
 
-		return (hstr,raw[startOffset:endOffset])
+		terminator = startOffset + raw[startOffset:endOffset].find('\000')
+
+		if terminator == -1:
+			raise IOError, _("Error: Invalid record entry (%d,%d), no null termination.")%(startOffset,endOffset)
+
+		return (hstr,raw[startOffset:terminator])
 		
 	def fromByteArray(self, raw, headerOnly = False):
 		"""
@@ -463,7 +468,7 @@ class PalmDatabase:
 
 			categoriesObject=plugin.createCategoriesObject(self)
 			if categoriesObject <> None:
-				categoriesObject.fromByteArray(applicationInfoBlock)
+				self.attributes['categoryLabels'] = categoriesObject.fromByteArray(applicationInfoBlock)
 				self.attributes['_categoriesObject']=categoriesObject
 				applicationInfoBlock=applicationInfoBlock[categoriesObject.objectBinarySize():]
 
