@@ -29,7 +29,7 @@
 __copyright__ = 'Copyright 2006 Rick Price <rick_price@users.sourceforge.net>'
 
 from . import DesktopApplications
-from . import Plugins.BasePlugin
+from .Plugins import BasePlugin
 from . import PalmDatabase
 
 basePlugin=Plugins.BasePlugin.BasePDBFilePlugin()
@@ -99,9 +99,9 @@ def getPluginList():
 #--------- Register Standard Plugins that come with Library ---------
 #
 
-from . import Plugins.ProgectPlugin
-from . import Plugins.PalmToDoPlugin
-from . import Plugins.ProgectProjectListPlugin
+from .Plugins import ProgectPlugin
+from .Plugins import PalmToDoPlugin
+from .Plugins import ProgectProjectListPlugin
 #import StandardNotepadPDBPlugin
 
 registerPDBPlugin(Plugins.ProgectPlugin.ProgectPlugin())

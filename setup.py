@@ -1,6 +1,10 @@
+import sys
+if sys.version_info < (2,7):
+    sys.exit('Sorry, Python < 2.7 is not supported')
+
 from setuptools import setup, find_packages
 
-PalmDBVersion = '1.8.1'
+PalmDBVersion = '3.0.0'
 
 setup(
     name="PalmDB",
@@ -39,6 +43,7 @@ setup(
     keywords='PRC,PDB,Palm,database',
 
     install_requires = [],
+    python_requires='>=3.6.0',
     packages = find_packages(),
     test_suite = 'UnitTests.__init__',
     entry_points = {
