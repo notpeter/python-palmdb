@@ -182,7 +182,7 @@ class BaseRecord:
         raise NotImplementedError
 
     def _crackPayload(self, dstr):
-        self.attributes['payload'] = dstr.encode('HEX')
+        self.attributes['payload'] = dstr.hex()
 
     def _packPayload(self):
         return self.attributes['payload'].decode('HEX')

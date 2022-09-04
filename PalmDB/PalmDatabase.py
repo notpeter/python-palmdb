@@ -38,6 +38,7 @@ __copyright__ = 'Copyright 2006 Rick Price <rick_price@users.sourceforge.net>'
 
 import copy
 import struct
+import traceback
 from . import PluginManager
 
 from gettext import gettext as _
@@ -163,7 +164,7 @@ class PalmDatabase:
         if nextRecord or applicationInformationOffset < 0 or sortInformationOffset < 0 or numberOfRecords < 0:
             raise ValueError(_("Invalid database header."))
 
-        self.attributes['fileName'] = fileName.split('\0')[0].decode('palmos')
+        self.attributes['fileName'] = fileName.split(b'\0')[0].decode('palmos')
         self.attributes['databaseType'] = databaseType.decode('palmos')
         self.attributes['creatorID'] = creatorID.decode('palmos')
         self.attributes['createdTime'] = crackPalmDate(createdTime)
@@ -367,7 +368,7 @@ class PalmDatabase:
                 _("Error: Invalid offset pair (%d,%d), start is greater than end.") % (startOffset, endOffset)
             )
 
-        terminator = startOffset + raw[startOffset:endOffset].find('\000')
+        terminator = startOffset + raw[startOffset:endOffset].find(b'\000')
 
         if terminator == -1:
             raise IOError(_("Error: Invalid record entry (%d,%d), no null termination.") % (startOffset, endOffset))
@@ -448,7 +449,7 @@ class PalmDatabase:
                 self.records.append(record)
             except Exception as e:
                 print('Had some sort of error reading record (', desiredRecord, ') [', e, ']')
-#                traceback.print_exc()
+                traceback.print_exc()
         # -------END: INSTANTIATE AND APPEND DATABASE RECORDS / RESOURCES-------
 
         # Now take care of the sortinfo and appinfo blocks
