@@ -19,20 +19,19 @@
 #  This code was based on code written by Rob Tillotson <rob@pyrite.org>, but has been heavily
 #  modified so that it is now basically code I have written.
 
-# This file includes changes made (including better naming, comments and design changes) by Mark Edgington, many thanks Mark.
+# This file includes changes made (including better naming, comments and design changes)
+# by Mark Edgington, many thanks Mark.
 
 """PRC/PDB file I/O in pure Python.
 
-    This module allows access to Palm OS(tm) database files on the desktop 
-    in pure Python. It is as simple as possible without (hopefully) being 
+    This module allows access to Palm OS(tm) database files on the desktop
+    in pure Python. It is as simple as possible without (hopefully) being
     too simple. As much as possible Python idioms have been used to make
     it easier to use and more versatile.
 """
 
 __copyright__ = 'Copyright 2006 Rick Price <rick_price@users.sourceforge.net>'
 
-import struct
-import datetime
 import PalmDB.Plugins.BasePlugin
 
 from PalmDB.Util import setBooleanAttributeFromBits
@@ -45,86 +44,95 @@ from PalmDB.Util import StructMap
 
 
 class PalmToDoPlugin(PalmDB.Plugins.BasePlugin.BasePDBFilePlugin):
-	def getPluginID(self):
-		return 'PALM_TODO'
-	def getPDBFormatName(self):
-		return 'Palm TODO'
-	def getPDBCreatorID(self):
-		return 'todo'
-	def getDefaultDesktopApplicationID(self):
-		return 'PALMDB_XML_TODOLIST'
-	def getSupportedDesktopApplications(self,readOrWrite):
-		return ['PALMDB_XML_TODOLIST']
-	def getSupportedApplicationsForFile(self,filename,readOrWrite):
-		if filename.upper().endswith('.XML'):
-			return ['PALMDB_XML_TODOLIST']
-		return []
-	def createPalmDatabaseRecord(self,PalmDatabaseObject):
-		return PalmToDoRecord()
-	def getXMLReaderObject(self,PalmDatabaseObject):
-		return ToDoDBXMLReaderObject()
+
+    def getPluginID(self):
+        return 'PALM_TODO'
+
+    def getPDBFormatName(self):
+        return 'Palm TODO'
+
+    def getPDBCreatorID(self):
+        return 'todo'
+
+    def getDefaultDesktopApplicationID(self):
+        return 'PALMDB_XML_TODOLIST'
+
+    def getSupportedDesktopApplications(self, readOrWrite):
+        return ['PALMDB_XML_TODOLIST']
+
+    def getSupportedApplicationsForFile(self, filename, readOrWrite):
+        if filename.upper().endswith('.XML'):
+            return ['PALMDB_XML_TODOLIST']
+        return []
+
+    def createPalmDatabaseRecord(self, PalmDatabaseObject):
+        return PalmToDoRecord()
+
+    def getXMLReaderObject(self, PalmDatabaseObject):
+        return ToDoDBXMLReaderObject()
+
 
 class ToDoDBXMLReaderObject(PalmDB.Plugins.BasePlugin.GeneralPalmDBXMLReaderObject):
-	def parse_START_ELEMENT_ToDoDataRecord(self,events,node,palmDatabaseObject):
-		events.expandNode(node)
-		plugin=palmDatabaseObject._getPlugin()
-		palmRecord=plugin.createPalmDatabaseRecord(palmDatabaseObject)
-		palmRecord.fromDOMNode(node)
-		palmDatabaseObject.append(palmRecord)
+    def parse_START_ELEMENT_ToDoDataRecord(self, events, node, palmDatabaseObject):
+        events.expandNode(node)
+        plugin = palmDatabaseObject._getPlugin()
+        palmRecord = plugin.createPalmDatabaseRecord(palmDatabaseObject)
+        palmRecord.fromDOMNode(node)
+        palmDatabaseObject.append(palmRecord)
+
 
 class PalmToDoRecord(PalmDB.Plugins.BasePlugin.DataRecord):
-	'''
-		This class encapsulates a Palm ToDo application record.
-	'''
-	def __init__(self):
-		PalmDB.Plugins.BasePlugin.DataRecord.__init__(self)
-		self.taskHeader=StructMap()
-		self.taskHeader.selfNetworkOrder('palmos')
-		self.taskHeader.setConversion([('dueDate','ushort'),('priority','uchar'),])
-	
-		self.clear()
+    '''
+        This class encapsulates a Palm ToDo application record.
+    '''
+    def __init__(self):
+        PalmDB.Plugins.BasePlugin.DataRecord.__init__(self)
+        self.taskHeader = StructMap()
+        self.taskHeader.selfNetworkOrder('palmos')
+        self.taskHeader.setConversion([('dueDate', 'ushort'), ('priority', 'uchar'), ])
 
-	def clear(self):
-		self.attributes.clear()
-		self.attributes['dueDate']=None
-		self.attributes['priority']=0
-		self.attributes['completed']=False
+        self.clear()
 
-		self.attributes['description']=''
-		self.attributes['note']=''
+    def clear(self):
+        self.attributes.clear()
+        self.attributes['dueDate'] = None
+        self.attributes['priority'] = 0
+        self.attributes['completed'] = False
 
-	def getRecordXMLName(self):
-		return 'ToDoDataRecord'
+        self.attributes['description'] = ''
+        self.attributes['note'] = ''
 
-	
-	def _crackPayload(self,dstr):
-#		self.attributes['debug_payload']=dstr.encode('HEX')
+    def getRecordXMLName(self):
+        return 'ToDoDataRecord'
 
-		# tell the StructMap to crack the data for us
-		self.taskHeader.fromByteArray(dstr)
+    def _crackPayload(self, dstr):
+        # self.attributes['debug_payload']=dstr.encode('HEX')
 
-		# copy the data from the structmap
-		self.attributes['dueDate']=crackPalmDatePacked(self.taskHeader['dueDate'])
-		# evidently *completed* is the leftmost bit in priority
-		setBooleanAttributeFromBits(self.attributes,'completed',self.taskHeader['priority'],7)
-		self.attributes['priority']=getBits(self.taskHeader['priority'],6,7)
+        # tell the StructMap to crack the data for us
+        self.taskHeader.fromByteArray(dstr)
 
-		# find the part of the data that will be our description and note
-		descriptionNoteString=dstr[self.taskHeader.getSize():]
-		# now we assume that the string _will_ end in a zero, this should break apart the strings for us
-		(description,note)=descriptionNoteString.split('\0')[:2]
-		# now set in our attributes
-		self.attributes['description']=description.decode('palmos')
-		self.attributes['note']=note.decode('palmos')
-	
-	
-	def _packPayload(self):
-		# copy the data to the structmap
-		self.taskHeader['dueDate']=packPalmDatePacked(self.attributes.get('dueDate',None))
-		# set the priority and completed in one statement
-		self.taskHeader['priority']=setBitsFromBooleanAttribute(self.attributes,'completed',self.attributes.get('priority',0),7)
+        # copy the data from the structmap
+        self.attributes['dueDate'] = crackPalmDatePacked(self.taskHeader['dueDate'])
+        # evidently *completed* is the leftmost bit in priority
+        setBooleanAttributeFromBits(self.attributes, 'completed', self.taskHeader['priority'], 7)
+        self.attributes['priority'] = getBits(self.taskHeader['priority'], 6, 7)
 
-		dstr=self.taskHeader.toByteArray()
-		dstr+=self.attributes['description'].encode('palmos')+'\0'
-		dstr+=self.attributes['note'].encode('palmos')+'\0'
-		return dstr
+        # find the part of the data that will be our description and note
+        descriptionNoteString = dstr[self.taskHeader.getSize():]
+        # now we assume that the string _will_ end in a zero, this should break apart the strings for us
+        (description, note) = descriptionNoteString.split('\0')[:2]
+        # now set in our attributes
+        self.attributes['description'] = description.decode('palmos')
+        self.attributes['note'] = note.decode('palmos')
+
+    def _packPayload(self):
+        # copy the data to the structmap
+        self.taskHeader['dueDate'] = packPalmDatePacked(self.attributes.get('dueDate', None))
+        # set the priority and completed in one statement
+        self.taskHeader['priority'] = setBitsFromBooleanAttribute(
+            self.attributes, 'completed', self.attributes.get('priority', 0), 7)
+
+        dstr = self.taskHeader.toByteArray()
+        dstr += self.attributes['description'].encode('palmos')+'\0'
+        dstr += self.attributes['note'].encode('palmos')+'\0'
+        return dstr
