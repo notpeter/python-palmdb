@@ -38,9 +38,9 @@ from PalmDB.DesktopApplications import WRITE
 from PalmDB.DesktopApplications import getDesktopApplicationDict
 from PalmDB.DesktopApplications import getDesktopApplicationNameFromID
 
-import PalmDatabase
-import PluginManager
-from PalmDatabase import PalmHeaderInfo
+from . import PalmDatabase
+from . import PluginManager
+from .PalmDatabase import PalmHeaderInfo
 
 import sys
 from optparse import OptionParser
@@ -61,22 +61,22 @@ def guessApplicationName(palmAppID,palmTypeID,filename):
 
 def listSupportAppsCallBack(option, opt, value, parser):
 	desktopApplicationDict=getDesktopApplicationDict()
-	print
-	print
-	print 'Supported Desktop Application IDs by Palm Database Type'
-	print '-----------------------------------'
+	print()
+	print()
+	print('Supported Desktop Application IDs by Palm Database Type')
+	print('-----------------------------------')
 	for plugin in PluginManager.getPluginList():
-		print '%s  -  %s'%(plugin.getPluginID(),plugin.getPDBFormatName())
-		print
-		print '  Reading'
+		print('%s  -  %s'%(plugin.getPluginID(),plugin.getPDBFormatName()))
+		print()
+		print('  Reading')
 		for desktopFormat in plugin.getSupportedDesktopApplications(READ):
-			print '    %s  -  %s'%(desktopFormat,desktopApplicationDict[desktopFormat])
-		print
-		print '  Writing'
+			print('    %s  -  %s'%(desktopFormat,desktopApplicationDict[desktopFormat]))
+		print()
+		print('  Writing')
 		for desktopFormat in plugin.getSupportedDesktopApplications(WRITE):
-			print '    %s  -  %s'%(desktopFormat,desktopApplicationDict[desktopFormat])
-		print
-		print
+			print('    %s  -  %s'%(desktopFormat,desktopApplicationDict[desktopFormat]))
+		print()
+		print()
 	sys.exit(2)
 
 def main():
@@ -88,7 +88,7 @@ def main():
 	parser.add_option('-l','--listApps',action='callback',help='print out a list of supported Palm application IDs and their corresponding Desktop Applications',callback=listSupportAppsCallBack)
 	
 	options,arguments=parser.parse_args()
-	if len(arguments) <> 2:
+	if len(arguments) != 2:
 		parser.error('Incorrect number of arguments')
 
 	Palm=None
@@ -145,9 +145,9 @@ def main():
 		desktopApplicationID=apps[0]
 
 	if Palm == 0:
-		print 'Converting ',PalmFilename,' to ', desktopFilename
+		print('Converting ',PalmFilename,' to ', desktopFilename)
 	else:
-		print 'Converting ',desktopFilename, ' to ',PalmFilename
+		print('Converting ',desktopFilename, ' to ',PalmFilename)
 		
 #	print 'desktop Filename is',desktopFilename
 #	print 'palm app id is',palmAppID

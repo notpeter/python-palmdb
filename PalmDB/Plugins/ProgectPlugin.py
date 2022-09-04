@@ -224,7 +224,7 @@ def crackProgectDate(variable):
 	#     month 4 bits (0-16)
 	#     day   5 bits (0-32)
 	year = getBits(variable,15,7)
-	if year <> 0:
+	if year != 0:
 		year += 1904
 	else:
 		return None
@@ -271,18 +271,18 @@ class PRI:
     INVALID_TYPE=6
     # Setup ItemType text names
     typeTextNames={
-        PROGRESS_TYPE:u'PROGRESS_TYPE',
-        NUMERIC_TYPE:u'NUMERIC_PROGRESS_TYPE',
-        ACTION_TYPE:u'ACTION_TYPE',
-        INFORMATIVE_TYPE:u'INFORMATION_TYPE',
-        EXTENDED_TYPE:u'EXTENDED_TYPE',
-        LINK_TYPE:u'LINK_TYPE',
-        INVALID_TYPE:u'INVALID_TYPE',
+        PROGRESS_TYPE:'PROGRESS_TYPE',
+        NUMERIC_TYPE:'NUMERIC_PROGRESS_TYPE',
+        ACTION_TYPE:'ACTION_TYPE',
+        INFORMATIVE_TYPE:'INFORMATION_TYPE',
+        EXTENDED_TYPE:'EXTENDED_TYPE',
+        LINK_TYPE:'LINK_TYPE',
+        INVALID_TYPE:'INVALID_TYPE',
         }
     # Setup reverse ItemType text names
     reverseTypeTextNames={}
-    (keys,values)=zip(*typeTextNames.items())
-    reverseTypeTextNames.update(zip(values,keys))
+    (keys,values)=list(zip(*list(typeTextNames.items())))
+    reverseTypeTextNames.update(list(zip(values,keys)))
     
 class ProgectRecord(PalmDB.Plugins.BasePlugin.DataRecord):
     '''
@@ -311,10 +311,10 @@ class ProgectRecord(PalmDB.Plugins.BasePlugin.DataRecord):
         self.extraBlockRecordList=[]
 	    
     def _setProgectFirstRecordProperties(self):
-	    self.attributes={'itemType': u'PROGRESS_TYPE','_hasDuration': False,'hasLink': False, '_hasDueDate': True,
+	    self.attributes={'itemType': 'PROGRESS_TYPE','_hasDuration': False,'hasLink': False, '_hasDueDate': True,
 			     'dueDate': None, '_hasNext': False, 'uid': 1638401, 'category': 0, 'priority': 'None',
-			     'busy': False, 'opened': True, '_hasPrevious': False, '_newFormat': True, 'note': u'',
-			     'deleted': False, 'secret': False, '_nextFormat': False, 'description': u'', '_hasNote': False,
+			     'busy': False, 'opened': True, '_hasPrevious': False, '_newFormat': True, 'note': '',
+			     'deleted': False, 'secret': False, '_nextFormat': False, 'description': '', '_hasNote': False,
 			     '_hasChild': True, 'completed': simpleRational(numerator=0,denominator=10), '_hasXB': False,
 			     '_newTask': True, 'hasToDo': False, '_level': 0, '_hasPrev': False, 'dirty': True,
 			     '_hasPred': False, '_hasStartDate': False}	    
@@ -335,7 +335,7 @@ class ProgectRecord(PalmDB.Plugins.BasePlugin.DataRecord):
 	    pass
     def _crackPayload(self,dstr):
         if len(dstr) < PRI.TaskAttrTypeStructSize:
-            raise IOError, "Error: raw data passed in is too small; required (%d), available (%d)"%(PRI.TaskAttrTypeStructSize,len(dstr))
+            raise IOError("Error: raw data passed in is too small; required (%d), available (%d)"%(PRI.TaskAttrTypeStructSize,len(dstr)))
 
         (taskAttrType, taskFormatType)= \
             struct.unpack(PRI.TaskAttrTypeStructString,dstr[:PRI.TaskAttrTypeStructSize])
@@ -378,7 +378,7 @@ class ProgectRecord(PalmDB.Plugins.BasePlugin.DataRecord):
 	if self.attributes['itemType'] == 'NUMERIC_PROGRESS_TYPE':
 		self.attributes['_hasXB']=True
 		for testFor in ['icon','linkToDo','linkLinkMaster']:
-			if self.attributes.has_key(testFor):
+			if testFor in self.attributes:
 				self.attributes['_hasXB']=True
 				break
 			
@@ -392,7 +392,7 @@ class ProgectRecord(PalmDB.Plugins.BasePlugin.DataRecord):
 	if len(self.attributes['note']):
 		self.attributes['_hasNote']=True
 	# _hasDueDate
-	if self.attributes.has_key('dueDate'):
+	if 'dueDate' in self.attributes:
 		self.attributes['_hasDueDate']=True
 
 	# +++ FIX THIS +++ I'm not sure if these are actually supported in Progect
@@ -480,7 +480,7 @@ class ProgectRecord(PalmDB.Plugins.BasePlugin.DataRecord):
     def fromByteArrayTaskStandardFields( self, dstr ):
         # we don't currently handle links
         if self.attributes['hasLink']:
-	    print 'dropping link record....'
+	    print('dropping link record....')
             self.attributes['description']='Links Not Supported'
             self.attributes['note']='Links Not Supported'
             return
@@ -632,7 +632,7 @@ class ExtraBlockRecordFactory( object ):
         Set raw data to marshall class.
         '''
         if len(raw) < self.__packSize:
-            raise IOError, "Error: raw data passed in is too small; required (%d), available (%d)"%(self.__packSize,len(raw))
+            raise IOError("Error: raw data passed in is too small; required (%d), available (%d)"%(self.__packSize,len(raw)))
 
         (type,subKey,reserve1,size)= \
             struct.unpack( self.__packString, raw[:self.__packSize] )

@@ -28,9 +28,9 @@
 
 __copyright__ = 'Copyright 2006 Rick Price <rick_price@users.sourceforge.net>'
 
-import DesktopApplications
-import Plugins.BasePlugin
-import PalmDatabase
+from . import DesktopApplications
+from .Plugins import BasePlugin
+from . import PalmDatabase
 
 basePlugin=Plugins.BasePlugin.BasePDBFilePlugin()
 
@@ -79,7 +79,7 @@ def getPluginsForFile(filename,readOrWrite):
 	else:
 		pluginList=[]
 		# So it does not seem to be a PDB file, we will have to ask each plugin if they know anything about the file
-		for pluginIDS,plugin in PDBPlugins.iteritems():
+		for pluginIDS,plugin in PDBPlugins.items():
 			retval=plugin.getSupportedApplicationsForFile(filename,readOrWrite)
 			if retval:
 				pluginList.append(plugin)
@@ -87,21 +87,21 @@ def getPluginsForFile(filename,readOrWrite):
 
 def guessPalmIDSFromFileObject(fileObject):
 	PalmDB=PalmDatabase.PalmDatabase()
-	if fileObject.tell() <> 0:
+	if fileObject.tell() != 0:
 		fileObject.seek(0)
 	fileData=fileObject.read(PalmDatabase.PalmHeaderInfo.PDBHeaderStructSize)
 	PalmDB.fromByteArray(fileData,headerOnly=True)
 	return (PalmDB.getCreatorID(),PalmDB.getTypeID())
 
 def getPluginList():
-	return PDBPlugins.values()
+	return list(PDBPlugins.values())
 #
 #--------- Register Standard Plugins that come with Library ---------
 #
 
-import Plugins.ProgectPlugin
-import Plugins.PalmToDoPlugin
-import Plugins.ProgectProjectListPlugin
+from .Plugins import ProgectPlugin
+from .Plugins import PalmToDoPlugin
+from .Plugins import ProgectProjectListPlugin
 #import StandardNotepadPDBPlugin
 
 registerPDBPlugin(Plugins.ProgectPlugin.ProgectPlugin())

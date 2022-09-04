@@ -37,7 +37,7 @@ import codecs
 import struct
 from xml.dom import pulldom
 #from Ft.Xml.Xslt import Transform
-import StringIO
+import io
 
 from PalmDB.Util import getBits
 from PalmDB.Util import setBits
@@ -49,6 +49,7 @@ from PalmDB.Util import dictionaryFromXMLDOMNode
 from PalmDB.DesktopApplications import getDesktopApplicationNameFromID
 from PalmDB.DesktopApplications import READ
 from PalmDB.DesktopApplications import WRITE
+from functools import reduce
 
 RESOURCE_ENTRY_SIZE = 10  # size of a resource entry
 RECORD_ENTRY_SIZE = 8 # size of a record entry
@@ -89,7 +90,7 @@ class BasePDBFilePlugin:
 		desktopData=self.unpackXMLFromFile(applicationID,filename)
 		PalmDB.setCreatorID(self.getPDBCreatorID())
 		PalmDB.setTypeID(self.getPDBTypeID())
-		PalmDB.fromXML(StringIO.StringIO(desktopData))
+		PalmDB.fromXML(io.StringIO(desktopData))
 	def saveToApplicationFile(self,PalmDB,applicationID,filename):
 		if applicationID not in self.getSupportedDesktopApplications(WRITE):
 			raise NotImplementedError('This plugin does not support [%s; %s]'%(applicationID,getDesktopApplicationNameFromID(applicationID)))
@@ -306,17 +307,17 @@ class CategoriesObject(dict):
 		renamedCategories=struct.unpack('!H',raw[0:2])[0]
 		categoryLabels=list(struct.unpack('16s'*16,raw[2:258]))
 		# Strip off the trailing zeroes
-		categoryLabels=map(lambda x : x.split('\0')[0],categoryLabels)
+		categoryLabels=[x.split('\0')[0] for x in categoryLabels]
 		# decode Palm charset
-		categoryLabels=map(lambda x : x.decode('palmos'),categoryLabels)
+		categoryLabels=[x.decode('palmos') for x in categoryLabels]
 		# Get category ID's
 		categoryUniqIDs=list(struct.unpack('B'*16,raw[258:274]))
 		lastUniqID=struct.unpack('B',raw[274])[0]
 		# build category list, use name as key, number as value
-		categories=zip(categoryLabels,categoryUniqIDs)
+		categories=list(zip(categoryLabels,categoryUniqIDs))
 	
 		# get rid of categories that are empty, because empty strings are false
-		categories=filter(lambda x : x[0],categories)
+		categories=[x for x in categories if x[0]]
 	
 		tempDict=dict(categories)
 	
@@ -337,7 +338,7 @@ class CategoriesObject(dict):
 		'''
 		# +++ FIX THIS +++, this is just plain old broken
 		renamedCategories=0
-		(categoryLabels,categoryUniqIDs)=zip(*self.items())
+		(categoryLabels,categoryUniqIDs)=list(zip(*list(self.items())))
 		lastUniqID=reduce(max,categoryUniqIDs)
 		categoryLabels=list(categoryLabels)
 		categoryUniqIDs=list(categoryUniqIDs)
@@ -348,7 +349,7 @@ class CategoriesObject(dict):
 		# have to add in dummy data now
 		dummyCount=16-len(categoryLabels)
 		categoryLabels.extend(['']*dummyCount)
-		categoryUniqIDs.extend(range(lastUniqID+1,lastUniqID+dummyCount+1))
+		categoryUniqIDs.extend(list(range(lastUniqID+1,lastUniqID+dummyCount+1)))
 		lastUniqID=lastUniqID+dummyCount-1
 		# +++ CHECK THIS +++
 		# this is completely untested, and should be assumed to be broken
@@ -373,8 +374,8 @@ class CategoriesObject(dict):
 	def update(self,dictionary):
 		dict.update(self,dictionary)
 		# now update the reverse lookup
-		(keys,values)=zip(*dictionary.items())
-		self._reverseLookup.update(zip(values,keys))
+		(keys,values)=list(zip(*list(dictionary.items())))
+		self._reverseLookup.update(list(zip(values,keys)))
 	def reverseLookup(self,value):
 		return self._reverseLookup[value]
 

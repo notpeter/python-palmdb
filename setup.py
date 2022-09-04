@@ -1,6 +1,10 @@
+import sys
+if sys.version_info < (2,7):
+    sys.exit('Sorry, Python < 2.7 is not supported')
+
 from setuptools import setup, find_packages
 
-PalmDBVersion = '1.8.1'
+PalmDBVersion = '3.0.0'
 
 setup(
     name="PalmDB",
@@ -22,15 +26,16 @@ setup(
     data will remain opaque, by providing a plugin you can turn the opaque
     data into something useful.
     ''',
-    maintainer="Rick Price",
-    maintainer_email="rick_price@users.sourceforge.net",
-    url="https://sourceforge.net/projects/pythonpalmdb/",
-    license='GNU Library or Lesser General Public License (LGPL)',
+    maintainer="Peter Tripp",
+    maintainer_email="notpeter@notpeter.net",
+    url="https://github.com/notpeter/",
+    license='PSF',
     classifiers = [
     'Development Status :: 4 - Beta',
-    'License :: OSI Approved :: GNU Library or Lesser General Public License (LGPL)',
+    'License :: OSI Approved :: Python Software Foundation License',
     'Intended Audience :: Developers',
     'Programming Language :: Python',
+    'Programming Language :: Python :: 3',
     'Topic :: Database',
     'Topic :: Software Development',
     'Operating System :: PalmOS',
@@ -39,6 +44,7 @@ setup(
     keywords='PRC,PDB,Palm,database',
 
     install_requires = [],
+    python_requires='>=3.6.0',
     packages = find_packages(),
     test_suite = 'UnitTests.__init__',
     entry_points = {

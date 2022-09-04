@@ -58,7 +58,7 @@ def getBits(variable,MSBBitIndex,bitCount=1):
 	assert(MSBBitIndex < 32)
 	assert(MSBBitIndex >= 0)
 	assert(MSBBitIndex >= bitCount-1)
-	assert(bitCount <> 0)
+	assert(bitCount != 0)
 	
 	shift=MSBBitIndex-bitCount+1
 	bitsToMask=pow(2,bitCount)-1
@@ -76,7 +76,7 @@ def setBits(variable,value,MSBBitIndex,bitCount=1):
 	assert(MSBBitIndex < 32)
 	assert(MSBBitIndex >= 0)
 	assert(MSBBitIndex >= bitCount-1)
-	assert(bitCount <> 0)
+	assert(bitCount != 0)
 
 	# MSBBitIndex is zero based
 	shift=MSBBitIndex-bitCount+1
@@ -104,7 +104,7 @@ def setBitsFromBooleanAttribute(dictionary,attributeName,bitStruct,bit):
 	else:
 		return setBits(bitStruct,0,bit)
 
-PILOT_TIME_DELTA = 2082844800L
+PILOT_TIME_DELTA = 2082844800
 def crackPalmDate(variable):
 		if variable == 0 or variable < PILOT_TIME_DELTA:
 			return None
@@ -144,11 +144,11 @@ def packPalmDatePacked(date):
 # XML Helper Functions
 #
 def escapeForXML(text):
-		return text.replace(u"&", u"&amp;")\
-			   .replace(u"<", u"&lt;")\
-			   .replace(u">", u"&gt;")\
-			   .replace(u"'", u"&apos;")\
-			   .replace(u'"', u"&quot;")
+		return text.replace("&", "&amp;")\
+			   .replace("<", "&lt;")\
+			   .replace(">", "&gt;")\
+			   .replace("'", "&apos;")\
+			   .replace('"', "&quot;")
 
 def returnObjectAsXML(itemName,item):
 	if item == None:
@@ -183,9 +183,9 @@ def returnRationalAsXML(itemName,numerator,denominator):
 
 def returnAttributeAsXML(itemName,itemType,item,escape=True):
 	if escape:
-		itemAsString=escapeForXML(unicode(item))
+		itemAsString=escapeForXML(str(item))
 	else:
-		itemAsString=unicode(item)
+		itemAsString=str(item)
 
 	if len(itemAsString) or not XMLsuppressFalseOrBlank:
 		return '<attribute name="%s"><%s value="%s"/></attribute>\n'%(itemName,itemType,itemAsString)
@@ -194,9 +194,9 @@ def returnAttributeAsXML(itemName,itemType,item,escape=True):
 
 def returnAsXMLItem(itemName,item,escape=True):
 	if escape:
-		itemAsString=escapeForXML(unicode(item))
+		itemAsString=escapeForXML(str(item))
 	else:
-		itemAsString=unicode(item)
+		itemAsString=str(item)
 
 	if len(itemAsString) or not XMLsuppressFalseOrBlank:
 		return '<%s>%s</%s>\n'%(itemName,itemAsString,itemName)
@@ -205,7 +205,7 @@ def returnAsXMLItem(itemName,item,escape=True):
 
 def returnDictionaryAsXML(dictionary):
 	returnValue=''
-	for (key,value) in dictionary.iteritems():
+	for (key,value) in dictionary.items():
 		if not key.startswith('_'):
 			returnValue+=returnObjectAsXML(key,value)
 	return returnValue
@@ -314,7 +314,7 @@ class StructMap(dict):
 			raise IOError("Error: raw data passed in to Structmap is too small; required (%d), available (%d)"%(self.getSize(),len(byteArray)))
 					
 		crackedData=struct.unpack(self._getPackString(),byteArray[:self.getSize()])
-		forDictData=zip(self._getParameterNames(),crackedData)
+		forDictData=list(zip(self._getParameterNames(),crackedData))
 		self.clear()
 		self.update(forDictData)
 	def toByteArray(self):

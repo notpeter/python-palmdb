@@ -37,7 +37,7 @@ __copyright__ = 'Copyright 2006 Rick Price <rick_price@users.sourceforge.net>'
 
 import struct
 import traceback
-import PluginManager
+from . import PluginManager
 
 from gettext import gettext as _
 
@@ -137,7 +137,7 @@ class PalmDatabase:
 		'''
 		Initialize Palm Database Header Data
 		'''
-		if len(raw) < HeaderInfo.PDBHeaderStructSize: raise ValueError, _("Too little data passed in.")
+		if len(raw) < HeaderInfo.PDBHeaderStructSize: raise ValueError(_("Too little data passed in."))
 
 		(fileName, flags, version, \
 		createdTime, modifiedTime, backedUpTime, \
@@ -148,7 +148,7 @@ class PalmDatabase:
 
 		# Do some sanity checking
 		if nextRecord or applicationInformationOffset < 0 or sortInformationOffset < 0 or numberOfRecords < 0:
-			raise ValueError, _("Invalid database header.")
+			raise ValueError(_("Invalid database header."))
 
 		self.attributes['fileName']=fileName.split('\0')[0].decode('palmos')
 		self.attributes['databaseType']=databaseType.decode('palmos')
@@ -219,11 +219,11 @@ class PalmDatabase:
 		returnValue+=plugin.getXMLVersionHeader(self)
 		returnValue+=plugin.getXMLFileHeader(self)
 		returnValue+=PalmHeaderAttributes
-		if self.attributes.has_key('_categoriesObject'):
+		if '_categoriesObject' in self.attributes:
 			returnValue+=self.attributes['_categoriesObject'].toXML()
-		if self.attributes.has_key('_applicationInformationObject'):
+		if '_applicationInformationObject' in self.attributes:
 			returnValue+=self.attributes['_applicationInformationObject'].toXML()
-		if self.attributes.has_key('_sortBlockObject'):
+		if '_sortBlockObject' in self.attributes:
 			returnValue+=self.attributes['_sortBlockObject'].toXML()
 		returnValue+=plugin.getRecordsAsXML(self)
 		returnValue+=plugin.getXMLFileFooter(self)
@@ -314,8 +314,8 @@ class PalmDatabase:
 		hstr=raw[startingRecordOffset:endingRecordOffset]
 
 		# make sure we got the data we are looking for
-		if (not hstr) or (len(hstr) <> palmRecordEntrySize):
-			raise IOError, _("Error: problem reading record entry, size was (%d), size should have been (%d)")%(len(hstr),palmRecordEntrySize)
+		if (not hstr) or (len(hstr) != palmRecordEntrySize):
+			raise IOError(_("Error: problem reading record entry, size was (%d), size should have been (%d)")%(len(hstr),palmRecordEntrySize))
 
 		return hstr
 		
@@ -329,18 +329,18 @@ class PalmDatabase:
 			endOffset=rawSize
 
 		if startOffset > rawSize:
-			raise IOError, _("Error: Invalid start offset (%d), off end of database")%(startOffset)
+			raise IOError(_("Error: Invalid start offset (%d), off end of database")%(startOffset))
 
 		if endOffset > rawSize:
-			raise IOError, _("Error: Invalid end offset (%d), off end of database")%(endOffset)
+			raise IOError(_("Error: Invalid end offset (%d), off end of database")%(endOffset))
 
 		if startOffset > endOffset:
-			raise IOError, _("Error: Invalid offset pair (%d,%d), start is greater than end.")%(startOffset,endOffset)
+			raise IOError(_("Error: Invalid offset pair (%d,%d), start is greater than end.")%(startOffset,endOffset))
 
 		terminator = startOffset + raw[startOffset:endOffset].find('\000')
 
 		if terminator == -1:
-			raise IOError, _("Error: Invalid record entry (%d,%d), no null termination.")%(startOffset,endOffset)
+			raise IOError(_("Error: Invalid record entry (%d,%d), no null termination.")%(startOffset,endOffset))
 
 		return (hstr,raw[startOffset:terminator])
 		
@@ -393,7 +393,7 @@ class PalmDatabase:
 
 		# check to make sure the Palm database is big enough to at least contain the records it says it does
 		if palmHeaderSize + palmRecordEntrySize * numberOfRecords > rawSize:
-			raise IOError, _("Error: database not big enough to have %d records")%(numberOfRecords)
+			raise IOError(_("Error: database not big enough to have %d records")%(numberOfRecords))
 
 		# create records for each Palm record
 		for desiredRecord in range(numberOfRecords):
@@ -403,7 +403,7 @@ class PalmDatabase:
 			# recordMaker is either createRecordFromByteArray() or createResourceFromByteArray()
 			record = plugin.createPalmDatabaseRecord(self)
 			if not record:
-				raise ValueError, _("Error: did not receive a PalmRecord back from the createPalmDatabaseRecord call into the plugin.problem reading record")
+				raise ValueError(_("Error: did not receive a PalmRecord back from the createPalmDatabaseRecord call into the plugin.problem reading record"))
 			# Check for problems
 			try:
 				# populate the record with the chunk data that it points to
@@ -411,8 +411,8 @@ class PalmDatabase:
 
 				# Add to beginning of self.records list because we are going backwards
 				self.records.append(record)
-			except Exception,e:
-				print 'Had some sort of error reading record (',desiredRecord,') [',e,']'
+			except Exception as e:
+				print('Had some sort of error reading record (',desiredRecord,') [',e,']')
 #				traceback.print_exc()
 		#-------END: INSTANTIATE AND APPEND DATABASE RECORDS / RESOURCES-------
 
@@ -456,34 +456,34 @@ class PalmDatabase:
 				appinfo_size=rawSize-applicationInformationOffset
 
 		if appinfo_size < 0:
-			raise IOError, _("Error: bad database header AppInfo Block size < 0 (%d)")%(appinfo_size)
+			raise IOError(_("Error: bad database header AppInfo Block size < 0 (%d)")%(appinfo_size))
 
 		if sortinfo_size < 0:
-			raise IOError, _("Error: bad database header SortInfo Block size < 0 (%d)")%(sortinfo_size)
+			raise IOError(_("Error: bad database header SortInfo Block size < 0 (%d)")%(sortinfo_size))
 
 		if appinfo_size: # if AppInfo block exists
 			applicationInfoBlock = raw[applicationInformationOffset:applicationInformationOffset+appinfo_size]
 			if len(applicationInfoBlock) != appinfo_size:
-				raise IOError, _("Error: failed to read appinfo block")
+				raise IOError(_("Error: failed to read appinfo block"))
 
 			categoriesObject=plugin.createCategoriesObject(self)
-			if categoriesObject <> None:
+			if categoriesObject != None:
 				self.attributes['categoryLabels'] = categoriesObject.fromByteArray(applicationInfoBlock)
 				self.attributes['_categoriesObject']=categoriesObject
 				applicationInfoBlock=applicationInfoBlock[categoriesObject.objectBinarySize():]
 
 				applicationInformationObject=plugin.createApplicationInformationObject(self)
-			if applicationInformationObject <> None:
+			if applicationInformationObject != None:
 				applicationInformationObject.fromByteArray(applicationInfoBlock)
 				self.attributes['_applicationInformationObject']=applicationInformationObject
 
 		if sortinfo_size: # if SortInfo block exists
 			sortInfoBlock = raw[sortInformationOffset:sortInformationOffset+sortinfo_size]
 			if len(sortInfoBlock) != sortinfo_size:
-				raise IOError, _("Error: failed to read sortinfo block")
+				raise IOError(_("Error: failed to read sortinfo block"))
 
 			sortBlockObject=plugin.createSortBlockObject(self)
-			if self.sortBlockObject <> None:
+			if self.sortBlockObject != None:
 				sortBlockObject.fromByteArray(sortInfoBlock)
 				self.attributes['_sortBlockObject']=sortBlockObject
 
@@ -510,16 +510,16 @@ class PalmDatabase:
 		entries_len=plugin.getPalmRecordEntrySize(self)*len(self)
 		offset = palmHeaderSize + entries_len + 2  #position following the entries
 
-		if self.attributes.has_key('_applicationInformationObject') or self.attributes.has_key('_categoriesObject'):
+		if '_applicationInformationObject' in self.attributes or '_categoriesObject' in self.attributes:
 			applicationInformationOffset = offset
-			if self.attributes.has_key('_categoriesObject'):
+			if '_categoriesObject' in self.attributes:
 				offset += self.attributes['_categoriesObject'].objectBinarySize()
-			if self.attributes.has_key('_applicationInformationObject'):
+			if '_applicationInformationObject' in self.attributes:
 				offset += self.attributes['_applicationInformationObject'].getSize()
 		else:
 			applicationInformationOffset = 0
 
-		if self.attributes.has_key('_sortBlockObject'):
+		if '_sortBlockObject' in self.attributes:
 			sortInformationOffset = offset
 			offset += self.attributes['_sortBlockObject'].getSize()
 		else:
@@ -548,11 +548,11 @@ class PalmDatabase:
 		raw = raw + '\0\0' # padding?  dunno, it's always there
 
 		# add the AppInfo and/or SortInfo blocks
-		if self.attributes.has_key('_categoriesObject'):
+		if '_categoriesObject' in self.attributes:
 			raw += self.attributes['_categoriesObject'].toByteArray()
-		if self.attributes.has_key('_applicationInformationObject'):
+		if '_applicationInformationObject' in self.attributes:
 			raw += self.attributes['_applicationInformationObject'].toByteArray()
-		if self.attributes.has_key('_sortBlockObject'):
+		if '_sortBlockObject' in self.attributes:
 			raw += self.attributes['_sortBlockObject'].toByteArray()
 
 		# finally, add the record/resource data chunks
@@ -563,6 +563,6 @@ class PalmDatabase:
 	# Load/Save API Ends
 
 if __name__ == "__main__":
-	print 'running file'
+	print('running file')
 	a=PalmDatabase()
-	print 'finished'
+	print('finished')

@@ -32,8 +32,8 @@
 
 __copyright__ = 'Copyright 2006 Rick Price <rick_price@users.sourceforge.net>'
 
-import PalmDatabase
-import PluginManager
+from . import PalmDatabase
+from . import PluginManager
 from PalmDB.DesktopApplications import READ
 from PalmDB.DesktopApplications import WRITE
 
@@ -45,7 +45,7 @@ def filterForRecordsByCategory(records,category=None):
 	return a list of records that match the criteria.  When category=None,
 	all records are returned.
 	'''
-	return filter(lambda x : (category == None or x.getCategory() == category), records)
+	return [x for x in records if (category == None or x.getCategory() == category)]
 
 def filterForResourcesByTypeID(records,type=None,id=None):
 	'''
@@ -54,7 +54,7 @@ def filterForResourcesByTypeID(records,type=None,id=None):
 	When passed a list of resources, and the appropriate filter it will
 	return a list of resources that match the criteria.
 	'''
-	return filter(lambda x : (type == None or x.getResourceType() == type) and (id == None or x.getResourceID() == id), records)
+	return [x for x in records if (type == None or x.getResourceType() == type) and (id == None or x.getResourceID() == id)]
 
 def filterForModifiedRecords(records):
 	'''
@@ -62,7 +62,7 @@ def filterForModifiedRecords(records):
 
 	When passed a list of records, this function will return a list of the modified records.
 	'''
-	return filter(lambda x : x.attributes['dirty'], records)
+	return [x for x in records if x.attributes['dirty']]
 
 def filterOutDeletedRecords(records):
 	'''
@@ -70,7 +70,7 @@ def filterOutDeletedRecords(records):
 
 	When passed a list of records, this function will return a list of the non-deleted records.
 	'''
-	return filter(lambda x : x.attributes['deleted'], records)
+	return [x for x in records if x.attributes['deleted']]
 
 def resetRecordDirtyFlags(records):
 	'''
@@ -126,7 +126,7 @@ class PDBFile(PalmDatabase.PalmDatabase):
 
 		if not fileName:
 			if not self.fileName:
-				raise UserWarning, "No filename specified from which to load data"
+				raise UserWarning("No filename specified from which to load data")
 		else:
 			self.fileName = fileName # store current filename as class variable
 
@@ -161,7 +161,7 @@ class PDBFile(PalmDatabase.PalmDatabase):
 		'''
 		# if no filename at all we can't do anything
 		if not fileName and not self.fileName:
-			raise UserWarning, "Cannot save: no fileName available"
+			raise UserWarning("Cannot save: no fileName available")
 
 		# if we are not saveCopyOnly, then save the filename we have been given
 		if fileName and not saveCopyOnly:
